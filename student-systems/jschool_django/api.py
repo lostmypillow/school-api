@@ -6,21 +6,19 @@ from ninja import NinjaAPI
 
 api = NinjaAPI()
 
-base_url = "https://aps.ntut.edu.tw/course/tw/"
 
 
-def combine(url):
-    return base_url + str(url)
 
 
 def scrape(url, tag):
+    combined_url = "https://aps.ntut.edu.tw/course/tw/" + url
     if tag == "td":
-        return BeautifulSoup(requests.get(url).content, "html.parser").find(str(tag))
+        return BeautifulSoup(requests.get(combined_url).content, "html.parser").find(str(tag))
 
     elif tag != "":
-        return BeautifulSoup(requests.get(url).content, "html.parser").find_all(str(tag))
+        return BeautifulSoup(requests.get(combined_url).content, "html.parser").find_all(str(tag))
     else:
-        return BeautifulSoup(requests.get(url).content, "html.parser").find_all(
+        return BeautifulSoup(requests.get(combined_url).content, "html.parser").find_all(
             lambda tag: tag.name == 'a' and tag.get('href', '').startswith('Subj'))
 
 
@@ -28,7 +26,7 @@ def scrape(url, tag):
 def get_semester(request):
     start_time = time.time()
     sem_list = []
-    sems = scrape(combine("courseSID.jsp"), "")
+    sems = scrape("courseSID.jsp", "")
     for sem in sems:
         extract_sem_year = re.findall(r'\d+', sem.text)
         sem_list.append({
@@ -46,7 +44,7 @@ def get_semester(request):
 def get_departments(request, link):
     start_time = time.time()
     dep_list = []
-    deps = scrape(combine(link))
+    deps = scrape(link, "a")
     for dep in deps:
         dep_list.append({
             "name": dep.text,
@@ -62,8 +60,7 @@ def get_departments(request, link):
 def get_years(request, link):
     start_time = time.time()
     year_list = []
-    # https://aps.ntut.edu.tw/course/tw/Subj.jsp?format=-3&year=112&sem=2&code=54
-    years = scrape(combine(link))
+    years = scrape(link, "a")
     for year in years:
         year_list.append({
             "name": year.text,
@@ -75,28 +72,27 @@ def get_years(request, link):
     return year_list
 
 
+
 @api.get("/course")
 def get_course(request):
     start_time = time.time()
     lst = []
     uurl = "Subj.jsp?format=-4&year=112&sem=2&code=2913"
-    course_data = scrape(combine(uurl), "td")
-    print(course_data)
-    x = course_data.text.replace(" ", "").replace("　", "").split("\n")
-    stripx = [line.strip() for line in x if line.strip()]
-    matches = [i for i, item in enumerate(stripx) if re.match(r'\b\d{6}\b', item)]
-    grouped_text = [stripx[matches[i]:matches[i + 1]] for i in range(len(matches) - 1)] + [stripx[matches[-1]:]]
-    end_time = time.time()
-    elapsed_time = end_time - start_time
-    print(elapsed_time)
-    return {"text": "yo"}
+    find = scrape(uurl, "tr")
+    count = 0
 
-@api.get("/course_new")
-def get_course_new(request):
-    start_time = time.time()
-    lst = []
-    uurl = "Subj.jsp?format=-4&year=112&sem=2&code=2913"
-    course_data = scrape(combine(uurl), "tr")
+    for f in find:
+        # print(f"Row {count}: {f}")
+        s = BeautifulSoup(str(f), 'html.parser').find_all("td")
+        alt_count = 0
+        for tt in s:
+            json_count = count
+            print(f"Row {count}, s = {str(tt.text)}")
+            lst.append({
+                "row": json_count,
+                "text": tt.text,
+            })
+        count += 1
     # for row in course_data:
     #     cells = row.find_all('td')
     #     course = {
@@ -118,5 +114,5 @@ def get_course_new(request):
     elapsed_time = end_time - start_time
     return {
         "time": elapsed_time,
-        "text": course_data,
+        "list": lst,
     }
