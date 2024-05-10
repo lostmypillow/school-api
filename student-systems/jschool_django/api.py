@@ -1,6 +1,5 @@
 import re, requests
 import time
-
 from bs4 import BeautifulSoup
 from ninja import NinjaAPI
 
@@ -13,15 +12,14 @@ def scrape(url, tag):
         return BeautifulSoup(requests.get(combined_url).content, "html.parser").find_all(
             lambda tag: tag.name == 'a' and tag.get('href', '').startswith('Subj'))
     else:
-        return BeautifulSoup(requests.get(combined_url).content, "html.parser").find_all(str(tag))
+        return BeautifulSoup(requests.get(combined_url).content, "lxml").find_all(str(tag))
 
 
 @api.get("/sems")
 def get_semester(request):
     start_time = time.time()
     sem_list = []
-    sems = scrape("courseSID.jsp", "sem")
-    for sem in sems:
+    for sem in scrape("courseSID.jsp", "sem"):
         extract_sem_year = re.findall(r'\d+', sem.text)
         sem_list.append({
             "year": extract_sem_year[0],
@@ -29,102 +27,91 @@ def get_semester(request):
             "link": sem['href'],
         })
     end_time = time.time()
-    elapsed_time = end_time - start_time
-    print(elapsed_time)
-    return sem_list
+    return {
+        "time": str(end_time - start_time) + " seconds",
+        "list": sem_list,
+    }
 
 
 @api.get("/deps")
-def get_departments(request, link):
+def get_departments(request, year, sem):
     start_time = time.time()
     dep_list = []
-    deps = scrape(link, "a")
-    for dep in deps:
+    for dep in scrape("Subj.jsp?format=-2&year=" + str(year) + "&sem=" + str(sem), "a"):
+        match = re.search(r"year=(\d+)&sem=(\d+)&code=([A-Za-z\d]+)", dep['href'])
         dep_list.append({
+            "year": match.group(1),
+            "sem": match.group(2),
+            "code": match.group(3),
             "name": dep.text,
             "link": dep['href'],
         })
     end_time = time.time()
-    elapsed_time = end_time - start_time
-    print(elapsed_time)
-    return dep_list
+    return {
+        "time": str(end_time - start_time) + " seconds",
+        "list": dep_list,
+    }
 
 
 @api.get("/years")
-def get_years(request, link):
+def get_years(request, year, sem, code):
     start_time = time.time()
     year_list = []
-    years = scrape(link, "a")
-    for year in years:
+    for year in scrape("Subj.jsp?format=-3&year=" + str(year) + "&sem=" + str(sem) + "&code=" + str(code), "a"):
+        match = re.search(r"year=(\d+)&sem=(\d+)&code=(\d+)", year['href'])
+        year_match = match.group(1)
+        sem_match = match.group(2)
+        code_match = match.group(3)
         year_list.append({
+            "year": year_match,
+            "sem": sem_match,
+            "code": code_match,
             "name": year.text,
             "link": year['href'],
         })
     end_time = time.time()
-    elapsed_time = end_time - start_time
-    print(elapsed_time)
-    return year_list
+    return {
+        "time": str(end_time - start_time) + " seconds",
+        "list": year_list,
+    }
 
 
 @api.get("/course")
-def get_course(request):
+def get_course(request, year, sem, code):
     start_time = time.time()
-    lst = []
-    uurl = "Subj.jsp?format=-4&year=112&sem=2&code=2913"
-    combined_url = "https://aps.ntut.edu.tw/course/tw/" + uurl
-    find = BeautifulSoup(requests.get(combined_url).content, "lxml").find_all("tr")
-
-    count = 0
-    for f in find:
-        #     # print(f"Row {count}: {f}")
+    course_list = []
+    for f in scrape("Subj.jsp?format=-4&year=" + str(year) + "&sem=" + str(sem) + "&code=" + str(code),"tr"):
         cells = BeautifulSoup(str(f), 'lxml').find_all("td")
-        count += 1
-        print(f"number{count}: {cells}")
         try:
-            course = {
+            course_list.append({
                 "code": cells[0].text.strip() if cells[0].text.strip() else None,
                 "name": cells[1].text.strip() if cells[1].text.strip() else None,
                 "credits": (cells[2].text.strip()) if cells[2].text.strip() else None,
                 "type": cells[5].text.strip() if cells[5].text.strip() else None,
-                "professor": cells[6].text.strip() if cells[6].text.strip() else None,
-                "time1": cells[9].text.strip() if cells[9].text.strip() else None,
-                "time2": cells[10].text.strip() if cells[10].text.strip() else None,
+                "prof": cells[6].text.strip() if cells[6].text.strip() else None,
+                "sun": cells[7].text.strip() if cells[7].text.strip() else None,
+                "mons": cells[8].text.strip() if cells[8].text.strip() else None,
+                "tues": cells[9].text.strip() if cells[9].text.strip() else None,
+                "wed": cells[10].text.strip() if cells[10].text.strip() else None,
+                "thu": cells[11].text.strip() if cells[11].text.strip() else None,
+                "fri": cells[12].text.strip() if cells[12].text.strip() else None,
+                "sat": cells[13].text.strip() if cells[13].text.strip() else None,
+                "classroom": cells[14].text.strip() if cells[14].text.strip() else None,
                 "ppl": int(cells[15].text.strip()) if cells[15].text.strip() else None,
-                "ppldrop": int(cells[16].text.strip()) if cells[16].text.strip() else None,
-                "lang": cells[18].text.strip() if cells[18].text.strip() else None,
-                "link": cells[19].find('a')['href'] if cells[19].find('a') else None,
-                "notes": cells[20].text.strip() if cells[20].text.strip() else None,
-            }
-            lst.append(course)
+                "dropped_ppl": int(cells[16].text.strip()) if cells[16].text.strip() else None,
+                "lang": cells[17].text.strip() if cells[17].text.strip() else None,
+                "link": cells[18].find('a')['href'] if cells[18].find('a') else None,
+                "notes": cells[19].text.strip() if cells[19].text.strip() else None,
+                "with_class": cells[20].text.strip() if cells[20].text.strip() else None,
+                "experiment": cells[21].text.strip() if cells[21].text.strip() else None,
+                "cross_disp": cells[22].text.strip() if cells[22].text.strip() else None,
+            })
         except IndexError:
-            print("empty list")
-
-
-    #     alt_count = 0
-    #     for tt in s:
-    #         print(f"Row {alt_count}, s = {str(tt.text)}")
-    #         alt_count += 1
-    #     count += 1
-    # for row in course_data:
-    #     cells = row.find_all('td')
-    #     course = {
-    #         "code": cells[0].text.strip() if cells[0].text.strip() else None,
-    #         "name": cells[1].text.strip() if cells[1].text.strip() else None,
-    #         "credits": float(cells[2].text.strip()) if cells[2].text.strip() else None,
-    #         "type": cells[5].text.strip() if cells[5].text.strip() else None,
-    #         "professor": cells[6].text.strip() if cells[6].text.strip() else None,
-    #         "time1": cells[9].text.strip() if cells[9].text.strip() else None,
-    #         "time2": cells[10].text.strip() if cells[10].text.strip() else None,
-    #         "ppl": int(cells[15].text.strip()) if cells[15].text.strip() else None,
-    #         "ppldrop": int(cells[16].text.strip()) if cells[16].text.strip() else None,
-    #         "lang": cells[18].text.strip() if cells[18].text.strip() else None,
-    #         "link": cells[19].find('a')['href'] if cells[19].find('a') else None,
-    #         "notes": cells[20].text.strip() if cells[20].text.strip() else None
-    #     }
-    #     lst.append(course)
+            course_list.append({
+                "error": "IndexError"
+            })
     end_time = time.time()
-    elapsed_time = end_time - start_time
     return {
-        "time": elapsed_time,
-        "list": lst,
-    }
+        "time": str(end_time - start_time) + " seconds",
+        "list": course_list,
+        }
