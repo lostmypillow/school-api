@@ -13,6 +13,7 @@ def scrape(url, tag):
             lambda tag: tag.name == 'a' and tag.get('href', '').startswith('Subj'))
     else:
         return BeautifulSoup(requests.get(combined_url).content, "lxml").find_all(str(tag))
+        
 
 
 @api.get("/sems")
