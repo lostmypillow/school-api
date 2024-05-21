@@ -29,7 +29,7 @@ pip install -r requirements.txt
 
 
 ## Why is it hosted on PythonAnywhere?/Where's the demo website?
-I haven't setup my homelab. After I set it up I will be able to host it on better hardware and a custom domain. The frontend is also forthcoming to consume this API.
+I haven't set up my homelab. After I set it up I will be able to host it on better hardware and a custom domain. The frontend is also forthcoming to consume this API.
 
 
 ## Future for this Project
