@@ -8,10 +8,15 @@ ENV PYTHONDONTWRITEBYTECODE=1
 
 # Turns off buffering for easier container logging
 ENV PYTHONUNBUFFERED=1d
-
+# Install the necessary build tools
+RUN apt-get update \
+    && apt-get install -y build-essential gcc \
+    && python -m pip install -r requirements.txt \
+    && apt-get remove -y build-essential gcc \
+    && apt-get autoremove -y \
+    && rm -rf /var/lib/apt/lists/*
 # Install pip requirements
-COPY requirements.txt .
-RUN python -m pip install -r requirements.txt
+
 
 WORKDIR /app
 COPY . /app
