@@ -8,6 +8,8 @@ ENV PYTHONDONTWRITEBYTECODE=1
 
 # Turns off buffering for easier container logging
 ENV PYTHONUNBUFFERED=1d
+
+COPY requirements.txt .
 # Install the necessary build tools
 RUN apt-get update \
     && apt-get install -y build-essential gcc \
