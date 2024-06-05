@@ -2,7 +2,7 @@ version: '3.4'
 
 services:
   jschooldjango:
-    image: jschooldjango
+    image: jcourses
     build:
       context: .
       dockerfile: ./Dockerfile
