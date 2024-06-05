@@ -39,19 +39,3 @@ An API needs a frontend, duh!
 
 ### Mobile App
 Speaking of frontend, mobile app version of said frontend is also planned.
-
-
-
-
-
-
-## Recreate this project
-
-### 1. Install dependencies
-```bash
-
-```
-### 2. Run dev server
-```bash
-./manage.py runserver
-```
