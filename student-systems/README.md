@@ -1,7 +1,7 @@
 # JCourses
 A Django/Django Ninja web scraper + API that scrapes data from the [NTUT Course Website](https://aps.ntut.edu.tw/course/tw/course.jsp)
 
-[API Docs](https://jcourses.lostmypillow.duckns.org/api/docs)
+[API Docs](https://jcourses.lostmypillow.duckdns.org/api/docs)
 
 
 ## Tech Stack
