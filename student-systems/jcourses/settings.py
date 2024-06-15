@@ -25,10 +25,14 @@ SECRET_KEY = 'django-insecure-(6^j^39=e1$mkrg@hd-80qbr+((cp9j%iful=!s+f_w62=m3ul
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['jcourses.onrender.com', 'jcourses.lostmypillow.duckdns.org']
+ALLOWED_HOSTS = ['jcourses.onrender.com', 'jcourses.lostmypillow.duckdns.org', 'localhost']
 
 
 # Application definition
+STATIC_URL = 'django_static/'
+
+REACT_APP_BUILD_PATH='frontend/out'
+
 
 INSTALLED_APPS = [
     'django.contrib.admin',
