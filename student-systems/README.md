@@ -1,11 +1,15 @@
 # JCourses
-A Django/Django Ninja web scraper + API that scrapes data from the [NTUT Course Website](https://aps.ntut.edu.tw/course/tw/course.jsp)
+A full stack Django/Django Ninja web scraper API that scrapes data from the [NTUT Course Website](https://aps.ntut.edu.tw/course/tw/course.jsp) PLUS a NextJS frontend
+
+[Demo(Planned)](https://jcourses.lostmypillow.duckdns.org)
+
 
 [API Docs](https://jcourses.lostmypillow.duckdns.org/api/docs)
 
 
 ## Tech Stack
 **Django** with **Django Ninja**
+Frontend in **NextJS (React)**
 
 
 ## Recreate this Project
@@ -21,21 +25,12 @@ pip install -r requirements.txt
  gunicorn --bind 0.0.0.0:8000 jcourses.wsgi
 ```
 
-## Backend Concepts Used
-- Set API endpoints
+## Features
+- API endpoints
 - Swagger
 - BeautifulSoup web scraping
-- JSON serialization
-
-
-## Why is it hosted on PythonAnywhere?/Where's the demo website?
-I haven't set up my homelab. After I set it up I will be able to host it on better hardware and a custom domain. The frontend is also forthcoming to consume this API.
 
 
 ## Future for this Project
 
-### Frontend
-An API needs a frontend, duh!
-
-### Mobile App
-Speaking of frontend, mobile app version of said frontend is also planned.
+- Mobile App
