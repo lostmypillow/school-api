@@ -1,5 +1,5 @@
 # JCourses
-A full stack Django/Django Ninja web scraper API that scrapes data from the [NTUT Course Website](https://aps.ntut.edu.tw/course/tw/course.jsp) PLUS a NextJS frontend
+A full stack Django/Django Ninja web app that scrapes data from the [NTUT Course Website](https://aps.ntut.edu.tw/course/tw/course.jsp), exposes it with API endpoints, and serves a NextJS frontend.
 
 [Demo(Planned)](https://jcourses.lostmypillow.duckdns.org)
 
