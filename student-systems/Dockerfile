@@ -14,7 +14,7 @@ RUN corepack enable && pnpm install --frozen-lockfile
 COPY /frontend .
 
 # Build the Next.js application as a static export
-RUN pnpm run export
+RUN pnpm run build
 
 # Stage 2: Set up the Django application
 # FROM --platform=linux/arm64 python:3-slim-buster
