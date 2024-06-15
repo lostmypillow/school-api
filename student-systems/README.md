@@ -1,7 +1,7 @@
 # JCourses
 A Django/Django Ninja web scraper + API that scrapes data from the [NTUT Course Website](https://aps.ntut.edu.tw/course/tw/course.jsp)
 
-[API Docs](https://lostmypillow.pythonanywhere.com/api/docs)
+[API Docs](https://jcourses.lostmypillow.duckns.org/api/docs)
 
 
 ## Tech Stack
@@ -23,7 +23,7 @@ pip install -r requirements.txt
 
 ## Backend Concepts Used
 - Set API endpoints
-- Swagger (NinjaAPI skin)
+- Swagger
 - BeautifulSoup web scraping
 - JSON serialization
 
