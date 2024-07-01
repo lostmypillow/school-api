@@ -1,0 +1,10 @@
+version: '3.4'
+
+services:
+  jsearch:
+    image: jsearch
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    ports:
+      - 8006:8006

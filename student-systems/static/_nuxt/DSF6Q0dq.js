@@ -1,0 +1,1 @@
+import{_ as s}from"./DlAUqK2U.js";import{t as a,v as t,A as e,y as n,K as o,s as c,V as r}from"./Xa0KOTYA.js";const d={},l=t("h1",{class:"text-xl font-bold"},"How do I search?",-1);function _(i,p){return c(),a(o,null,[l,t("p",null,[e("Just type anything and press enter OR press/tap that "),n(r,{icon:"mdi-send"}),e(" icon ")])],64)}const x=s(d,[["render",_]]);export{x as default};
