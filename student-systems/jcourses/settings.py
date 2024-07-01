@@ -31,7 +31,7 @@ ALLOWED_HOSTS = ['jcourses.lostmypillow.duckdns.org', 'localhost', '127.0.0.1']
 # Application definition
 STATIC_URL = 'django_static/'
 
-REACT_APP_BUILD_PATH='frontend/out'
+REACT_APP_BUILD_PATH='frontend'
 
 
 INSTALLED_APPS = [
