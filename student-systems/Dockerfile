@@ -1,5 +1,5 @@
 # For more information, please refer to https://aka.ms/vscode-docker-python
-FROM --platform=linux/arm64 python:3-slim
+FROM python:3-slim
 
 EXPOSE 8006
 
