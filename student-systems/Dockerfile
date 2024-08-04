@@ -1,18 +1,3 @@
-FROM node:lts-slim AS nextjs_builder
-
-WORKDIR /frontend
-
-COPY /frontend/package.json /frontend/pnpm-lock.yaml ./
-
-
-RUN corepack enable && pnpm install --frozen-lockfile
-
-
-COPY /frontend .
-
-
-RUN pnpm run build
-
 # FROM --platform=linux/arm64 python:3-slim-buster
 
 
