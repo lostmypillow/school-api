@@ -20,9 +20,6 @@ WORKDIR /app
 COPY . /app
 
 
-COPY --from=nextjs_builder /frontend/out /app/frontend/out
-
-
 RUN adduser -u 5678 --disabled-password --gecos "" appuser && chown -R appuser /app
 USER appuser
 
