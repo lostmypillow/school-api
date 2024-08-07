@@ -11,7 +11,7 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 """
 
 from pathlib import Path
-
+import os
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -20,18 +20,16 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-(6^j^39=e1$mkrg@hd-80qbr+((cp9j%iful=!s+f_w62=m3ul'
+SECRET_KEY = os.getenv("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = ['jcourses.lostmypillow.duckdns.org', 'localhost', '127.0.0.1', 'jcourses.onrender.com']
 
 
 # Application definition
-STATIC_URL = 'django_static/'
 
-REACT_APP_BUILD_PATH='frontend'
 
 
 INSTALLED_APPS = [
