@@ -52,5 +52,3 @@ async def get_google(query: str, limit: int, related: bool):
     print(r.json())
 
     return {"results": r.json()}
-
-app.mount("/", StaticFiles(directory="static", html=True), name="static")
