@@ -12,7 +12,7 @@ origins = [
      "jsearch-latest.onrender.com",
      "jsearch.lostmypillow.duckdns.org",
      "lostmypillow.github.io/jsearch-vue",
-     "localhost:3000"
+     "localhost"
 
     
 ]
