@@ -18,7 +18,6 @@ from django.contrib import admin
 from django.urls import path, re_path
 from django.conf import settings
 from .api import api
-from .views import serve_react
 urlpatterns = [
     path('admin/', admin.site.urls),
     path("api/", api.urls),
