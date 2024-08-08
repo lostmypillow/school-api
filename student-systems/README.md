@@ -1,17 +1,18 @@
 # JCourses
-A Django web app that scrapes data from the [NTUT Course Website](https://aps.ntut.edu.tw/course/tw/course.jsp), complete with:
-- **Django Ninja** API endpoints
-- **NextJS(React)** frontend (might switch to a Vue SPA or even an HTMX frontend)
+## What is it?
+A Django API that scrapes data from the [NTUT Course Website](https://aps.ntut.edu.tw/course/tw/course.jsp), complete with:
 
-[Demo(Planned)](https://jcourses.lostmypillow.duckdns.org)
 
+Demo (WIP)
 
 [API Docs](https://jcourses.lostmypillow.duckdns.org/api/docs)
 
+[Backup API Docs]()
+## How does it work?
 
 ## Tech Stack
-**Django** with **Django Ninja**
-Frontend in **NextJS (React)**
+ - **Django** with **Django Ninja** API endpoints
+ - Frontend planned
 
 
 ## Recreate this Project
