@@ -11,7 +11,7 @@ app = FastAPI()
 origins = [
      "http://jsearch-latest.onrender.com",
      "http://jsearch.lostmypillow.duckdns.org",
-     "http://lostmypillow.github.io/jsearch-vue",
+     "https://lostmypillow.github.io/jsearch-vue",
      "http://localhost:3000"
 
     
