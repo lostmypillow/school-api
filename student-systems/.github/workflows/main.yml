@@ -29,6 +29,6 @@ jobs:
         with:
           push: true
           platforms: linux/amd64,linux/arm64
-          tags: lostmypillow/jrar:latest
+          tags: lostmypillow/jcourses:latest
           build-args: |
             SECRET_KEY=${{ secrets.DJANGO_SECRET_KEY }}
