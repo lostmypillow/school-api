@@ -11,7 +11,7 @@ A FastAPI search engine for movies and Google search. Consumes OMDb API and a ra
 
 [**API Documentation**](https://jsearch.lostmypillow.duckdns.org/docs)
 
-[**Backup API Docs (Loads slow!)**](https://jsearch.onrender.com/docs)
+[**Backup API Docs (Loads slow!)**](https://jsearch-latest.onrender.com/docs)
 
 [React frontend (broken)](https://github.com/lostmypillow/jsearch-react)
 
