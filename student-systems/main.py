@@ -8,23 +8,23 @@ from fastapi.middleware.cors import CORSMiddleware
 
 
 app = FastAPI()
-# origins = [
-#      "http://localhost:32773",
-#      "http://localhost:32774",
-#      "http://localhost:32778",
-#      "http://localhost:32777",
-#      "http://localhost:3000",
+origins = [
+     "jsearch.onrender.com",
+     "jsearch.lostmypillow.duckdns.org",
+     "lostmypillow.github.io/jsearch-vue",
+     "localhost:3000"
+
     
-# ]
+]
 
 
-# app.add_middleware(
-#     CORSMiddleware,
-#     allow_origins=origins,
-#     allow_credentials=True,
-#     allow_methods=["*"],
-#     allow_headers=["*"],
-# )
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 
