@@ -1,13 +1,12 @@
 # JCourses
 ## What is it?
-A Django API that scrapes data from the [NTUT Course Website](https://aps.ntut.edu.tw/course/tw/course.jsp), complete with:
-
+A Django API that scrapes data from the [NTUT Course Website](https://aps.ntut.edu.tw/course/tw/course.jsp)
 
 Demo (WIP)
 
 [API Docs](https://jcourses.lostmypillow.duckdns.org/api/docs)
 
-[Backup API Docs]()
+[Backup API Docs](https://jcourses.onrender.com/api/docs)
 ## How does it work?
 
 ## Tech Stack
