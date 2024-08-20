@@ -9,8 +9,8 @@ from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
 origins = [
-     "http://jsearch-latest.onrender.com",
-     "http://jsearch.lostmypillow.duckdns.org",
+     "https://jsearch-latest.onrender.com",
+     "https://jsearch.lostmypillow.duckdns.org",
      "https://lostmypillow.github.io",
      "http://localhost:3000"
 
