@@ -2,6 +2,7 @@
 ## What is it?
 A FastAPI search engine for movies and Google search. Consumes OMDb API and a random rate limited RapidAPI. 
 
+![image](https://github.com/user-attachments/assets/84740b26-ff7c-4f75-837e-4f2ebd6bebb5)
 
 
 [**Vue frontend**](https://github.com/lostmypillow/jsearch-vue)
