@@ -1,8 +1,11 @@
 from sqlalchemy import create_engine, text
 import pathlib
 import os
+from dotenv import load_dotenv
 
-connection_url = "mssql+pyodbc://testsql:test123456@192.168.2.8/?driver=ODBC+Driver+18+for+SQL+Server&TrustServerCertificate=yes"
+load_dotenv()
+
+connection_url = 
 engine = create_engine(connection_url)
 
 
@@ -23,7 +26,8 @@ def fetch_one_sql(command_name, **kwargs):
     with engine.connect() as conn:
         result = conn.execute(text(sql_from_file(command_name)), kwargs)
         return result.fetchone()
-    
+
+
 def fetch_all_sql(command_name, **kwargs):
     with engine.connect() as conn:
         result = conn.execute(text(sql_from_file(command_name)), kwargs)
