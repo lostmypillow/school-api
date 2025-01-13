@@ -41,6 +41,13 @@ async def handleSMS(data: SMSRequest):
     async with httpx.AsyncClient() as client:
         response: Response = await client.post(url_list[str(vendor_id)])
         sms_id = ET.fromstring(response.text).find("msgid").text
+
+        send_mobile_notif = await client.post("https://studev.", {
+            "student_id": data.student_id,
+            "phone": data.phone_number,
+            "title": "簡訊通知",
+            "body": data.message_content
+        })
     await commit_sql(
         "insert_record",
         student_id=data.student_id,
