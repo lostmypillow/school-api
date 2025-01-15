@@ -8,26 +8,12 @@ DISTRO=$(lsb_release -is)
 
 
 echo "SETUP [Update system]"
-sudo apt-get update >/dev/null
+sudo apt-get update -y >/dev/null
 echo "ok"
 
 echo "SETUP [Ensure necessary packages are installed]"
 sudo apt-get install -y python3-venv python3-pip python3-tk wget p7zip-full  curl gnupg >/dev/null
-echo "ok"
 
-
-echo "SETUP [Ensure virtual environment is enabled]"
-if [ ! -d "$APP_DIR/.venv" ]; then
-    python3 -m venv "$APP_DIR/.venv" >/dev/null
-fi
-source "$APP_DIR/.venv/bin/activate"
-echo "ok"
-
-echo "SETUP [Install Python requirements]"
-pip install -r "$APP_DIR/requirements.txt" >/dev/null
-echo "ok"
-
-echo "SETUP [Install Microsoft ODBC Driver 18]"
 curl https://packages.microsoft.com/keys/microsoft.asc | sudo gpg --dearmor --yes -o /usr/share/keyrings/microsoft-prod.gpg >/dev/null
 if [ "$DISTRO" == "Ubuntu" ]; then
     curl https://packages.microsoft.com/config/ubuntu/$(lsb_release -rs)/prod.list | sudo tee /etc/apt/sources.list.d/mssql-release.list >/dev/null
@@ -45,6 +31,17 @@ sudo ACCEPT_EULA=Y apt-get install -y mssql-tools18 >/dev/null
 echo 'export PATH="$PATH:/opt/mssql-tools18/bin"' >> ~/.bashrc
 source ~/.bashrc
 sudo apt-get install -y unixodbc-dev >/dev/null
+echo "ok"
+
+echo "SETUP [Ensure virtual environment is enabled]"
+if [ ! -d "$APP_DIR/.venv" ]; then
+    python3 -m venv "$APP_DIR/.venv" >/dev/null
+fi
+source "$APP_DIR/.venv/bin/activate"
+echo "ok"
+
+echo "SETUP [Install Python requirements]"
+pip install -r "$APP_DIR/requirements.txt" >/dev/null
 echo "ok"
 
 echo "SETUP [Register as systemd service and start it]"
