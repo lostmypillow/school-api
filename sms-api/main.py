@@ -1,91 +1,86 @@
 from fastapi import FastAPI, BackgroundTasks, HTTPException
-import asyncio
-from typing import Any
-import httpx
-from httpx import Response
-import random
-from database.async_operations import fetch_one_sql, commit_sql
-from pydantic import BaseModel
-import xml.etree.ElementTree as ET
 from dotenv import load_dotenv
-
+from database.async_session import async_engine
+from lib.sms_model import SMSModel
+from lib.handleSMS import handleSMS
+from lib.decode_big5 import decode_big5
 load_dotenv()
 
-app = FastAPI()
 
+async def lifespan(app: FastAPI):
+    """Generator for FastAPI lifespan management
+    """
+    yield
+    await async_engine.dispose()
 
-class SMSRequest(BaseModel):
-
-    # 學號
-    student_id: str
-
-    # 對象
-    recipient: str
-
-    # 手機
-    phone_number: str
-
-    # 內容
-    message_content: str
-
-    # 預約時間
-    send_time: Any
-
-
-async def handleSMS(data: SMSRequest):
-    url_list: dict = {
-        "1":  + str(data.phone_number) +  + str(data.message_content) +  + "&longsms=Y" if len(data.message_content) >= 70 else "" + f"&sendtime = {data.send_time}" if data.send_time is not None else "",
-        "2":  + str(data.phone_number) +  + str(data.message_content) +  "&longsms=Y" if len(data.message_content) >= 70 else "" + f"&sendtime = {data.send_time}" if data.send_time is not None else "",
-        "3":  + str(data.phone_number) +  + str(data.message_content)
-    }
-    preferred_vendor = await fetch_one_sql("get_specified_vendor", phone_number=data.phone_number)
-    vendor_id = str(random.randint(
-        1, 3) if preferred_vendor is None else preferred_vendor.限定廠商編號)
-
-    try:
-        async with httpx.AsyncClient() as client:
-            response: Response = await client.post(url_list[vendor_id])
-            sms_id = ET.fromstring(response.text).find("msgid").text
-
-            await client.post("https://studev.", {
-                "student_id": data.student_id,
-                "phone": data.phone_number,
-                "title": "簡訊通知",
-                "body": data.message_content
-            })
-        await commit_sql(
-            "insert_record",
-            student_id=data.student_id,
-            recipient=data.recipient,
-            phone_number=data.phone_number,
-            sms_id=sms_id,
-            message_content=data.message_content,
-            vendor_id=vendor_id
-        )
-
-    except Exception as e:
-        print(e)
+app = FastAPI(lifespan=lifespan)
 
 
 @app.post("/sms")
-async def send_sms(sms_request: SMSRequest, background_tasks: BackgroundTasks) -> str:
+async def send_sms(
+    sms_request: SMSModel,
+    background_tasks: BackgroundTasks
+) -> str:
+
     background_tasks.add_task(handleSMS, sms_request)
+
     return "sent"
 
 
 @app.get("/sms")
-async def get_send_sms(background_tasks: BackgroundTasks, student_id: str, recipient: str, phone_number: str, message_content: str, send_time = None) -> str:
+async def get_send_sms(
+    background_tasks: BackgroundTasks,
+    student_id: str,
+    recipient: str,
+    phone_number: str,
+    message_content: str,
+    send_time: str =None
+) -> str:
+    """給 VB app 的 Endpoint
+
+    Parameters
+    ----------
+    background_tasks : BackgroundTasks
+        FastAPI 內建功能
+    
+    student_id : str
+        學號
+
+    recipient : str
+        對象
+    
+    phone_number : str
+        手機號碼
+
+    message_content : str
+        簡訊內容
+
+    send_time : str, optional
+        預約時間, by default None
+
+    Returns
+    -------
+    str
+        "sent"
+
+    Raises
+    ------
+    HTTPException
+        'Format Error'
+    """
+
     try:
-        sms_request: SMSRequest = SMSRequest(
-        student_id=student_id,
-        recipient=recipient,
-        phone_number=phone_number,
-        message_content=message_content,
-        send_time=send_time)
+        sms_request: SMSModel = SMSModel(
+            student_id=student_id,
+            recipient=decode_big5(recipient),
+            phone_number=phone_number,
+            message_content=decode_big5(message_content),
+            send_time=send_time)
 
     except Exception as e:
         print(e)
         raise HTTPException(404, 'Format Error')
-    
+
     background_tasks.add_task(handleSMS, sms_request)
+
     return "sent"
