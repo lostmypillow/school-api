@@ -53,7 +53,7 @@ After=network.target
 [Service]
 User=$USER
 WorkingDirectory=$APP_DIR
-ExecStart=$APP_DIR/.venv/bin/python -m fastapi run $APP_DIR
+ExecStart=$APP_DIR/.venv/bin/python -m fastapi run $APP_DIR/main.py
 Restart=always
 Environment=PYTHONUNBUFFERED=1
 

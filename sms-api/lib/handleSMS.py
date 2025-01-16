@@ -33,7 +33,7 @@ async def handleSMS(data: SMSModel):
 
 
         async with AsyncClient() as client:
-            response: Response = await client.post(url_list[vendor_id])
+            response: Response = await client.get(url_list[vendor_id])
             sms_id = ET.fromstring(response.text).find("msgid").text
 
             await client.post("https://studev.", {
