@@ -13,7 +13,16 @@ async def lifespan(app: FastAPI):
     yield
     await async_engine.dispose()
 
-app = FastAPI(lifespan=lifespan)
+# Entry of the FastAPI app
+app = FastAPI(
+    lifespan=lifespan,
+
+    # Here I define the title. This is purely cosmetic, and so you know which application's Swagger Doc you're looking at when you visit the "/docs" endpoint
+    title="簡訊&推播系統 / SMS",
+
+    # Version is also arbitrary. I wasn't keeping track, and we (Gitea) don't have semantic versioning. I follow the ZeroVer convention by keeping the version number under (and never reaching) 1.0.0
+    version="0.1.0"
+    )
 
 
 @app.post("/sms")
@@ -21,6 +30,21 @@ async def send_sms(
     sms_request: SMSModel,
     background_tasks: BackgroundTasks
 ) -> str:
+    """Original SMS endpoint. (Unused)
+
+    Parameters
+    ----------
+    sms_request : SMSModel
+        Look at SMSModel at the bottom of the docs page for more info.
+
+    background_tasks : BackgroundTasks
+        FastAPI 內建功能
+
+    Returns
+    -------
+    str
+         "sent"
+    """
 
     background_tasks.add_task(handleSMS, sms_request)
 
