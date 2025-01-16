@@ -14,7 +14,7 @@ echo "ok"
 echo "SETUP [Ensure necessary packages are installed]"
 sudo apt-get install -y python3-venv python3-pip wget curl gnupg >/dev/null
 
-curl -sSL -O https://packages.microsoft.com/config/ubuntu/$(grep VERSION_ID /etc/os-release | cut -d '"' -f 2)/packages-microsoft-prod.deb
+curl -sSL -O https://packages.microsoft.com/config/ubuntu/24.04/packages-microsoft-prod.deb
 # Install the package
 sudo dpkg -i packages-microsoft-prod.deb
 # Delete the file

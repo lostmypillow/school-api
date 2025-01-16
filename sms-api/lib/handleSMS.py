@@ -4,8 +4,7 @@ import xml.etree.ElementTree as ET
 from .sms_model import SMSModel
 from httpx import Response, AsyncClient
 
-
-
+import urllib.parse
 
 
 async def handleSMS(data: SMSModel):
@@ -31,18 +30,18 @@ async def handleSMS(data: SMSModel):
 
         print(url_list[vendor_id])
 
-
         async with AsyncClient() as client:
             response: Response = await client.get(url_list[vendor_id])
             sms_id = ET.fromstring(response.text).find("msgid").text
+            print(sms_id)
 
-            await client.post("https://studev.", {
+            await client.post("https://studev.", json={
                 "student_id": data.student_id,
                 "phone": data.phone_number,
                 "title": "簡訊通知",
                 "body": data.message_content
             })
-        
+
         await commit_sql(
             "insert_record",
             student_id=data.student_id,
