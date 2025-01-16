@@ -14,16 +14,21 @@ echo "ok"
 echo "SETUP [Ensure necessary packages are installed]"
 sudo apt-get install -y python3-venv python3-pip wget curl gnupg >/dev/null
 
-curl https://packages.microsoft.com/keys/microsoft.asc | sudo gpg --dearmor --yes -o /usr/share/keyrings/microsoft-prod.gpg
+curl -sSL -O https://packages.microsoft.com/config/ubuntu/$(grep VERSION_ID /etc/os-release | cut -d '"' -f 2)/packages-microsoft-prod.deb
+# Install the package
+sudo dpkg -i packages-microsoft-prod.deb
+# Delete the file
+rm packages-microsoft-prod.deb
 
-curl https://packages.microsoft.com/config/ubuntu/$(lsb_release -rs)/prod.list | sudo tee /etc/apt/sources.list.d/mssql-release.list 
-
-sudo apt-get update -y  >/dev/null
-sudo ACCEPT_EULA=Y apt-get install -y msodbcsql18 >/dev/null
-sudo ACCEPT_EULA=Y apt-get install -y mssql-tools18 >/dev/null
+# Install the driver
+sudo apt-get update -y
+sudo ACCEPT_EULA=Y apt-get install -y msodbcsql18
+# optional: for bcp and sqlcmd
+sudo ACCEPT_EULA=Y apt-get install -y mssql-tools18
 echo 'export PATH="$PATH:/opt/mssql-tools18/bin"' >> ~/.bashrc
 source ~/.bashrc
-sudo apt-get install -y unixodbc-dev >/dev/null
+# optional: for unixODBC development headers
+sudo apt-get install -y unixodbc-dev
 echo "ok"
 
 echo "SETUP [Ensure virtual environment is enabled]"
