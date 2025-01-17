@@ -12,23 +12,19 @@ sudo apt-get update -y >/dev/null
 echo "ok"
 
 echo "SETUP [Ensure necessary packages are installed]"
-sudo apt-get install -y python3-venv python3-pip wget curl gnupg >/dev/null
+sudo apt-get install -y python3-venv python3-pip wget curl gnupg nginx >/dev/null
 
 curl -sSL -O https://packages.microsoft.com/config/ubuntu/24.04/packages-microsoft-prod.deb
-# Install the package
 sudo dpkg -i packages-microsoft-prod.deb
-# Delete the file
 rm packages-microsoft-prod.deb
 
 # Install the driver
-sudo apt-get update -y
-sudo ACCEPT_EULA=Y apt-get install -y msodbcsql18
-# optional: for bcp and sqlcmd
-sudo ACCEPT_EULA=Y apt-get install -y mssql-tools18
+sudo apt-get update -y >/dev/null
+sudo ACCEPT_EULA=Y apt-get install -y msodbcsql18 >/dev/null
+sudo ACCEPT_EULA=Y apt-get install -y mssql-tools18 >/dev/null
 echo 'export PATH="$PATH:/opt/mssql-tools18/bin"' >> ~/.bashrc
 source ~/.bashrc
-# optional: for unixODBC development headers
-sudo apt-get install -y unixodbc-dev
+sudo apt-get install -y unixodbc-dev >/dev/null
 echo "ok"
 
 echo "SETUP [Ensure virtual environment is enabled]"
@@ -40,6 +36,7 @@ echo "ok"
 
 echo "SETUP [Install Python requirements]"
 pip install -r "$APP_DIR/requirements.txt" >/dev/null
+pip install gunicorn
 echo "ok"
 
 echo "SETUP [Register as systemd service and start it]"
@@ -53,7 +50,7 @@ After=network.target
 [Service]
 User=$USER
 WorkingDirectory=$APP_DIR
-ExecStart=$APP_DIR/.venv/bin/python -m fastapi run $APP_DIR/main.py
+ExecStart=$APP_DIR/.venv/bin/gunicorn --bind 0.0.0.0:8000 -k uvicorn.workers.UvicornWorker src.main:app
 Restart=always
 Environment=PYTHONUNBUFFERED=1
 
@@ -61,19 +58,49 @@ Environment=PYTHONUNBUFFERED=1
 WantedBy=multi-user.target
 EOL
 
-# Reload systemd, enable, and start the service
+
+
+echo "SETUP [Configure Nginx as a reverse proxy]"
+NGINX_CONFIG="/etc/nginx/sites-available/$SERVICE_NAME"
+
+sudo bash -c "cat > $NGINX_CONFIG" <<EOL
+server {
+    listen 80;
+
+    server_name _;
+
+    location / {
+        proxy_pass http://127.0.0.1:8000;
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto \$scheme;
+    }
+}
+EOL
+
+# Enable Nginx configuration
+sudo ln -sf $NGINX_CONFIG /etc/nginx/sites-enabled/
+sudo nginx -t  # Test configuration syntax
+sudo systemctl reload nginx  # Reload Nginx to apply changes
+
+echo "SETUP [Nginx configured and running]"
+
+echo "RUN [Starting FastAPI systemd service...]"
 sudo systemctl daemon-reload
 sudo systemctl enable $SERVICE_NAME
 sudo systemctl start $SERVICE_NAME
 
 STATUS=$(sudo systemctl status $SERVICE_NAME --no-pager --quiet)
-echo "$STATUS"
 
-# Graceful exit if the service is running correctly
 if [[ "$STATUS" == *"active (running)"* ]]; then
     echo "$SERVICE_NAME is running successfully."
-    exit 0
 else
     echo "$SERVICE_NAME failed to start."
     exit 1
 fi
+
+
+echo "[DONE!] Access SMS API at http://$(hostname -I | awk '{print $1}')"
+
+exit 0
