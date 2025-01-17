@@ -85,6 +85,8 @@ ExecStartPost=/bin/sleep 0.1
 EOL
 sudo systemctl daemon-reload
 sudo systemctl restart nginx
+sudo rm -f /etc/nginx/sites-enabled/default
+sudo systemctl reload nginx
 echo "ok"
 
 
