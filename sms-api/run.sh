@@ -41,7 +41,6 @@ echo "ok"
 
 echo "SETUP [Register as systemd service and start it]"
 SERVICE_FILE="/etc/systemd/system/$SERVICE_NAME.service"
-
 sudo bash -c "cat > $SERVICE_FILE" <<EOL
 [Unit]
 Description=SMS
@@ -62,7 +61,6 @@ EOL
 
 echo "SETUP [Configure Nginx as a reverse proxy]"
 NGINX_CONFIG="/etc/nginx/sites-available/$SERVICE_NAME"
-
 sudo bash -c "cat > $NGINX_CONFIG" <<EOL
 server {
     listen 80;
@@ -78,23 +76,24 @@ server {
     }
 }
 EOL
-
-# Enable Nginx configuration
 sudo ln -sf $NGINX_CONFIG /etc/nginx/sites-enabled/
-sudo nginx -t  # Test configuration syntax
-sudo systemctl reload nginx  # Reload Nginx to apply changes
+sudo nginx -t
+sudo mkdir -p /etc/systemd/system/nginx.service.d
+sudo bash -c "cat > /etc/systemd/system/nginx.service.d/override.conf" <<EOL
+[Service]
+ExecStartPost=/bin/sleep 0.1
+EOL
+sudo systemctl daemon-reload
+sudo systemctl restart nginx
+echo "ok"
 
-echo "SETUP [Nginx configured and running]"
 
 echo "RUN [Starting FastAPI systemd service...]"
 sudo systemctl daemon-reload
 sudo systemctl enable $SERVICE_NAME
 sudo systemctl start $SERVICE_NAME
-
-STATUS=$(sudo systemctl status $SERVICE_NAME --no-pager --quiet)
-
-if [[ "$STATUS" == *"active (running)"* ]]; then
-    echo "$SERVICE_NAME is running successfully."
+if [[ "$(sudo systemctl status $SERVICE_NAME --no-pager --quiet)" == *"active (running)"* ]]; then
+    echo "ok"
 else
     echo "$SERVICE_NAME failed to start."
     exit 1
