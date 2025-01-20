@@ -1,4 +1,5 @@
 from fastapi import FastAPI, BackgroundTasks, HTTPException
+from fastapi.responses import HTMLResponse
 from dotenv import load_dotenv
 from database.async_operations import exec_sql, async_engine
 from lib.sms_model import SMSModel
@@ -35,7 +36,8 @@ async def get_send_sms(
     recipient: str,
     phone_number: str,
     message_content: str,
-    send_time: str = None
+    send_time: str = None,
+    response_class=HTMLResponse
 ) -> str:
     """給 VB app 的 Endpoint
 
@@ -84,4 +86,16 @@ async def get_send_sms(
 
     background_tasks.add_task(handleSMS, sms_request)
 
-    return "sent"
+    return HTMLResponse("""
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Success</title>
+</head>
+<body>
+    <h1>Success</h1>
+</body>
+</html>
+
+""")

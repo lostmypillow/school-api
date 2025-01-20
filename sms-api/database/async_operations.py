@@ -39,40 +39,61 @@ create_session = async_sessionmaker(
 )
 
 
-async def sql_from_file(command_name: str) -> str:
-    """Returns SQL statement from .sql file
-
-    Parameters
-    ----------
-    command_name : str
-        name of .sql file
-    Returns
-    -------
-    str
-        Extracted SQL statement
-    """
-    file_path = path.join(
-        pathlib.Path(__file__).parent.resolve(),
-        'sql',
-        command_name + '.sql'
-    )
-    with open(file_path, 'r', encoding="utf-8") as file_buffer:
-        return file_buffer.read()
-
-
 async def exec_sql(
         mode: Literal['commit', 'one', 'all'],
         command_name: str,
         **kwargs
 ):
+    """executes SQL statement based on file name
+
+    Parameters
+    ----------
+    mode : Literal[&#39;commit&#39;, &#39;one&#39;, &#39;all&#39;]
+        mode of SQL operation, 'commit' for UPDATE and INSERT, 'one' or 'all' for SELECT
+
+    command_name : str
+        name of sql file
+
+    Returns
+    -------
+    Any
+        I say Any cuz it might return dict, None or list, or not return anything at all
+    """
+
+    # Gets file path of the .sql file
+    # File path shoud be should be (root)/database/sql/xxx.sql
+    file_path = path.join(
+        pathlib.Path(__file__).parent.resolve(),
+        'sql',
+        command_name + '.sql'
+    )
+
+
+    # Reads the SQL statement from file
+    with open(file_path, 'r', encoding="utf-8") as file_buffer:
+        sql_command = file_buffer.read()
+
+    # Creates an async session using the async sessionmaker
     async with create_session() as session:
-        sql_command = await sql_from_file(command_name)
+
+        # Executes the statement
         result = await session.execute(text(sql_command), kwargs)
+
         if mode == "commit":
+
+            # Just commit if we don't need a return value
             await session.commit()
-        elif mode == "":
+
+        elif mode == "one":
+
+            # Get one result
             one_result = result.fetchone()
+
+            # Return the result as dictionary if result isn't None
+            # Otherwise, just return None
             return one_result._mapping if one_result is not None else one_result
+        
         elif mode == "all":
-            all_results = result.mappings().all()
-            return all_results
+
+            # Returns the results as a list of dicts, or an empty list
+            return result.mappings().all()

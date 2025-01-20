@@ -3,7 +3,7 @@ import random
 import xml.etree.ElementTree as ET
 from .sms_model import SMSModel
 from httpx import Response, AsyncClient
-
+from bs4 import BeautifulSoup
 import urllib.parse
 
 
@@ -23,7 +23,7 @@ async def handleSMS(data: SMSModel):
             "one",
             "get_specified_vendor",
             phone_number=data.phone_number)
-        
+
         vendor_id = str(random.randint(
             1, 3) if preferred_vendor is None else preferred_vendor['限定廠商編號'])
         if vendor_id != "3":
@@ -36,16 +36,18 @@ async def handleSMS(data: SMSModel):
 
         async with AsyncClient() as client:
             response: Response = await client.get(url_list[vendor_id])
-            sms_id = ET.fromstring(response.text).find("msgid").text
-            print(sms_id)
+            print()
+            soup = BeautifulSoup(response.text, 'html.parser')
+            sms_id = soup.find('msgid').text if vendor_id != "3" else soup.find('msg').text
+            print(f"sms_id is {sms_id}")
 
             await client.post(
                 "https://studev.", json={
-                "student_id": data.student_id,
-                "phone": data.phone_number,
-                "title": "簡訊通知",
-                "body": data.message_content
-            })
+                    "student_id": data.student_id,
+                    "phone": data.phone_number,
+                    "title": "簡訊通知",
+                    "body": data.message_content
+                })
 
         await exec_sql(
             "commit",
