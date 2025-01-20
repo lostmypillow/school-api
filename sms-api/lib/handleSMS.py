@@ -1,4 +1,4 @@
-from database.async_operations import fetch_one_sql, commit_sql
+from database.async_operations import exec_sql
 import random
 import xml.etree.ElementTree as ET
 from .sms_model import SMSModel
@@ -19,9 +19,13 @@ async def handleSMS(data: SMSModel):
     }
 
     try:
-        preferred_vendor = await fetch_one_sql("get_specified_vendor", phone_number=data.phone_number)
+        preferred_vendor = await exec_sql(
+            "one",
+            "get_specified_vendor",
+            phone_number=data.phone_number)
+        
         vendor_id = str(random.randint(
-            1, 3) if preferred_vendor is None else preferred_vendor.限定廠商編號)
+            1, 3) if preferred_vendor is None else preferred_vendor['限定廠商編號'])
         if vendor_id != "3":
             if len(data.message_content) >= 7:
                 url_list[vendor_id] += "&longsms=Y"
@@ -35,14 +39,16 @@ async def handleSMS(data: SMSModel):
             sms_id = ET.fromstring(response.text).find("msgid").text
             print(sms_id)
 
-            await client.post("https://studev.", json={
+            await client.post(
+                "https://studev.", json={
                 "student_id": data.student_id,
                 "phone": data.phone_number,
                 "title": "簡訊通知",
                 "body": data.message_content
             })
 
-        await commit_sql(
+        await exec_sql(
+            "commit",
             "insert_record",
             student_id=data.student_id,
             recipient=data.recipient,
