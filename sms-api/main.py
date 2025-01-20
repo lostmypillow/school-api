@@ -25,30 +25,30 @@ app = FastAPI(
     )
 
 
-@app.post("/sms")
-async def send_sms(
-    sms_request: SMSModel,
-    background_tasks: BackgroundTasks
-) -> str:
-    """Original SMS endpoint. (Unused)
+# @app.post("/sms")
+# async def send_sms(
+#     sms_request: SMSModel,
+#     background_tasks: BackgroundTasks
+# ) -> str:
+#     """Original SMS endpoint. (Unused)
 
-    Parameters
-    ----------
-    sms_request : SMSModel
-        Look at SMSModel at the bottom of the docs page for more info.
+#     Parameters
+#     ----------
+#     sms_request : SMSModel
+#         Look at SMSModel at the bottom of the docs page for more info.
 
-    background_tasks : BackgroundTasks
-        FastAPI 內建功能
+#     background_tasks : BackgroundTasks
+#         FastAPI 內建功能
 
-    Returns
-    -------
-    str
-         "sent"
-    """
+#     Returns
+#     -------
+#     str
+#          "sent"
+#     """
 
-    background_tasks.add_task(handleSMS, sms_request)
+#     background_tasks.add_task(handleSMS, sms_request)
 
-    return "sent"
+#     return "sent"
 
 
 @app.get("/sms")
