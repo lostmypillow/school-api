@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Response, HTTPException
-from database.operations import fetch_one_sql
-router = APIRouter(
+from app.database.operations import fetch_one_sql
+from app.lib.custom_logger import logger
+picture_router = APIRouter(
     prefix="/picture",
     tags=["Picture"],
 )
@@ -15,7 +16,7 @@ image_response = {
 }
 
 
-@router.get('/{role}/{id}',
+@picture_router.get('/{role}/{id}',
             responses=image_response,
             response_class=Response)
 def get_employee_image(role: str, id: str):
@@ -39,4 +40,5 @@ def get_employee_image(role: str, id: str):
         image_bytes = fetch_one_sql('picture_' + role, id=id).照片
         return Response(content=image_bytes, media_type="image/png")
     except Exception as e:
+        logger.error(f'[PIC] {e}')
         raise HTTPException(status_code=404, detail=f"Unexpected error: {e}")

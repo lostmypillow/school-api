@@ -1,18 +1,24 @@
 from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
-from routers import video, picture, auth
-from routers.video import smb_session
+from app.routers.ws import ws_router
+from app.routers.auth import auth_router
+from app.routers.picture import picture_router
+from app.routers.video import video_router
+from app.routers.ws import active_connections
 from fastapi.staticfiles import StaticFiles
+from app.lib.send_updates import send_updates
 from pydantic import BaseModel
-from database.operations import commit_sql, fetch_one_sql
-from lib.get_dep_number import get_dep_number
-from database.async_operations import async_engine, exec_sql
+from app.database.operations import commit_sql, fetch_one_sql
+from app.lib.get_dep_number import get_dep_number
+from app.database.async_operations import async_engine, exec_sql
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.interval import IntervalTrigger
 from typing import Any, Union
 import asyncio
-
+import logging
+import uvicorn
+from app.lib.custom_logger import logger
 
 class SeatInfo(BaseModel):
     student_id: str
@@ -26,67 +32,11 @@ class SurveyInfo(BaseModel):
     dep_number: int
 
 
-async def send_updates():
 
-    # current_date = datetime.now().strftime('%Y/%m/%d')
-    # current_hour = datetime.now().hour
-    # match current_hour:
-    #     case h if 12 <= h <= 17:
-    #         current_period = 2
-    #     case h if h <= 11:
-    #         current_period = 1
-    #     case _:
-    #         current_period = 3
-
-    current_date = '2023/08/15'  # DEBUG USE
-    current_period = 1  # DEBUG USE
-
-    classes_today: list[dict[str, Any]] = await exec_sql(
-        'all',
-        'classes_today',
-        current_date=current_date,
-        current_period=current_period
-    )
-
-    # '位子'
-    class_with_seats: dict[str, Union[str, list[str]]] = await exec_sql('one', 'single_get_remaining')
-
-    # convert 位子, which is a string with a lot of commas, into a list
-    # SQ.座位號,
-    # SQ.座位
-    class_with_seats['座位'] = [
-        {"座位": seat, "號碼": seat_num}
-        for seat, seat_num in zip(
-            class_with_seats['座位'].split(','),
-            class_with_seats['座位號'].split(',')
-        )
-    ]
-
-    del class_with_seats['座位號']
-
-    data = {
-        "classes_today": classes_today,
-        "class_with_seats": class_with_seats
-    }
-
-    if 'client' in active_connections:
-        await active_connections['client'].send_json(data)
-
-    print(data)
-    print("meow")
-
-
-async def send_heartbeat():
-    if 'control' in active_connections:
-        await active_connections['control'].send_json(
-            {
-                "to": "control",
-                "from": "server",
-                "action": "heartbeat"
-            })
 
 
 async def lifespan(app: FastAPI):
+    logger.info('meow')
     scheduler = AsyncIOScheduler()
     scheduler.start()
     # scheduler.add_job(
@@ -95,17 +45,19 @@ async def lifespan(app: FastAPI):
     #     seconds=5
 
     # )
-
-  
+ 
     yield
     if async_engine:
         await async_engine.dispose()
+        logger.info('Disposed async SQLAlchemy Engine')
 
     if scheduler:
         scheduler.shutdown()
+        logger.info('Shut down APScheduler')
 
-    if smb_session:
-        smb_session.disconnect()
+    # if smb_session:
+    #     smb_session.disconnect()
+    #     logger.info('Disconnected SMB Session')
 
 
 app = FastAPI(
@@ -130,7 +82,10 @@ app.add_middleware(
 
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
-
+app.include_router(video_router)
+# app.include_router(picture.router)
+app.include_router(auth_router)
+app.include_router(ws_router)
 
 # @app.post('/seat')
 # def register_seat(seat_info: SeatInfo):
@@ -170,44 +125,6 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 #     except Exception as e:
 #         print(e)
 #         raise HTTPException(404, '發生錯誤')
-
-# Store connected clients
-active_connections: dict[str, WebSocket] = {}
-
-
-@app.websocket("/ws/{client_name}")
-async def websocket_endpoint(websocket: WebSocket, client_name: str):
-    await websocket.accept()
-    active_connections[client_name] = websocket
-
-    try:
-        while True:
-            data: dict = await websocket.receive_json()
-            if "to" in data:
-                recipient = data['to']
-                if recipient in active_connections:
-                    await active_connections[recipient].send_json(data)
-    except WebSocketDisconnect:
-        print(f"Client {client_name} disconnected.")
-    finally:
-        # Ensure the connection is removed from the active connections
-        active_connections.pop(client_name, None)
-        print(f"Removed {client_name} from active connections.")
-
-        # x= {
-        #     "to": "control",
-        #     "action": "request"
-        # }
-        # y = {
-        #     "to": "client",
-        #     "action": "send",
-        #     "data": "meow"
-        # }
-
-
-app.include_router(video.router)
-# app.include_router(picture.router)
-app.include_router(auth.router)
 
 
 @app.get('/test')
