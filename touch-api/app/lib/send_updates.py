@@ -1,6 +1,8 @@
 from typing import Any, Union
 from app.database.async_operations import exec_sql
 from app.routers.ws import active_connections
+
+
 async def send_updates():
 
     # current_date = datetime.now().strftime('%Y/%m/%d')
@@ -43,7 +45,14 @@ async def send_updates():
         "classes_today": classes_today,
         "class_with_seats": class_with_seats
     }
+    
 
     if active_connections:
         for con in active_connections:
-            await active_connections[con].send_json(data)
+            await active_connections[con].send_json(
+                {
+                    "from": "server",
+                    "action": "update class",
+                    "message": data
+                }
+            )

@@ -18,6 +18,7 @@ from typing import Any, Union
 import asyncio
 import logging
 import uvicorn
+from app.lib.sync import sync
 from app.lib.custom_logger import logger
 
 class SeatInfo(BaseModel):
@@ -39,12 +40,13 @@ async def lifespan(app: FastAPI):
     logger.info('meow')
     scheduler = AsyncIOScheduler()
     scheduler.start()
-    # scheduler.add_job(
-    #     send_updates,
-    #     "interval",
-    #     seconds=5
+    await sync()
+    scheduler.add_job(
+        send_updates,
+        "interval",
+        seconds=5
 
-    # )
+    )
  
     yield
     if async_engine:

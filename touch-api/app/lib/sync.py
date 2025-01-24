@@ -7,6 +7,7 @@ from app.lib.list_local import list_local, local_dir
 import os
 from pathlib import Path
 from time import perf_counter
+from app.lib.create_cycler import create_cycler
 SMB_SERVER = os.getenv('SMB_SERVER')
 SMB_USERNAME = os.getenv('SMB_USERNAME')
 SMB_PASSWORD = os.getenv('SMB_PASSWORD')
@@ -15,10 +16,11 @@ SMB_PASSWORD = os.getenv('SMB_PASSWORD')
 smb_dir = f"\\\\{SMB_SERVER}\\\\"
 
 
-video_queue: list[dict] = []
-
+video_queue: list = []
+get_next_vid = None
 async def sync():
     global active_connections
+    global video_queue
     start = perf_counter()
     smb_session = smb.register_session(SMB_SERVER, username=SMB_USERNAME, password=SMB_PASSWORD) 
     smb_files = [
@@ -56,13 +58,16 @@ async def sync():
     
     smb_session.disconnect()
 
+    for video in list_local():
+        video_queue.append(video)
+
     if active_connections:
         for client in active_connections:
             await active_connections[client].send_json({
                 "from": "server",
-                "to": "all",
-                "action": "update queue",
-                "data": list_local()
+                "action": "sync",
+                "message": video_queue
             })
+    
     stop = perf_counter()
     logger.info(f'[LOCAL SYNC] Done in {stop-start}s')
