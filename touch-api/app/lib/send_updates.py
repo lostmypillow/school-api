@@ -51,7 +51,6 @@ async def send_updates():
         for con in active_connections:
             await active_connections[con].send_json(
                 {
-                    "from": "server",
                     "action": "update class",
                     "message": data
                 }
