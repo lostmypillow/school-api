@@ -5,6 +5,7 @@ from app.lib.auth_operations import check_existence, check_match, check_already_
 
 from app.database.async_operations import exec_sql
 from app.lib.custom_logger import logger
+from app.lib.get_class_with_seats import get_class_with_seats
 auth_router = APIRouter(
     prefix="/auth",
     tags=["Auth"],
@@ -29,8 +30,6 @@ class AuthData(BaseModel):
         not to be confused with python types, either 'seats' or 'survey'
     """
     student_id: str
-    course: str
-    course_num: int
     type: Literal['seats', 'survey']
 
 
@@ -101,9 +100,10 @@ async def authorize_student(auth_data: AuthData) -> AuthResponse:
             #         "班別": ""
             #     }
             # ]
+            class_with_seat = await get_class_with_seats()
 
             matches_course: bool = any(
-                d['班別'] == auth_data.course
+                d['班別'] == class_with_seat['班別']
                 for d in courses_of_student
             )
 
@@ -113,11 +113,13 @@ async def authorize_student(auth_data: AuthData) -> AuthResponse:
                 f'''[AUTH {auth_data.student_id}] Student s courses match course for seats'''
             )
 
+            
+
             check_already_selected: list = await exec_sql(
                 'all',
                 'student_already_selected',
-                course_id=4,
-                student_id='30003'
+                course_id=class_with_seat['主檔號'],
+                student_id=auth_data.student_id
             )
             # OUTPUT:
             # [
@@ -227,3 +229,70 @@ async def authorize_student(auth_data: AuthData) -> AuthResponse:
         logger.error(f'[AUTH {auth_data.student_id}] {e}')
 
         raise HTTPException(404, "發生錯誤")
+# {
+#   "學號": "",
+#   "姓名": "",
+#   "性別": "男",
+#   "rateable_employees": [
+#     {
+#       "學號": "",
+#       "姓名": "",
+#       "主要部門": 
+#     },
+#     {
+#       "學號": "",
+#       "姓名": "",
+#       "主要部門": 
+#     },
+#     {
+#       "學號": "",
+#       "姓名": "",
+#       "主要部門": 
+#     },
+#     {
+#       "學號": "",
+#       "姓名": "",
+#       "主要部門": 
+#     },
+#     {
+#       "學號": "",
+#       "姓名": "",
+#       "主要部門": ""
+#     },
+#     {
+#       "學號": "",
+#       "姓名": "",
+#       "主要部門": 
+#     },
+#     {
+#       "學號": "",
+#       "姓名": "",
+#       "主要部門": 
+#     },
+#     {
+#       "學號": "",
+#       "姓名": "",
+#       "主要部門": 
+#     },
+#     {
+#       "學號": "",
+#       "姓名": "",
+#       "主要部門": 
+#     },
+#     {
+#       "學號": "",
+#       "姓名": "",
+#       "主要部門": 
+#     },
+#     {
+#       "學號": "",
+#       "姓名": "",
+#       "主要部門": 
+#     },
+#     {
+#       "學號": "",
+#       "姓名": "",
+#       "主要部門": 
+#     }
+#   ]
+# }

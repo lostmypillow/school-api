@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Response, HTTPException
-from app.database.operations import fetch_one_sql
+from app.database.async_operations import exec_sql
 from app.lib.custom_logger import logger
+from typing import Literal
 picture_router = APIRouter(
     prefix="/picture",
     tags=["Picture"],
@@ -19,26 +20,21 @@ image_response = {
 @picture_router.get('/{role}/{id}',
             responses=image_response,
             response_class=Response)
-def get_employee_image(role: str, id: str):
-    """_summary_
+async def get_image(role: Literal['employee', 'student'], id: str):
+    """Gets an image of either an employee or a student
 
     Parameters
     ----------
-    role : str
-        _description_
+    role : Literal[&#39;employee&#39;, &#39;student&#39;]
+        Either 'employee' or 'student'
     id : str
-        _description_
-    
-    Returns
-    -------
-    Response
-        A custom FastAPI Response class with media_type as PNG
-
+        ID of either employee or student
     """
     # def GetTodayEmployeePhotoByID(self, id):
     try:
-        image_bytes = fetch_one_sql('picture_' + role, id=id).照片
+        image_data = await exec_sql('one', 'picture_' + role, id=id)
+        image_bytes = image_data['照片']
         return Response(content=image_bytes, media_type="image/png")
     except Exception as e:
         logger.error(f'[PIC] {e}')
-        raise HTTPException(status_code=404, detail=f"Unexpected error: {e}")
+        raise HTTPException(404, 'Image not found')

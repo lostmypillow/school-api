@@ -7,7 +7,6 @@ from app.routers.picture import picture_router
 from app.routers.video import video_router
 from app.routers.ws import active_connections
 from fastapi.staticfiles import StaticFiles
-from app.lib.send_updates import send_updates
 from pydantic import BaseModel
 from app.database.operations import commit_sql, fetch_one_sql
 from app.lib.get_dep_number import get_dep_number
@@ -15,15 +14,14 @@ from app.database.async_operations import async_engine, exec_sql
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.interval import IntervalTrigger
 from typing import Any, Union
-import asyncio
-import logging
-import uvicorn
+from app.lib.get_class_with_seats import get_class_with_seats
+from app.lib.get_classes_today import get_classes_today
 from app.routers.video import sync
 from app.lib.custom_logger import logger
 
-class SeatInfo(BaseModel):
-    student_id: str
-    sn: int
+class RegisterSeat(BaseModel):
+    學號: str
+    號碼: int
 
 
 class SurveyInfo(BaseModel):
@@ -32,6 +30,19 @@ class SurveyInfo(BaseModel):
     rating: int
     dep_number: int
 
+
+async def send_updates():
+    if active_connections:
+        for con in active_connections:
+            await active_connections[con].send_json(
+                {
+                    "action": "update class",
+                    "message": {
+                        "classes_today": await get_classes_today(),
+                        "class_with_seats": await get_class_with_seats()
+                    }
+                }
+            )
 
 
 
@@ -85,33 +96,34 @@ app.add_middleware(
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
 app.include_router(video_router)
-# app.include_router(picture.router)
+app.include_router(picture_router)
 app.include_router(auth_router)
 app.include_router(ws_router)
 
-# @app.post('/seat')
-# def register_seat(seat_info: SeatInfo):
-#     """_summary_
+@app.post('/seat')
+async def register_seat(seat_info: RegisterSeat):
+    """_summary_
 
-#     Parameters
-#     ----------
-#     seat_info : SeatInfo
-#         _description_
+    Parameters
+    ----------
+    seat_info : SeatInfo
+        _description_
 
-#     Raises
-#     ------
-#     HTTPException
-#         _description_
-#     """
-#     try:
-#         commit_sql(
-#             'student/register_seat',
-#             student_id=seat_info.student_id,
-#             sn=seat_info.sn
-#         )
-#     except Exception as e:
-#         print(e)
-#         raise HTTPException(404, '發生錯誤')
+    Raises
+    ------
+    HTTPException
+        _description_
+    """
+    try:
+        await exec_sql(
+            'commit',
+            'register_seat',
+            student_id=seat_info. 學號,
+            sn=seat_info.號碼
+        )
+    except Exception as e:
+        logger.error(f'[SEAT] {e}')
+        raise HTTPException(404, '發生錯誤')
 
 
 # @app.post('/rate')
