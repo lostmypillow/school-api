@@ -25,6 +25,17 @@ async def send_updates():
         current_period=current_period
     )
 
+    classroom_map = [
+        ,
+        ,
+        ,
+        ,
+        
+    ]
+    for c in classes_today:
+        c['教室'] = classroom_map[c['教室'] - 1]
+
+
     # '位子'
     class_with_seats: dict[str, Union[str, list[str]]] = await exec_sql('one', 'single_get_remaining')
 
@@ -39,7 +50,17 @@ async def send_updates():
         )
     ]
 
+    class_with_seats['男座位'] = []
+    class_with_seats['女座位'] = []
+    for seat in class_with_seats['座位']:
+        if int(seat["座位"][-2:]) <= 15:
+            class_with_seats['女座位'].append(seat)
+        else:
+            class_with_seats['男座位'].append(seat)
+            
+    del class_with_seats['座位']
     del class_with_seats['座位號']
+
 
     data = {
         "classes_today": classes_today,

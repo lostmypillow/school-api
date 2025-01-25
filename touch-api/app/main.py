@@ -41,12 +41,12 @@ async def lifespan(app: FastAPI):
     scheduler = AsyncIOScheduler()
     scheduler.start()
     await sync()
-    # scheduler.add_job(
-    #     send_updates,
-    #     "interval",
-    #     seconds=5
+    scheduler.add_job(
+        send_updates,
+        "interval",
+        seconds=5
 
-    # )
+    )
  
     yield
     if async_engine:
@@ -131,32 +131,154 @@ app.include_router(ws_router)
 
 @app.get('/test')
 async def test():
-    deps = {
-        : 2,
-        "": 4,
-        : 8,
-        : 9,
-        : 11
-    }
+    class_with_seats: dict[str, Union[str, list[str]]] = await exec_sql('one', 'single_get_remaining')
 
-    emp_working_today = await exec_sql(
-        'all',
-        'student_today_employees',
-        current_date='2020-09-16'
-    )
-    for employee in emp_working_today:
-        if "學號" in employee:
-            employee['學號'] = employee['學號'].strip()
-        #
-        if '主要部門' in employee:
-            employee['主要部門'] = next(
-                (k for k, v in deps.items() if v == employee['主要部門']), None)
+    # convert 位子, which is a string with a lot of commas, into a list
+    # SQ.座位號,
+    # SQ.座位
+    class_with_seats['座位'] = [
+        {"座位": seat, "號碼": seat_num}
+        for seat, seat_num in zip(
+            class_with_seats['座位'].split(','),
+            class_with_seats['座位號'].split(',')
+        )
+    ]
 
-    voted_emp_week = await exec_sql(
-        'all',
-        'student_voted_employees',
-        monday='2020-12-15 00:00:00.000',
-        student_id=''
-    )
+    class_with_seats['男座位'] = []
+    class_with_seats['女座位'] = []
+    for seat in class_with_seats['座位']:
+        if int(seat["座位"][-2:]) <= 15:
+            class_with_seats['女座位'].append(seat)
+        else:
+            class_with_seats['男座位'].append(seat)
+            
+    del class_with_seats['座位']
+    del class_with_seats['座位號']
 
-    return [y for y in emp_working_today if y['學號'] not in {x['評分對象'] for x in voted_emp_week}]
+    return class_with_seats
+
+
+
+# {
+#   "主檔號": 4,
+#   "班級名稱": "",
+#   "班別": "",
+#   "座位": [
+#     {
+#       "座位": "A09",
+#       "號碼": "55154"
+#     },
+#     {
+#       "座位": "A13",
+#       "號碼": "55155"
+#     },
+#     {
+#       "座位": "A15",
+#       "號碼": "55156"
+#     },
+#     {
+#       "座位": "B08",
+#       "號碼": "55157"
+#     },
+#     {
+#       "座位": "B11",
+#       "號碼": "55158"
+#     },
+#     {
+#       "座位": "B15",
+#       "號碼": "55159"
+#     },
+#     {
+#       "座位": "C11",
+#       "號碼": "55160"
+#     },
+#     {
+#       "座位": "D10",
+#       "號碼": "55161"
+#     },
+#     {
+#       "座位": "E09",
+#       "號碼": "55162"
+#     },
+#     {
+#       "座位": "E11",
+#       "號碼": "55163"
+#     },
+#     {
+#       "座位": "G09",
+#       "號碼": "55164"
+#     },
+#     {
+#       "座位": "G14",
+#       "號碼": "55165"
+#     },
+#     {
+#       "座位": "H10",
+#       "號碼": "55166"
+#     },
+#     {
+#       "座位": "I15",
+#       "號碼": "55167"
+#     },
+#     {
+#       "座位": "I13",
+#       "號碼": "55168"
+#     },
+#     {
+#       "座位": "A22",
+#       "號碼": "55170"
+#     },
+#     {
+#       "座位": "B21",
+#       "號碼": "55171"
+#     },
+#     {
+#       "座位": "B23",
+#       "號碼": "55172"
+#     },
+#     {
+#       "座位": "B18",
+#       "號碼": "55173"
+#     },
+#     {
+#       "座位": "D22",
+#       "號碼": "55174"
+#     },
+#     {
+#       "座位": "E22",
+#       "號碼": "55175"
+#     },
+#     {
+#       "座位": "F18",
+#       "號碼": "55176"
+#     },
+#     {
+#       "座位": "F23",
+#       "號碼": "55177"
+#     },
+#     {
+#       "座位": "H17",
+#       "號碼": "55178"
+#     },
+#     {
+#       "座位": "H21",
+#       "號碼": "55179"
+#     },
+#     {
+#       "座位": "I20",
+#       "號碼": "55180"
+#     },
+#     {
+#       "座位": "I22",
+#       "號碼": "55181"
+#     },
+#     {
+#       "座位": "J18",
+#       "號碼": "55182"
+#     },
+#     {
+#       "座位": "J22",
+#       "號碼": "55183"
+#     }
+#   ]
+# }

@@ -19,7 +19,8 @@ async def websocket_endpoint(websocket: WebSocket, client_name: str):
     global client_online
     await websocket.accept()
     active_connections[client_name] = websocket
-    await active_connections['control'].send_json({
+    if 'control' in active_connections:
+        await active_connections['control'].send_json({
                 "action": "update queue",
                 "message": list_local()
             })
