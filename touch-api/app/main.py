@@ -1,6 +1,5 @@
 from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import StreamingResponse
 from app.routers.ws import ws_router
 from app.routers.auth import auth_router
 from app.routers.picture import picture_router
@@ -8,7 +7,6 @@ from app.routers.video import video_router
 from app.routers.ws import active_connections
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
-from app.database.operations import commit_sql, fetch_one_sql
 from app.lib.get_dep_number import get_dep_number
 from app.database.async_operations import async_engine, exec_sql
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
@@ -18,6 +16,8 @@ from app.lib.get_class_with_seats import get_class_with_seats
 from app.lib.get_classes_today import get_classes_today
 from app.routers.video import sync
 from app.lib.custom_logger import logger
+from dotenv import load_dotenv
+load_dotenv()
 
 class RegisterSeat(BaseModel):
     學號: str
@@ -45,10 +45,7 @@ async def send_updates():
             )
 
 
-
-
 async def lifespan(app: FastAPI):
-    logger.info('meow')
     scheduler = AsyncIOScheduler()
     scheduler.start()
     await sync()
@@ -56,17 +53,16 @@ async def lifespan(app: FastAPI):
         send_updates,
         "interval",
         seconds=5
-
     )
- 
+
     yield
     if async_engine:
         await async_engine.dispose()
-        logger.info('Disposed async SQLAlchemy Engine')
+        logger.info('[SHUTDOWN] Disposed async SQLAlchemy Engine')
 
     if scheduler:
         scheduler.shutdown()
-        logger.info('Shut down APScheduler')
+        logger.info('[SHUTDOWN] Shut down APScheduler')
 
     # if smb_session:
     #     smb_session.disconnect()
@@ -74,14 +70,8 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(
-
-
-    lifespan=lifespan,
-
-    # Here I define the title. This is purely cosmetic, and so you know which application's Swagger Doc you're looking at when you visit the "/docs" endpoint
-    title="觸控螢幕 API /  API",
-
-    # Version is also arbitrary. I wasn't keeping track, and we (Gitea) don't have semantic versioning. I follow the ZeroVer convention by keeping the version number under (and never reaching) 1.0.0
+    lifespan=lifespan, 
+    title="觸控螢幕 API /  API",  
     version="0.1.0"
 )
 
@@ -93,12 +83,13 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-
+app.mount("/dash", StaticFiles(directory="public", html=True), name="dashboard")
 app.mount("/static", StaticFiles(directory="static"), name="static")
 app.include_router(video_router)
 app.include_router(picture_router)
 app.include_router(auth_router)
 app.include_router(ws_router)
+
 
 @app.post('/seat')
 async def register_seat(seat_info: RegisterSeat):
@@ -125,20 +116,27 @@ async def register_seat(seat_info: RegisterSeat):
         logger.error(f'[SEAT] {e}')
         raise HTTPException(404, '發生錯誤')
 
-
-# @app.post('/rate')
-# def rate_employee(survey_info: SurveyInfo):
-#     try:
-#         commit_sql(
-#             'rate_employee',
-#             student_id=survey_info.student_id,
-#             department=get_dep_number(survey_info.employee_id),
-#             employee_id=survey_info.employee_id,
-#             rank=survey_info.rating
-#         )
-#     except Exception as e:
-#         print(e)
-#         raise HTTPException(404, '發生錯誤')
+# TODO Test rating at API level
+# TODO Then test rating at app level
+@app.post('/rate')
+async def rate_employee(survey_info: SurveyInfo):
+    try:
+        dep_number = int(await exec_sql(
+                'one',
+                'get_dep_number',
+                employee_id=survey_info.employee_id
+            )['主要部門'])
+        await exec_sql(
+            'commit',
+            'rate_employee',
+            student_id=survey_info.student_id,
+            department=dep_number,
+            employee_id=survey_info.employee_id,
+            rating=survey_info.rating
+        )
+    except Exception as e:
+        logger.error(f'[RATE ERROR] {e}')
+        raise HTTPException(404, '發生錯誤')
 
 
 @app.get('/test')
@@ -163,134 +161,8 @@ async def test():
             class_with_seats['女座位'].append(seat)
         else:
             class_with_seats['男座位'].append(seat)
-            
+
     del class_with_seats['座位']
     del class_with_seats['座位號']
 
     return class_with_seats
-
-
-
-# {
-#   "主檔號": 4,
-#   "班級名稱": "",
-#   "班別": "",
-#   "座位": [
-#     {
-#       "座位": "A09",
-#       "號碼": "55154"
-#     },
-#     {
-#       "座位": "A13",
-#       "號碼": "55155"
-#     },
-#     {
-#       "座位": "A15",
-#       "號碼": "55156"
-#     },
-#     {
-#       "座位": "B08",
-#       "號碼": "55157"
-#     },
-#     {
-#       "座位": "B11",
-#       "號碼": "55158"
-#     },
-#     {
-#       "座位": "B15",
-#       "號碼": "55159"
-#     },
-#     {
-#       "座位": "C11",
-#       "號碼": "55160"
-#     },
-#     {
-#       "座位": "D10",
-#       "號碼": "55161"
-#     },
-#     {
-#       "座位": "E09",
-#       "號碼": "55162"
-#     },
-#     {
-#       "座位": "E11",
-#       "號碼": "55163"
-#     },
-#     {
-#       "座位": "G09",
-#       "號碼": "55164"
-#     },
-#     {
-#       "座位": "G14",
-#       "號碼": "55165"
-#     },
-#     {
-#       "座位": "H10",
-#       "號碼": "55166"
-#     },
-#     {
-#       "座位": "I15",
-#       "號碼": "55167"
-#     },
-#     {
-#       "座位": "I13",
-#       "號碼": "55168"
-#     },
-#     {
-#       "座位": "A22",
-#       "號碼": "55170"
-#     },
-#     {
-#       "座位": "B21",
-#       "號碼": "55171"
-#     },
-#     {
-#       "座位": "B23",
-#       "號碼": "55172"
-#     },
-#     {
-#       "座位": "B18",
-#       "號碼": "55173"
-#     },
-#     {
-#       "座位": "D22",
-#       "號碼": "55174"
-#     },
-#     {
-#       "座位": "E22",
-#       "號碼": "55175"
-#     },
-#     {
-#       "座位": "F18",
-#       "號碼": "55176"
-#     },
-#     {
-#       "座位": "F23",
-#       "號碼": "55177"
-#     },
-#     {
-#       "座位": "H17",
-#       "號碼": "55178"
-#     },
-#     {
-#       "座位": "H21",
-#       "號碼": "55179"
-#     },
-#     {
-#       "座位": "I20",
-#       "號碼": "55180"
-#     },
-#     {
-#       "座位": "I22",
-#       "號碼": "55181"
-#     },
-#     {
-#       "座位": "J18",
-#       "號碼": "55182"
-#     },
-#     {
-#       "座位": "J22",
-#       "號碼": "55183"
-#     }
-#   ]
-# }

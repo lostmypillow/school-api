@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException
 from typing import Any, Literal
 from pydantic import BaseModel
 from app.lib.auth_operations import check_existence, check_match, check_already_selected, check_rateable_employees
-
+import os
 from app.database.async_operations import exec_sql
 from app.lib.custom_logger import logger
 from app.lib.get_class_with_seats import get_class_with_seats
@@ -19,13 +19,13 @@ class AuthData(BaseModel):
     ----------
     student_id : str
         Student ID
-    
+
     course: str
         班別
-    
+
     course_num: int
         主檔號
-    
+
     type: Literal['seats', 'survey']
         not to be confused with python types, either 'seats' or 'survey'
     """
@@ -41,11 +41,12 @@ class AuthResponse(BaseModel):
 
 
 {
-  "student_id": "",
-  "course": "",
-  "course_num": 4,
-  "type": "survey"
+    "student_id": "",
+    "course": "",
+    "course_num": 4,
+    "type": "survey"
 }
+
 
 @auth_router.post('/')
 async def authorize_student(auth_data: AuthData) -> AuthResponse:
@@ -66,6 +67,74 @@ async def authorize_student(auth_data: AuthData) -> AuthResponse:
     HTTPException
         See router/auth.py for all HTTPException triggers.
     """
+    if os.getenv('DEBUG') == 'True':
+        return {
+            "學號": "",
+            "姓名": "",
+            "性別": "男",
+            "rateable_employees": [
+                {
+                    "學號": "",
+                    "姓名": "",
+                    "主要部門": 
+                },
+                {
+                    "學號": "",
+                    "姓名": "",
+                    "主要部門": 
+                },
+                {
+                    "學號": "",
+                    "姓名": "",
+                    "主要部門": 
+                },
+                {
+                    "學號": "",
+                    "姓名": "",
+                    "主要部門": 
+                },
+                {
+                    "學號": "",
+                    "姓名": "",
+                    "主要部門": ""
+                },
+                {
+                    "學號": "",
+                    "姓名": "",
+                    "主要部門": 
+                },
+                {
+                    "學號": "",
+                    "姓名": "",
+                    "主要部門": 
+                },
+                {
+                    "學號": "",
+                    "姓名": "",
+                    "主要部門": 
+                },
+                {
+                    "學號": "",
+                    "姓名": "",
+                    "主要部門": 
+                },
+                {
+                    "學號": "",
+                    "姓名": "",
+                    "主要部門": 
+                },
+                {
+                    "學號": "",
+                    "姓名": "",
+                    "主要部門": 
+                },
+                {
+                    "學號": "",
+                    "姓名": "",
+                    "主要部門": 
+                }
+            ]
+        }
     logger.info(f'[AUTH {auth_data.student_id}] Processing auth data...')
 
     try:
@@ -112,8 +181,6 @@ async def authorize_student(auth_data: AuthData) -> AuthResponse:
                 if matches_course else
                 f'''[AUTH {auth_data.student_id}] Student s courses match course for seats'''
             )
-
-            
 
             check_already_selected: list = await exec_sql(
                 'all',
@@ -209,12 +276,13 @@ async def authorize_student(auth_data: AuthData) -> AuthResponse:
                 logger.error(f'[AUTH {auth_data.student_id}] 目前沒有可評分的員工')
 
                 raise HTTPException(404, "目前沒有可評分的員工")
-            
+
             else:
 
                 auth_response.rateable_employees = rateable_employees
 
-                logger.info(f'[AUTH {auth_data.student_id}] Success! Returned data!')
+                logger.info(
+                    f'[AUTH {auth_data.student_id}] Success! Returned data!')
 
                 return auth_response
 
@@ -229,70 +297,3 @@ async def authorize_student(auth_data: AuthData) -> AuthResponse:
         logger.error(f'[AUTH {auth_data.student_id}] {e}')
 
         raise HTTPException(404, "發生錯誤")
-# {
-#   "學號": "",
-#   "姓名": "",
-#   "性別": "男",
-#   "rateable_employees": [
-#     {
-#       "學號": "",
-#       "姓名": "",
-#       "主要部門": 
-#     },
-#     {
-#       "學號": "",
-#       "姓名": "",
-#       "主要部門": 
-#     },
-#     {
-#       "學號": "",
-#       "姓名": "",
-#       "主要部門": 
-#     },
-#     {
-#       "學號": "",
-#       "姓名": "",
-#       "主要部門": 
-#     },
-#     {
-#       "學號": "",
-#       "姓名": "",
-#       "主要部門": ""
-#     },
-#     {
-#       "學號": "",
-#       "姓名": "",
-#       "主要部門": 
-#     },
-#     {
-#       "學號": "",
-#       "姓名": "",
-#       "主要部門": 
-#     },
-#     {
-#       "學號": "",
-#       "姓名": "",
-#       "主要部門": 
-#     },
-#     {
-#       "學號": "",
-#       "姓名": "",
-#       "主要部門": 
-#     },
-#     {
-#       "學號": "",
-#       "姓名": "",
-#       "主要部門": 
-#     },
-#     {
-#       "學號": "",
-#       "姓名": "",
-#       "主要部門": 
-#     },
-#     {
-#       "學號": "",
-#       "姓名": "",
-#       "主要部門": 
-#     }
-#   ]
-# }

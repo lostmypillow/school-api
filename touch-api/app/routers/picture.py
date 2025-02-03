@@ -7,19 +7,17 @@ picture_router = APIRouter(
     tags=["Picture"],
 )
 
-image_response = {
-    200: {
-        "content":
-        {
-            "image/png": {}
-        }
-    }
-}
-
 
 @picture_router.get('/{role}/{id}',
-            responses=image_response,
-            response_class=Response)
+                    responses={
+                        200: {
+                            "content":
+                            {
+                                "image/png": {}
+                            }
+                        }
+                    },
+                    response_class=Response)
 async def get_image(role: Literal['employee', 'student'], id: str):
     """Gets an image of either an employee or a student
 

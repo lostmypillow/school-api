@@ -2,23 +2,20 @@
 
 # Exit on error
 set -e
-APP_DIR="$(pwd)"
-SERVICE_NAME="fastapi"
-DISTRO=$(lsb_release -is)
+APP_DIR="$(pwd)/backend"
+SERVICE_NAME="touchscreen"
+PORT="8002"
 
 
-echo "SETUP [Update system]"
+echo "SETUP [Updating system...]"
 sudo apt-get update -y >/dev/null
 echo "ok"
 
-echo "SETUP [Ensure necessary packages are installed]"
+echo "SETUP [Ensuring necessary packages are installed...]"
 sudo apt-get install -y python3-venv python3-pip wget curl gnupg nginx >/dev/null
-
 curl -sSL -O https://packages.microsoft.com/config/ubuntu/24.04/packages-microsoft-prod.deb
-sudo dpkg -i packages-microsoft-prod.deb
-rm packages-microsoft-prod.deb
-
-# Install the driver
+sudo dpkg -i packages-microsoft-prod.deb >/dev/null
+rm packages-microsoft-prod.deb >/dev/null
 sudo apt-get update -y >/dev/null
 sudo ACCEPT_EULA=Y apt-get install -y msodbcsql18 >/dev/null
 sudo ACCEPT_EULA=Y apt-get install -y mssql-tools18 >/dev/null
@@ -27,19 +24,20 @@ source ~/.bashrc
 sudo apt-get install -y unixodbc-dev >/dev/null
 echo "ok"
 
-echo "SETUP [Ensure virtual environment is enabled]"
+echo "SETUP [Enabling virtual environment...]"
 if [ ! -d "$APP_DIR/.venv" ]; then
     python3 -m venv "$APP_DIR/.venv" >/dev/null
 fi
 source "$APP_DIR/.venv/bin/activate"
 echo "ok"
 
-echo "SETUP [Install Python requirements]"
+echo "SETUP [Installing Python requirements...]"
 pip install -r "$APP_DIR/requirements.txt" >/dev/null
-pip install gunicorn
+# Gunicorn is installed only in deployment. This is becuz gunicorn doesn't work in Windows, where most of the dev work happens
+pip install gunicorn >/dev/null
 echo "ok"
 
-echo "SETUP [Register as systemd service and start it]"
+echo "SETUP [Registering as systemd service and starting the service...]"
 SERVICE_FILE="/etc/systemd/system/$SERVICE_NAME.service"
 sudo bash -c "cat > $SERVICE_FILE" <<EOL
 [Unit]
@@ -49,14 +47,13 @@ After=network.target
 [Service]
 User=$USER
 WorkingDirectory=$APP_DIR
-ExecStart=$APP_DIR/.venv/bin/gunicorn --bind 0.0.0.0:8000 -k uvicorn.workers.UvicornWorker main:app
+ExecStart=$APP_DIR/.venv/bin/gunicorn --bind 0.0.0.0:$PORT -k uvicorn.workers.UvicornWorker main:app
 Restart=always
 Environment=PYTHONUNBUFFERED=1
 
 [Install]
 WantedBy=multi-user.target
 EOL
-
 
 echo "RUN [Starting FastAPI systemd service...]"
 sudo systemctl daemon-reload
@@ -70,6 +67,6 @@ else
 fi
 
 
-echo "[DONE!] Access  API at http://$(hostname -I | awk '{print $1}')"
+echo "[DONE!] Access  API at http://$(hostname -I | awk '{print $1}'):$PORT"
 
 exit 0

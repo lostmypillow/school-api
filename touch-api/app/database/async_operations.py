@@ -1,8 +1,10 @@
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
+from sqlalchemy.exc import InterfaceError
 from sqlalchemy import text, URL
 import pathlib
 from os import getenv, path
 from dotenv import load_dotenv
+from app.lib.custom_logger import logger
 import pyodbc
 from typing import Literal
 
@@ -25,12 +27,18 @@ connection_url = URL.create(
 
 
 # Creating the SQLAlchemy async engine and sessionmaker
+
+
 async_engine = create_async_engine(
-    connection_url,
-    pool_size=100,
-    max_overflow=0,
-    pool_pre_ping=True,
-)
+        connection_url,
+        pool_size=100,
+        max_overflow=0,
+        pool_pre_ping=True,
+    )
+   
+async_engine = None
+
+
 
 # Define an async session maker
 create_session = async_sessionmaker(

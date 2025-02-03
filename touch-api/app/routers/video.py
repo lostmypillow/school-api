@@ -21,7 +21,6 @@ from typing import Iterable
 from pathlib import Path
 from dotenv import load_dotenv
 
-load_dotenv()
 
 local_dir = Path(__file__).resolve().parent.parent.parent / "static"
 
@@ -29,7 +28,7 @@ local_dir = Path(__file__).resolve().parent.parent.parent / "static"
 SMB_SERVER = os.getenv('SMB_SERVER')
 SMB_USERNAME = os.getenv('SMB_USERNAME')
 SMB_PASSWORD = os.getenv('SMB_PASSWORD')
-smb_dir = f"\\\\{SMB_SERVER}\\\\"
+smb_dir = f"\\\\{SMB_SERVER}{os.getenv('SMB_FOLDER')}"
 
 
 video_queue: list = []
@@ -37,8 +36,10 @@ video_queue: list = []
 # This is a function
 get_next_vid = None
 
+
 def list_local():
     return [f for f in os.listdir(local_dir) if os.path.isfile(os.path.join(local_dir, f))]
+
 
 def create_cycler(iterable: list):
     cycler: cycle = cycle(iterable)
@@ -53,57 +54,58 @@ async def sync():
     global video_queue
     global get_next_vid
     start = perf_counter()
-    smb_session = smb.register_session(SMB_SERVER, username=SMB_USERNAME, password=SMB_PASSWORD) 
+    smb_session = smb.register_session(
+        SMB_SERVER, username=SMB_USERNAME, password=SMB_PASSWORD)
     smb_files = [
         file.smb_info._asdict()
         for file in smb.scandir(smb_dir)
         if file.name.endswith('.mp4')
     ]
     local_files = list_local()
-    logger.info('[SYNC] Task starting')
+    # logger.info('[SYNC] Task starting')
 
-    logger.info(f"[SMB -> LOCAL] Syncing new files from SMB to local...")
+    # logger.info(f"[SMB -> LOCAL] Syncing new files from SMB to local...")
     for file in smb_files:
         if file['file_name'] not in local_files:
-            logger.info(f"[SMB -> LOCAL] {file['file_name']} does not exist")
+            # logger.info(f"[SMB -> LOCAL] {file['file_name']} does not exist")
             with smb.open_file(f"{smb_dir}\\{file['file_name']}", mode="rb") as smb_file:
                 with open(f"{local_dir}\\{file['file_name']}", mode="wb") as local_file:
                     local_file.write(smb_file.read())
-                    logger.info(
-                        f"[SMB -> LOCAL] Saved file at {local_dir /  file['file_name']}")
+                    # logger.info(
+                    #     f"[SMB -> LOCAL] Saved file at {local_dir /  file['file_name']}")
 
-        else:
-            logger.info(f"[SMB -> LOCAL] {file['file_name']} exists. Skipping!")
+        # else:
+        #     logger.info(f"[SMB -> LOCAL] {file['file_name']} exists. Skipping!")
     stop = perf_counter()
-    start = perf_counter() 
     logger.info(f'[SMB -> LOCAL] Done in {stop-start}s')
-    logger.info("[LOCAL SYNC] Checking if local files need to be deleted...")
+    start = perf_counter()
+    # logger.info("[LOCAL SYNC] Checking if local files need to be deleted...")
     for local_file in local_files:
         # If local file not present in smb
         if not any(d.get('file_name') == local_file for d in smb_files):
-            logger.info(
-                f'[LOCAL SYNC] Removing file not present on SMB {local_dir /  local_file}')
+            # logger.info(
+            #     f'[LOCAL SYNC] Removing file not present on SMB {local_dir /  local_file}')
             os.remove(local_dir / local_file)
-        else:
-            logger.info(f'[LOCAL SYNC] {local_file} is present. Skipping')
-    
+        # else:
+        #     logger.info(f'[LOCAL SYNC] {local_file} is present. Skipping')
+
     smb_session.disconnect()
 
     video_queue = list_local()
 
     if active_connections:
         if 'control' in active_connections:
-            await active_connections['control'].send_json({
-                "action": "update queue",
-                "message": video_queue
-            })
-
+            await active_connections['control'].send_json(
+                {
+                    "action": "update queue",
+                    "message": video_queue
+                })
+            print('sent to ws control')
 
     get_next_vid = create_cycler(video_queue)
-    
+
     stop = perf_counter()
     logger.info(f'[LOCAL SYNC] Done in {stop-start}s')
-
 
 
 video_router = APIRouter(
@@ -112,22 +114,21 @@ video_router = APIRouter(
 )
 
 
-
-
-
 @video_router.get('/')
 def next_video():
     return get_next_vid()
-    
+
+
 @video_router.get('/queue')
 def next_video():
     return list_local()
-    
+
 
 @video_router.delete('/{filename}')
 async def remove_video(filename: str, bg_tasks: BackgroundTasks):
     try:
-        smb_session = smb.register_session(SMB_SERVER, username=SMB_USERNAME, password=SMB_PASSWORD) 
+        smb_session = smb.register_session(
+            SMB_SERVER, username=SMB_USERNAME, password=SMB_PASSWORD)
         smb.remove(f"{smb_dir}\\{filename + '.mp4'}")
         smb_session.disconnect()
         await sync()
@@ -135,14 +136,14 @@ async def remove_video(filename: str, bg_tasks: BackgroundTasks):
     except Exception as e:
         logger.info(f'[VID] {e}')
         raise HTTPException(status_code=404, detail="Failed to delete video")
-   
 
 
 @video_router.post("/")
 async def upload_video(file: UploadFile, bg_tasks: BackgroundTasks):
 
     try:
-        smb_session = smb.register_session(SMB_SERVER, username=SMB_USERNAME, password=SMB_PASSWORD) 
+        smb_session = smb.register_session(
+            SMB_SERVER, username=SMB_USERNAME, password=SMB_PASSWORD)
         with smb.open_file(f"{smb_dir}\\{file.filename}", mode="wb") as fd:
             fd.write(await file.read())
         smb_session.disconnect()
