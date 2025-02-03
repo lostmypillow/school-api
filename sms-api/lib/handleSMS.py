@@ -5,7 +5,7 @@ from .sms_model import SMSModel
 from httpx import Response, AsyncClient
 from bs4 import BeautifulSoup
 import urllib.parse
-from custom_logger import logger
+from .custom_logger import logger
 
 async def handleSMS(data: SMSModel):
     url_list: dict = {
