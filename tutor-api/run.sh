@@ -54,6 +54,7 @@ Environment=PYTHONUNBUFFERED=1
 [Install]
 WantedBy=multi-user.target
 EOL
+echo "ok"
 
 echo "RUN [Starting FastAPI systemd service...]"
 sudo systemctl daemon-reload
