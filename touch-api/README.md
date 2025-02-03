@@ -29,6 +29,8 @@ deactivate
 
 6. **READ THE DOCUMENTATION!** *All classes and functions have docstrings and/or comments.* If you wish to know how this code works, start with `main.py` in the `app` folder
 
+7. The `.gitkeep` file will be deleted when you upload into the folder, be sure to add it back before committing or else the `static` folder won't be committed to git.
+
 ## Production
 
 1. Fill out server details in .env file

@@ -21,6 +21,7 @@ from typing import Iterable
 from pathlib import Path
 from dotenv import load_dotenv
 
+load_dotenv()
 
 local_dir = Path(__file__).resolve().parent.parent.parent / "static"
 
@@ -68,8 +69,8 @@ async def sync():
     for file in smb_files:
         if file['file_name'] not in local_files:
             # logger.info(f"[SMB -> LOCAL] {file['file_name']} does not exist")
-            with smb.open_file(f"{smb_dir}\\{file['file_name']}", mode="rb") as smb_file:
-                with open(f"{local_dir}\\{file['file_name']}", mode="wb") as local_file:
+            with smb.open_file(str(Path(smb_dir) / file['file_name']), mode="rb") as smb_file:
+                with open(local_dir / file['file_name'], mode="wb") as local_file:
                     local_file.write(smb_file.read())
                     # logger.info(
                     #     f"[SMB -> LOCAL] Saved file at {local_dir /  file['file_name']}")
@@ -129,7 +130,7 @@ async def remove_video(filename: str, bg_tasks: BackgroundTasks):
     try:
         smb_session = smb.register_session(
             SMB_SERVER, username=SMB_USERNAME, password=SMB_PASSWORD)
-        smb.remove(f"{smb_dir}\\{filename + '.mp4'}")
+        smb.remove(str(Path(smb_dir) / (filename + ".mp4")))
         smb_session.disconnect()
         await sync()
         return f"{filename + '.mp4'} removed"
@@ -144,7 +145,7 @@ async def upload_video(file: UploadFile, bg_tasks: BackgroundTasks):
     try:
         smb_session = smb.register_session(
             SMB_SERVER, username=SMB_USERNAME, password=SMB_PASSWORD)
-        with smb.open_file(f"{smb_dir}\\{file.filename}", mode="wb") as fd:
+        with smb.open_file(str(Path(smb_dir) / file.filename), mode="wb") as fd:
             fd.write(await file.read())
         smb_session.disconnect()
         await sync()
