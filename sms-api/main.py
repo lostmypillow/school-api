@@ -1,11 +1,14 @@
 from fastapi import FastAPI, BackgroundTasks, HTTPException
+from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse
 from dotenv import load_dotenv
 from database.async_operations import exec_sql, async_engine
 from lib.sms_model import SMSModel
 from lib.handleSMS import handleSMS
 from lib.decode_big5 import decode_big5
-
+import markdown
+from pathlib import Path
+from lib.custom_logger import logger
 load_dotenv()
 
 
@@ -13,31 +16,42 @@ async def lifespan(app: FastAPI):
     """Disposes SQLAlchemy engine
     """
     yield
-    await async_engine.dispose()
+    if async_engine:
+        await async_engine.dispose()
 
 # Entry of the FastAPI app
 app = FastAPI(
-
-
     lifespan=lifespan,
 
-    # Here I define the title. This is purely cosmetic, and so you know which application's Swagger Doc you're looking at when you visit the "/docs" endpoint
     title="簡訊&推播系統 / SMS",
 
-    # Version is also arbitrary. I wasn't keeping track, and we (Gitea) don't have semantic versioning. I follow the ZeroVer convention by keeping the version number under (and never reaching) 1.0.0
-    version="0.1.0"
+    version="0.1.1"
 )
 
+@app.get("/", response_class=HTMLResponse)
+async def read_readme():
+    # Path to the README.md file
+    readme_path = Path(__file__).parent / "README.md"
+    
+    # Read the README.md file
+    with open(readme_path, "r", encoding="utf-8") as f:
+        readme_content = f.read()
+    
+    # Convert Markdown to HTML
+    html_content = markdown.markdown(readme_content)
+    
+    # Return the HTML response
+    return html_content
 
-@app.get("/sms")
+
+@app.get("/sms", response_class=HTMLResponse)
 async def get_send_sms(
     background_tasks: BackgroundTasks,
     student_id: str,
     recipient: str,
     phone_number: str,
     message_content: str,
-    send_time: str = None,
-    response_class=HTMLResponse
+    send_time: str = None
 ) -> str:
     """給 VB app 的 Endpoint
 
@@ -81,12 +95,12 @@ async def get_send_sms(
             send_time=send_time)
 
     except Exception as e:
-        print(e)
+        logger.error(f'[ERROR] {e}')
         raise HTTPException(404, 'Format Error')
 
     background_tasks.add_task(handleSMS, sms_request)
 
-    return HTMLResponse("""
+    return """
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -97,5 +111,4 @@ async def get_send_sms(
     <h1>Success</h1>
 </body>
 </html>
-
-""")
+"""

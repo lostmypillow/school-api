@@ -5,7 +5,7 @@ from .sms_model import SMSModel
 from httpx import Response, AsyncClient
 from bs4 import BeautifulSoup
 import urllib.parse
-
+from custom_logger import logger
 
 async def handleSMS(data: SMSModel):
     url_list: dict = {
@@ -32,14 +32,13 @@ async def handleSMS(data: SMSModel):
             if data.send_time is not None:
                 url_list[vendor_id] += f"&sendtime={data.send_time}"
 
-        print(url_list[vendor_id])
+        logger.info(url_list[vendor_id])
 
         async with AsyncClient() as client:
             response: Response = await client.get(url_list[vendor_id])
-            print()
             soup = BeautifulSoup(response.text, 'html.parser')
             sms_id = soup.find('msgid').text if vendor_id != "3" else soup.find('msg').text
-            print(f"sms_id is {sms_id}")
+            logger.info(f"sms_id is {sms_id}")
 
             await client.post(
                 "https://studev.", json={
@@ -61,4 +60,4 @@ async def handleSMS(data: SMSModel):
         )
 
     except Exception as e:
-        print(e)
+        logger.info(f'[ERROR]: {e}')
