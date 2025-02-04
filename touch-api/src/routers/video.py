@@ -1,35 +1,18 @@
-from fastapi import APIRouter, Response, UploadFile, HTTPException, BackgroundTasks
-from typing import List, Iterable
-import smbclient as smb
-from pathlib import Path
-import logging
-from pydantic import BaseModel
-from itertools import cycle
-from fastapi.responses import FileResponse
-from app.lib.custom_logger import logger
-
-# from smbclient import register_session, open_file, scandir
-import smbclient as smb
-from app.lib.active_connections import active_connections
-from app.lib.custom_logger import logger
 import os
+import smbclient as smb
+from fastapi import APIRouter, UploadFile, HTTPException
 from pathlib import Path
-from time import perf_counter
-
 from itertools import cycle
-from typing import Iterable
-from pathlib import Path
-from dotenv import load_dotenv
+from time import perf_counter
+from src.lib.custom_logger import logger
+from src.lib.active_connections import active_connections
+from src.lib.custom_logger import logger
+from src.config import settings
 
-load_dotenv()
 
 local_dir = Path(__file__).resolve().parent.parent.parent / "static"
 
-
-SMB_SERVER = os.getenv('SMB_SERVER')
-SMB_USERNAME = os.getenv('SMB_USERNAME')
-SMB_PASSWORD = os.getenv('SMB_PASSWORD')
-smb_dir = f"\\\\{SMB_SERVER}{os.getenv('SMB_FOLDER')}"
+smb_dir = f"\\\\{settings.SMB_HOST}{settings.SMB_FOLDER}"
 
 
 video_queue: list = []
@@ -56,7 +39,7 @@ async def sync():
     global get_next_vid
     start = perf_counter()
     smb_session = smb.register_session(
-        SMB_SERVER, username=SMB_USERNAME, password=SMB_PASSWORD)
+        settings.SMB_HOST, username=settings.SMB_USERNAME, password=settings.SMB_PASSWORD)
     smb_files = [
         file.smb_info._asdict()
         for file in smb.scandir(smb_dir)
@@ -126,10 +109,10 @@ def next_video():
 
 
 @video_router.delete('/{filename}')
-async def remove_video(filename: str, bg_tasks: BackgroundTasks):
+async def remove_video(filename: str):
     try:
         smb_session = smb.register_session(
-            SMB_SERVER, username=SMB_USERNAME, password=SMB_PASSWORD)
+            settings.SMB_HOST, username=settings.SMB_USERNAME, password=settings.SMB_PASSWORD)
         smb.remove(str(Path(smb_dir) / (filename + ".mp4")))
         smb_session.disconnect()
         await sync()
@@ -140,11 +123,11 @@ async def remove_video(filename: str, bg_tasks: BackgroundTasks):
 
 
 @video_router.post("/")
-async def upload_video(file: UploadFile, bg_tasks: BackgroundTasks):
+async def upload_video(file: UploadFile):
 
     try:
         smb_session = smb.register_session(
-            SMB_SERVER, username=SMB_USERNAME, password=SMB_PASSWORD)
+            settings.SMB_HOST, username=settings.SMB_USERNAME, password=settings.SMB_PASSWORD)
         with smb.open_file(str(Path(smb_dir) / file.filename), mode="wb") as fd:
             fd.write(await file.read())
         smb_session.disconnect()

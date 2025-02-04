@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Response, HTTPException
-from app.database.async_operations import exec_sql
-from app.lib.custom_logger import logger
 from typing import Literal
+from src.database.async_operations import exec_sql
+from src.lib.custom_logger import logger
 picture_router = APIRouter(
     prefix="/picture",
     tags=["Picture"],
@@ -31,6 +31,8 @@ async def get_image(role: Literal['employee', 'student'], id: str):
     # def GetTodayEmployeePhotoByID(self, id):
     try:
         image_data = await exec_sql('one', 'picture_' + role, id=id)
+        # print(type(image_data))
+        # return "ok"
         image_bytes = image_data['照片']
         return Response(content=image_bytes, media_type="image/png")
     except Exception as e:

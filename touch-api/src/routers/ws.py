@@ -1,9 +1,8 @@
-from fastapi import APIRouter, WebSocket, WebSocketDisconnect, BackgroundTasks
-from app.routers.video import  video_queue, list_local
-from pprint import pprint
-from app.lib.active_connections import active_connections
-from app.lib.custom_logger import logger
-import asyncio
+from fastapi import APIRouter, WebSocket, WebSocketDisconnect
+from src.routers.video import  video_queue, list_local
+from src.lib.active_connections import active_connections
+from src.lib.custom_logger import logger
+
 ws_router = APIRouter(
     prefix="/ws",
     tags=["Websocket / Control"],

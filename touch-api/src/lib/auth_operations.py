@@ -1,4 +1,4 @@
-from app.database.operations import fetch_one_sql, fetch_all_sql, commit_sql
+from src.database.operations import fetch_one_sql, fetch_all_sql, commit_sql
 from datetime import datetime
 
 

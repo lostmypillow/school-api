@@ -1,22 +1,23 @@
 from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
-from app.routers.ws import ws_router
-from app.routers.auth import auth_router
-from app.routers.picture import picture_router
-from app.routers.video import video_router
-from app.routers.ws import active_connections
+from src.routers.ws import ws_router
+from src.routers.auth import auth_router
+from src.routers.picture import picture_router
+from src.routers.video import video_router
+from src.routers.ws import active_connections
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
-from app.lib.get_dep_number import get_dep_number
-from app.database.async_operations import async_engine, exec_sql
+from src.lib.get_dep_number import get_dep_number
+from src.database.async_operations import async_engine, exec_sql
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.interval import IntervalTrigger
 from typing import Any, Union
-from app.lib.get_class_with_seats import get_class_with_seats
-from app.lib.get_classes_today import get_classes_today
-from app.routers.video import sync
-from app.lib.custom_logger import logger
+from src.lib.get_class_with_seats import get_class_with_seats
+from src.lib.get_classes_today import get_classes_today
+from src.routers.video import sync
+from src.lib.custom_logger import logger
 from dotenv import load_dotenv
+from src.lib.deps import deps
 load_dotenv()
 
 class RegisterSeat(BaseModel):
@@ -26,9 +27,9 @@ class RegisterSeat(BaseModel):
 
 class SurveyInfo(BaseModel):
     employee_id: str
+    employee_dep: str
     student_id: str
     rating: int
-    dep_number: int
 
 
 async def send_updates():
@@ -64,10 +65,6 @@ async def lifespan(app: FastAPI):
         scheduler.shutdown()
         logger.info('[SHUTDOWN] Shut down APScheduler')
 
-    # if smb_session:
-    #     smb_session.disconnect()
-    #     logger.info('Disconnected SMB Session')
-
 
 app = FastAPI(
     lifespan=lifespan, 
@@ -83,8 +80,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.mount("/dash", StaticFiles(directory="public", html=True), name="dashboard")
-app.mount("/static", StaticFiles(directory="static"), name="static")
+
 app.include_router(video_router)
 app.include_router(picture_router)
 app.include_router(auth_router)
@@ -109,28 +105,23 @@ async def register_seat(seat_info: RegisterSeat):
         await exec_sql(
             'commit',
             'register_seat',
-            student_id=seat_info. 學號,
+            student_id=seat_info.學號,
             sn=seat_info.號碼
         )
     except Exception as e:
         logger.error(f'[SEAT] {e}')
         raise HTTPException(404, '發生錯誤')
 
-# TODO Test rating at API level
-# TODO Then test rating at app level
+
 @app.post('/rate')
 async def rate_employee(survey_info: SurveyInfo):
+    global deps
     try:
-        dep_number = int(await exec_sql(
-                'one',
-                'get_dep_number',
-                employee_id=survey_info.employee_id
-            )['主要部門'])
         await exec_sql(
             'commit',
             'rate_employee',
             student_id=survey_info.student_id,
-            department=dep_number,
+            department=deps[survey_info.employee_dep],
             employee_id=survey_info.employee_id,
             rating=survey_info.rating
         )
@@ -166,3 +157,7 @@ async def test():
     del class_with_seats['座位號']
 
     return class_with_seats
+
+
+app.mount("/dash", StaticFiles(directory="public", html=True), name="dash")
+app.mount("/static", StaticFiles(directory="static"), name="static")

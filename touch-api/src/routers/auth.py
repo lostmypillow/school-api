@@ -1,11 +1,13 @@
 from fastapi import APIRouter, HTTPException
-from typing import Any, Literal
+from typing import  Literal
 from pydantic import BaseModel
-from app.lib.auth_operations import check_existence, check_match, check_already_selected, check_rateable_employees
-import os
-from app.database.async_operations import exec_sql
-from app.lib.custom_logger import logger
-from app.lib.get_class_with_seats import get_class_with_seats
+from datetime import datetime, timedelta
+from src.config import settings
+from src.database.async_operations import exec_sql
+from src.lib.custom_logger import logger
+from src.lib.get_class_with_seats import get_class_with_seats
+from src.lib.deps import deps
+
 auth_router = APIRouter(
     prefix="/auth",
     tags=["Auth"],
@@ -50,6 +52,7 @@ class AuthResponse(BaseModel):
 
 @auth_router.post('/')
 async def authorize_student(auth_data: AuthData) -> AuthResponse:
+    global settings
     """Authorize student and return appropriate data. See code at routers/auth.py
 
     Parameters
@@ -67,79 +70,10 @@ async def authorize_student(auth_data: AuthData) -> AuthResponse:
     HTTPException
         See router/auth.py for all HTTPException triggers.
     """
-    if os.getenv('DEBUG') == 'True':
-        return {
-            "學號": "",
-            "姓名": "",
-            "性別": "男",
-            "rateable_employees": [
-                {
-                    "學號": "",
-                    "姓名": "",
-                    "主要部門": 
-                },
-                {
-                    "學號": "",
-                    "姓名": "",
-                    "主要部門": 
-                },
-                {
-                    "學號": "",
-                    "姓名": "",
-                    "主要部門": 
-                },
-                {
-                    "學號": "",
-                    "姓名": "",
-                    "主要部門": 
-                },
-                {
-                    "學號": "",
-                    "姓名": "",
-                    "主要部門": ""
-                },
-                {
-                    "學號": "",
-                    "姓名": "",
-                    "主要部門": 
-                },
-                {
-                    "學號": "",
-                    "姓名": "",
-                    "主要部門": 
-                },
-                {
-                    "學號": "",
-                    "姓名": "",
-                    "主要部門": 
-                },
-                {
-                    "學號": "",
-                    "姓名": "",
-                    "主要部門": 
-                },
-                {
-                    "學號": "",
-                    "姓名": "",
-                    "主要部門": 
-                },
-                {
-                    "學號": "",
-                    "姓名": "",
-                    "主要部門": 
-                },
-                {
-                    "學號": "",
-                    "姓名": "",
-                    "主要部門": 
-                }
-            ]
-        }
     logger.info(f'[AUTH {auth_data.student_id}] Processing auth data...')
 
-    try:
-
-        student_details: dict[str, str] = await exec_sql(
+    
+    student_details: dict[str, str] = await exec_sql(
             'one',
             'student_details',
             card_id=auth_data.student_id
@@ -151,9 +85,9 @@ async def authorize_student(auth_data: AuthData) -> AuthResponse:
         #     "性別": "男"
         # }
 
-        auth_response = AuthResponse(**student_details)
+    auth_response = AuthResponse(**student_details)
 
-        if student_details and auth_data.type == "seats":
+    if student_details and auth_data.type == "seats":
 
             logger.info(
                 f'''[AUTH {auth_data.student_id}] Student details exist & auth is for seats''')
@@ -204,9 +138,9 @@ async def authorize_student(auth_data: AuthData) -> AuthResponse:
             already_selected: bool = False if check_already_selected == [] else True
 
             logger.info(
-                f'[AUTH {auth_data.student_id}] Student has already selected course'
+                f'[AUTH {auth_data.student_id}] Student has already selected seat for course'
                 if already_selected else
-                f'[AUTH {auth_data.student_id}] Student has not already selected course')
+                f'[AUTH {auth_data.student_id}] Student has not already selected seat for course')
 
             if not matches_course or already_selected:
 
@@ -221,24 +155,21 @@ async def authorize_student(auth_data: AuthData) -> AuthResponse:
 
                 return auth_response
 
-        elif student_details and auth_data.type == "survey":
+    elif student_details and auth_data.type == "survey":
 
             logger.info(
                 f'[AUTH {auth_data.student_id}] Student details exist and auth is for survey')
 
-            deps = {
-                : 2,
-                "": 4,
-                : 8,
-                : 9,
-                : 11
-            }
-
+            if settings.DEBUG is True:
+                 logger.info('debug mode is on')
+            else:
+                 logger.info('DEBUG mode is not on')
             emp_working_today = await exec_sql(
                 'all',
                 'student_today_employees',
                 current_date='2020-09-16'
             )
+            # TODO replace debug values: datetime.now().strftime('%Y-%m-%d')
 
             for employee in emp_working_today:
 
@@ -258,8 +189,8 @@ async def authorize_student(auth_data: AuthData) -> AuthResponse:
             voted_emp_week = await exec_sql(
                 'all',
                 'student_voted_employees',
-                monday='2020-12-15 00:00:00.000',
-                student_id=''
+                monday=(datetime.now() - timedelta(days=datetime.now().weekday())).strftime('%Y-%m-%d 00:00:00.000'),
+                student_id=auth_data.student_id
             )
 
             rateable_employees = [
@@ -270,6 +201,7 @@ async def authorize_student(auth_data: AuthData) -> AuthResponse:
                     for x in voted_emp_week
                 ]
             ]
+            print(rateable_employees)
 
             if rateable_employees == []:
 
@@ -286,14 +218,8 @@ async def authorize_student(auth_data: AuthData) -> AuthResponse:
 
                 return auth_response
 
-        else:
+    else:
 
             logger.error(f'[AUTH {auth_data.student_id}] 查無此人')
 
             raise HTTPException(404, "查無此人")
-
-    except Exception as e:
-
-        logger.error(f'[AUTH {auth_data.student_id}] {e}')
-
-        raise HTTPException(404, "發生錯誤")

@@ -4,10 +4,10 @@ from sqlalchemy import text, URL
 import pathlib
 from os import getenv, path
 from dotenv import load_dotenv
-from app.lib.custom_logger import logger
+from src.lib.custom_logger import logger
 import pyodbc
 from typing import Literal
-
+from src.config import settings
 pyodbc.pooling = False
 
 load_dotenv()
@@ -15,10 +15,10 @@ load_dotenv()
 # Database connection URL
 connection_url = URL.create(
     "mssql+aioodbc",
-    username=getenv('DB_USERNAME'),
-    password=getenv('DB_PASSWORD'),
-    host=getenv('DB_HOST'),
-    database=getenv('DB_NAME'),
+    username=settings.DB_USERNAME,
+    password=settings.DB_PASSWORD,
+    host=settings.DB_HOST,
+    database=settings.DB_NAME,
     query={
         "driver": "ODBC Driver 18 for SQL Server",
         "TrustServerCertificate": "yes"
@@ -36,14 +36,14 @@ async_engine = create_async_engine(
         pool_pre_ping=True,
     )
    
-async_engine = None
+
 
 
 
 # Define an async session maker
 create_session = async_sessionmaker(
     async_engine,
-    expire_on_commit=False
+    expire_on_commit=False,
 )
 
 
