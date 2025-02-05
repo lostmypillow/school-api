@@ -8,6 +8,7 @@ import urllib.parse
 from .custom_logger import logger
 
 async def handleSMS(data: SMSModel):
+    # todo http > 1-2
     url_list: dict = {
 
         "1": ,
@@ -40,13 +41,14 @@ async def handleSMS(data: SMSModel):
             sms_id = soup.find('msgid').text if vendor_id != "3" else soup.find('msg').text
             logger.info(f"sms_id is {sms_id}")
 
-            await client.post(
-                "https://studev.", json={
+            res = await client.post(
+                "https://studev.", data={
                     "student_id": data.student_id,
                     "phone": data.phone_number,
                     "title": "簡訊通知",
                     "body": data.message_content
-                })
+                }, headers={"Content-Type": "application/json"})
+            print(res)
 
         await exec_sql(
             "commit",
