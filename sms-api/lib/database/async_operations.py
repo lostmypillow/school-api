@@ -20,9 +20,9 @@ connection_url = URL.create(
     query={
         "driver": "ODBC Driver 18 for SQL Server",
         "TrustServerCertificate": "yes",
-        "Encrypt": "no"
     }
 )
+print(connection_url)
 
 
 # Creating the SQLAlchemy async engine and sessionmaker
