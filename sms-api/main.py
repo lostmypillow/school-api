@@ -2,14 +2,14 @@ from fastapi import FastAPI, BackgroundTasks, HTTPException
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse
 from dotenv import load_dotenv
-from database.async_operations import exec_sql, async_engine
+from lib.database.async_operations import exec_sql, async_engine
 from lib.sms_model import SMSModel
-from lib.handleSMS import handleSMS
+from lib.handle_sms import handle_sms
 from lib.decode_big5 import decode_big5
 import markdown
 from pathlib import Path
 from lib.custom_logger import logger
-load_dotenv()
+
 
 
 async def lifespan(app: FastAPI):
@@ -93,12 +93,13 @@ async def get_send_sms(
             phone_number=phone_number,
             message_content=decode_big5(message_content),
             send_time=send_time)
+        logger.info(f'[SUCCESS] Received request: {sms_request.model_dump}')
 
     except Exception as e:
         logger.error(f'[ERROR] {e}')
         raise HTTPException(404, 'Format Error')
 
-    background_tasks.add_task(handleSMS, sms_request)
+    background_tasks.add_task(handle_sms, sms_request)
 
     return """
 <html lang="en">

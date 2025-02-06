@@ -5,7 +5,7 @@ from os import getenv, path
 from dotenv import load_dotenv
 import pyodbc
 from typing import Literal
-
+from config import settings
 pyodbc.pooling = False
 
 load_dotenv()
@@ -13,10 +13,10 @@ load_dotenv()
 # Database connection URL
 connection_url = URL.create(
     "mssql+aioodbc",
-    username=getenv('DB_USERNAME'),
-    password=getenv('DB_PASSWORD'),
-    host=getenv('DB_HOST'),
-    database=getenv('DB_NAME'),
+    username=settings.DB_USERNAME,
+    password=settings.DB_PASSWORD,
+    host=settings.DB_HOST,
+    database=settings.DB_NAME,
     query={
         "driver": "ODBC Driver 18 for SQL Server",
         "TrustServerCertificate": "yes"
@@ -68,7 +68,6 @@ async def exec_sql(
         command_name + '.sql'
     )
 
-
     # Reads the SQL statement from file
     with open(file_path, 'r', encoding="utf-8") as file_buffer:
         sql_command = file_buffer.read()
@@ -92,7 +91,7 @@ async def exec_sql(
             # Return the result as dictionary if result isn't None
             # Otherwise, just return None
             return one_result._mapping if one_result is not None else one_result
-        
+
         elif mode == "all":
 
             # Returns the results as a list of dicts, or an empty list
