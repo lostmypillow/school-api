@@ -17,8 +17,8 @@ curl -sSL -O https://packages.microsoft.com/config/ubuntu/24.04/packages-microso
 sudo dpkg -i packages-microsoft-prod.deb >/dev/null
 rm packages-microsoft-prod.deb >/dev/null
 sudo apt-get update -y >/dev/null
-sudo ACCEPT_EULA=Y apt-get install -y msodbcsql18 >/dev/null
-sudo ACCEPT_EULA=Y apt-get install -y mssql-tools18 >/dev/null
+sudo ACCEPT_EULA=Y apt-get install -y msodbcsql17 >/dev/null
+sudo ACCEPT_EULA=Y apt-get install -y mssql-tools >/dev/null
 echo 'export PATH="$PATH:/opt/mssql-tools18/bin"' >> ~/.bashrc
 source ~/.bashrc
 sudo apt-get install -y unixodbc-dev >/dev/null

@@ -18,8 +18,7 @@ connection_url = URL.create(
     host=settings.DB_HOST,
     database=settings.DB_NAME,
     query={
-        "driver": "ODBC Driver 18 for SQL Server",
-        "TrustServerCertificate": "yes"
+        "driver": "ODBC Driver 17 for SQL Server",
     }
 )
 
