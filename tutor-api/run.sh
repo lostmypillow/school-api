@@ -60,6 +60,7 @@ echo "RUN [Starting FastAPI systemd service...]"
 sudo systemctl daemon-reload
 sudo systemctl enable $SERVICE_NAME
 sudo systemctl start $SERVICE_NAME
+sudo systemctl restart $SERVICE_NAME
 if [[ "$(sudo systemctl status $SERVICE_NAME --no-pager --quiet)" == *"active (running)"* ]]; then
     echo "ok"
 else
