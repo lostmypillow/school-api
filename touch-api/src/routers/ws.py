@@ -40,7 +40,7 @@ async def websocket_endpoint(websocket: WebSocket, client_name: str):
 
     except WebSocketDisconnect:
         print(f"Client {client_name} disconnected.")
-        if client_name == 'client':
+        if 'control' in active_connections and client_name == 'client':
             await active_connections['control'].send_json({
                 "action": "update client status",
                 "message": "disconnected"
