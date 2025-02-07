@@ -1,6 +1,6 @@
 ## FastAPI 建置
 
-1. 伺服器資料位於 `.env`
+1. 伺服器資料位於 `config.py`
 2. 跑 `sudo chmod +x run.sh`
 3. 再跑 `./run.sh`
 
@@ -45,4 +45,18 @@ curl -X 'POST' \
 
 ```json
 "sent"
+```
+
+
+## Add to openssl.cnf
+```cnf
+[openssl_init]
+ssl_conf = ssl_sect
+
+[ssl_sect]
+system_default = system_default_sect
+
+[system_default_sect]
+CipherString =  DEFAULT@SECLEVEL=0
+
 ```

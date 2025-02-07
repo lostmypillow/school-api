@@ -19,7 +19,7 @@ connection_url = URL.create(
     database=settings.DB_NAME,
     query={
         "driver": "ODBC Driver 18 for SQL Server",
-        "Encrypt": "no",
+        "TrustServerCertificate": "yes",
     }
 )
 print(connection_url)
