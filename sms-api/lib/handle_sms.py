@@ -8,6 +8,7 @@ import urllib.parse
 from lib.custom_logger import logger
 from config import settings
 
+
 async def handle_sms(data: SMSModel):
     # todo http > 1-2
     url_list: dict = {
@@ -80,13 +81,15 @@ async def handle_sms(data: SMSModel):
             logger.info(f'[HANDLE SMS] Error response from vendor: {e}')
 
         try:
-            logger.info(f'[HANDLE SMS] FCM URL: https://"+ {settings.notif_api} +".')
-            await client.post(
-                "https://"+ settings.notif_api +".", data={
+            logger.info(
+                f'[HANDLE SMS] FCM URL: ')
+            res = await client.post(
+                "https://" + settings.notif_api + ".", data={
                     "student_id": data.student_id,
                     "title": "簡訊通知",
                     "body": data.message_content
-                }, headers={"Content-Type": "application/json"})
+                }, headers={'Content-Type': 'application/x-www-form-urlencoded'})
+            logger.info(f' [HANDLE SMS {res.status_code} {res.json()}]')
 
         except Exception as e:
             logger.info(f'[HANDLE SMS] Error response from app notif: {e}')
