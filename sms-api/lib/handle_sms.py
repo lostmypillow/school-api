@@ -84,7 +84,6 @@ async def handle_sms(data: SMSModel):
             await client.post(
                 "https://"+ settings.notif_api +".", data={
                     "student_id": data.student_id,
-                    "phone": data.phone_number,
                     "title": "簡訊通知",
                     "body": data.message_content
                 }, headers={"Content-Type": "application/json"})
