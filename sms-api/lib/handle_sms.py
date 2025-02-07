@@ -6,7 +6,7 @@ from httpx import Response, AsyncClient
 from bs4 import BeautifulSoup
 import urllib.parse
 from lib.custom_logger import logger
-
+from config import settings
 
 async def handle_sms(data: SMSModel):
     # todo http > 1-2
@@ -80,8 +80,9 @@ async def handle_sms(data: SMSModel):
             logger.info(f'[HANDLE SMS] Error response from vendor: {e}')
 
         try:
+            logger.info(f'[HANDLE SMS] FCM URL: https://"+ {settings.notif_api} +".')
             await client.post(
-                "https://studev.", data={
+                "https://"+ settings.notif_api +".", data={
                     "student_id": data.student_id,
                     "phone": data.phone_number,
                     "title": "簡訊通知",
