@@ -13,7 +13,7 @@ class Settings(BaseSettings):
     SMB_FOLDER: str = "\\\\"
     SMB_USERNAME: str = 
     SMB_PASSWORD: str = 
-    DEBUG: bool = True
+    DEBUG: bool = False
 
 
 # TODO replace debug values
