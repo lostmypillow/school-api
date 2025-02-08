@@ -3,8 +3,6 @@ import pathlib
 import os
 from dotenv import load_dotenv
 
-load_dotenv()
-
 connection_url: str = f"mssql+pyodbc://{os.getenv('DB_USERNAME')}:{os.getenv('DB_PASSWORD')}@{os.getenv('DB_URL')}?driver=ODBC+Driver+18+for+SQL+Server&TrustServerCertificate=yes"
 
 engine = create_engine(connection_url)

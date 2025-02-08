@@ -16,10 +16,10 @@ from src.lib.get_class_with_seats import get_class_with_seats
 from src.lib.get_classes_today import get_classes_today
 from src.routers.video import sync
 from src.lib.custom_logger import logger
-from dotenv import load_dotenv
 from src.lib.deps import deps
 from .config import settings
 from pprint import pprint
+from src.database.async_operations import exec_sql
 pprint(settings)
 
 class RegisterSeat(BaseModel):
@@ -135,7 +135,7 @@ async def rate_employee(survey_info: SurveyInfo):
 @app.get('/test')
 async def test():
     return {
-        "action": await get_classes_today(),
+        "action": await exec_sql('one', 'single_get_remaining'),
     }
 
 

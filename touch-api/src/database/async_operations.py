@@ -3,14 +3,12 @@ from sqlalchemy.exc import InterfaceError
 from sqlalchemy import text, URL
 import pathlib
 from os import getenv, path
-from dotenv import load_dotenv
 from src.lib.custom_logger import logger
 import pyodbc
 from typing import Literal
 from src.config import settings
 pyodbc.pooling = False
 
-load_dotenv()
 
 # Database connection URL
 connection_url = URL.create(
@@ -99,7 +97,7 @@ async def exec_sql(
 
             # Return the result as dictionary if result isn't None
             # Otherwise, just return None
-            return dict(one_result._mapping) if one_result is not None else one_result
+            return dict(one_result._mapping) if one_result is not None else {}
         
         elif mode == "all":
             # Returns the results as a list of dicts, or an empty list

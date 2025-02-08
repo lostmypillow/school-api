@@ -6,6 +6,8 @@ import os
 async def get_class_with_seats() -> dict[str, Union[str, list[str]]]:
 
     class_with_seats: dict[str, Union[str, list[str]]] = await exec_sql('one', 'single_get_remaining')
+    if class_with_seats == {}:
+        return class_with_seats
 
     # convert 位子, which is a string with a lot of commas, into a list
     # SQ.座位號,
