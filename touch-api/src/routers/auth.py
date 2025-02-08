@@ -172,9 +172,9 @@ async def authorize_student(auth_data: AuthData) -> AuthResponse:
         emp_working_today = await exec_sql(
             'all',
             'student_today_employees',
-            current_date='2020-09-16'
+            current_date=datetime.now().strftime('%Y-%m-%d')
         )
-        # TODO replace debug values: datetime.now().strftime('%Y-%m-%d')
+        # TODO replace debug values: datetime.now().strftime('%Y-%m-%d')'2020-09-16'
 
         for employee in emp_working_today:
 
