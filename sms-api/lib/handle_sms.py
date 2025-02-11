@@ -83,12 +83,17 @@ async def handle_sms(data: SMSModel):
         try:
             logger.info(
                 f'[HANDLE SMS] FCM URL: ')
-            res = await client.post(
-                "https://" + settings.notif_api + ".", data={
-                    "student_id": data.student_id,
+            res_data = {
+                "student_id": "",
+                    "phone": data.phone_number,
                     "title": "簡訊通知",
                     "body": data.message_content
-                }, headers={'Content-Type': 'application/x-www-form-urlencoded'})
+                }
+            res = await client.post(
+                "https://" + settings.notif_api + ".",
+                data=res_data,
+                headers={'Content-Type': 'application/x-www-form-urlencoded'})
+            logger.info(f'Res content: {res_data}')
             logger.info(f' [HANDLE SMS {res.status_code} {res.json()}]')
 
         except Exception as e:
