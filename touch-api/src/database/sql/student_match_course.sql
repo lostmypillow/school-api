@@ -14,5 +14,5 @@ WHERE
             學號 = :student_id
             AND (欠費 <= 0 OR 金額 >= 3000)
     )
-    AND CAST('2024-08-22' AS datetime) BETWEEN [學生補位主檔].開始時間 AND [學生補位主檔].結束時間
-    AND [學生補位主檔].日期 = CONVERT(char(10), CAST('2024-08-22' AS datetime), 111)
+    AND GETDATE() BETWEEN [學生補位主檔].開始時間 AND [學生補位主檔].結束時間
+    AND [學生補位主檔].日期 = CONVERT(char(10), GETDATE(), 111)

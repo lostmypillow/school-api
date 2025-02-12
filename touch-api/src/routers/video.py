@@ -1,6 +1,6 @@
 import os
 import smbclient as smb
-from fastapi import APIRouter, UploadFile, HTTPException
+from fastapi import APIRouter, UploadFile, HTTPException, BackgroundTasks
 from pathlib import Path
 from itertools import cycle
 from time import perf_counter
@@ -107,6 +107,10 @@ def next_video():
 def next_video():
     return list_local()
 
+@video_router.get('/sync')
+def queue_sync(bg: BackgroundTasks):
+    bg.add_task(sync)
+    return "Sync queued"
 
 @video_router.delete('/{filename}')
 async def remove_video(filename: str):

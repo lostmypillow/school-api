@@ -102,6 +102,7 @@ async def authorize_student(auth_data: AuthData) -> AuthResponse:
             'student_match_course',
             student_id=auth_data.student_id
         )
+        print(f'courses of student: {courses_of_student}')
         # OUTPUT:
         # [
         #     {
@@ -118,7 +119,7 @@ async def authorize_student(auth_data: AuthData) -> AuthResponse:
         logger.info(
             f'''[AUTH {auth_data.student_id}] Student s course matches course for seats'''
             if matches_course else
-            f'''[AUTH {auth_data.student_id}] Student s courses match course for seats'''
+            f'''[AUTH {auth_data.student_id}] Student s courses does NOT match course for seats'''
         )
 
         check_already_selected: list = await exec_sql(
@@ -127,6 +128,7 @@ async def authorize_student(auth_data: AuthData) -> AuthResponse:
             course_id=class_with_seat['主檔號'],
             student_id=auth_data.student_id
         )
+        print(check_already_selected)
         # OUTPUT:
         # [
         #     {
@@ -145,9 +147,10 @@ async def authorize_student(auth_data: AuthData) -> AuthResponse:
         logger.info(
             f'[AUTH {auth_data.student_id}] Student has already selected seat for course'
             if already_selected else
-            f'[AUTH {auth_data.student_id}] Student has not already selected seat for course')
-
-        if not matches_course or already_selected:
+            f'[AUTH {auth_data.student_id}] Student has NOT already selected seat for course')
+        print(matches_course)
+        print(already_selected)
+        if matches_course is False or already_selected is True:
 
             logger.error(f'[AUTH {auth_data.student_id}] 目前沒有您可選的補位資料')
 
