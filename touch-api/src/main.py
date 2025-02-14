@@ -1,25 +1,20 @@
-from fastapi import FastAPI, HTTPException, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from src.routers.ws import ws_router
-from src.routers.auth import auth_router
-from src.routers.picture import picture_router
-from src.routers.video import video_router
-from src.routers.ws import active_connections
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
-from src.lib.get_dep_number import get_dep_number
-from src.database.async_operations import async_engine, exec_sql
-from apscheduler.schedulers.asyncio import AsyncIOScheduler
-from apscheduler.triggers.interval import IntervalTrigger
-from typing import Any, Union
-from src.lib.get_class_with_seats import get_class_with_seats
-from src.lib.get_classes_today import get_classes_today
-from src.routers.video import sync
-from src.lib.custom_logger import logger
-from src.lib.deps import deps
 from .config import settings
 from pprint import pprint
-from src.database.async_operations import exec_sql
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from src.routers.ws import ws_router, active_connections
+from src.routers.auth import auth_router
+from src.routers.picture import picture_router
+from src.routers.video import video_router, sync
+from src.database.async_operations import async_engine, exec_sql
+from src.lib.get_class_with_seats import get_class_with_seats
+from src.lib.get_classes_today import get_classes_today
+from src.lib.custom_logger import logger
+from src.lib.deps import deps
+
 pprint(settings)
 
 class RegisterSeat(BaseModel):
@@ -71,8 +66,10 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     lifespan=lifespan,
     title="觸控螢幕 API /  API",
-    version="0.1.0"
+    version="0.1.4",
+    # Compatible with  0.1.5
 )
+
 
 app.add_middleware(
     CORSMiddleware,
@@ -84,24 +81,27 @@ app.add_middleware(
 
 
 app.include_router(video_router)
+
 app.include_router(picture_router)
+
 app.include_router(auth_router)
+
 app.include_router(ws_router)
 
 
 @app.post('/seat')
 async def register_seat(seat_info: RegisterSeat):
-    """_summary_
+    """Registers seat number for student
 
     Parameters
     ----------
     seat_info : SeatInfo
-        _description_
+        See SeatInfo schema for more details
 
     Raises
     ------
     HTTPException
-        _description_
+        404, '發生錯誤'
     """
     try:
         await exec_sql(
@@ -117,6 +117,18 @@ async def register_seat(seat_info: RegisterSeat):
 
 @app.post('/rate')
 async def rate_employee(survey_info: SurveyInfo):
+    """Rates employee..idk sef explanatory
+
+    Parameters
+    ----------
+    survey_info : SurveyInfo
+        See SurveyInfo
+
+    Raises
+    ------
+    HTTPException
+        _description_
+    """
     global deps
     try:
         await exec_sql(
