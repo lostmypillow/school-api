@@ -1,4 +1,5 @@
 import logging
+from pathlib import Path
 import os
 import psutil
 from fastapi import FastAPI, Request, HTTPException, Header, UploadFile, File
@@ -6,6 +7,7 @@ from fastapi.responses import StreamingResponse
 import smbclient
 from config import settings
 from itertools import cycle
+from urllib.parse import quote
 # Initialize FastAPI
 app = FastAPI(
     title="",
@@ -13,8 +15,7 @@ app = FastAPI(
     version="0.1.0")
 
 # SMB Configuration
-SMB_SERVER = settings.SMB_HOST
-SMB_SHARE = settings.SMB_FOLDER
+smb_url = ''
 SMB_USERNAME = settings.SMB_USERNAME
 SMB_PASSWORD = settings.SMB_PASSWORD
 CHUNK_SIZE = 512 * 1024  # 512 KB chunks
@@ -29,6 +30,7 @@ logging.basicConfig(
         logging.StreamHandler()  # Print logs to console
     ],
 )
+
 
 
 def check_memory_usage():
@@ -65,7 +67,7 @@ def get_file_size(file_name: str):
     smbclient.ClientConfig(username=SMB_USERNAME, password=SMB_PASSWORD)
 
     # Get the file size from the SMB share
-    file_path = f"\\\\{SMB_SERVER}\\{SMB_SHARE}\\{file_name}"
+    file_path = os.path.join(smb_url, file_name)
     size = os.stat(file_path).st_size
 
     logging.info(f"File size: {size} bytes")
@@ -77,7 +79,7 @@ def stream_smb_file(file_name: str, start: int, end: int):
     logging.info(f"Starting stream: {start}-{end}")
 
     smbclient.ClientConfig(username=SMB_USERNAME, password=SMB_PASSWORD)
-    file_path = f"\\\\{SMB_SERVER}\\{SMB_SHARE}\\{file_name}"
+    file_path = os.path.join(smb_url, file_name)
 
     with smbclient.open_file(file_path, mode='rb') as file:
         file.seek(start)
@@ -99,11 +101,11 @@ def stream_smb_file(file_name: str, start: int, end: int):
 def get_all_smb_files():
     global get_next_vid, video_queue
     smbclient.ClientConfig(username=SMB_USERNAME, password=SMB_PASSWORD)
-    file_path = f"\\\\{SMB_SERVER}\\{SMB_SHARE}"
+    folder_path = smb_url
     try:
         return [
             file.smb_info._asdict()["file_name"]
-            for file in smbclient.scandir(file_path)
+            for file in smbclient.scandir(folder_path)
             if file.name.endswith('.mp4')
         ]
     except Exception as e:
@@ -184,7 +186,7 @@ async def upload_video(file: UploadFile = File(...)):
     # Ensure the video queue is updated, in case it changes during upload
     global video_queue, get_next_vid
     smbclient.ClientConfig(username=SMB_USERNAME, password=SMB_PASSWORD)
-    file_path = f"\\\\{SMB_SERVER}\\{SMB_SHARE}\\{file.filename}"
+    file_path = smb_url / file.filename
 
     # Open the file on SMB for writing
     with smbclient.open_file(file_path, mode='wb') as smb_file:
@@ -205,7 +207,7 @@ async def delete_video(file_name: str):
 
     # Configure smbclient with credentials
     smbclient.ClientConfig(username=SMB_USERNAME, password=SMB_PASSWORD)
-    file_path = f"\\\\{SMB_SERVER}\\{SMB_SHARE}\\{file_name}"
+    file_path = os.path.join(smb_url, file_name)
 
     try:
         # Check if the file exists before trying to delete
