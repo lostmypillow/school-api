@@ -59,17 +59,6 @@ def create_cycler(iterable: list):
 get_next_vid = create_cycler(video_queue)
 
 
-def get_all_smb_files():
-    global get_next_vid, video_queue
-    smbclient.ClientConfig(username=SMB_USERNAME, password=SMB_PASSWORD)
-    file_path = f"\\\\{SMB_SERVER}\\{SMB_SHARE}"
-
-    return [
-        file.smb_info._asdict()["file_name"]
-        for file in smbclient.scandir(file_path)
-        if file.name.endswith('.mp4')
-    ]
-
 
 def get_file_size(file_name: str):
     """Get the total size of the file on SMB using smbclient."""
@@ -81,35 +70,6 @@ def get_file_size(file_name: str):
 
     logging.info(f"File size: {size} bytes")
     return size
-
-
-@app.middleware("http")
-async def limit_memory_usage(request: Request, call_next):
-    """Middleware to check memory usage before and after requests."""
-    logging.info(f"Incoming request: {request.url}")
-    check_memory_usage()
-
-    response = await call_next(request)
-
-    check_memory_usage()
-    return response
-
-
-@app.get('/file')
-def get_next_file():
-    global get_next_vid, video_queue
-
-    updated_queue = get_all_smb_files()
-    if video_queue != updated_queue:
-        video_queue = updated_queue
-        get_next_vid = create_cycler(video_queue)
-
-    return get_next_vid()
-
-
-@app.get('/files')
-def get_all_files():
-    return get_all_smb_files()
 
 
 def stream_smb_file(file_name: str, start: int, end: int):
@@ -135,6 +95,46 @@ def stream_smb_file(file_name: str, start: int, end: int):
             yield chunk
 
     logging.info("Streaming finished successfully")
+
+
+@app.middleware("http")
+async def limit_memory_usage(request: Request, call_next):
+    """Middleware to check memory usage before and after requests."""
+    logging.info(f"Incoming request: {request.url}")
+    check_memory_usage()
+
+    response = await call_next(request)
+
+    check_memory_usage()
+    return response
+
+
+@app.get('/next')
+def get_next_file():
+    global get_next_vid, video_queue
+
+    updated_queue = get_all_smb_files()
+    if video_queue != updated_queue:
+        video_queue = updated_queue
+        get_next_vid = create_cycler(video_queue)
+
+    return get_next_vid()
+
+
+@app.get('/all')
+def get_all_files():
+    global get_next_vid, video_queue
+    smbclient.ClientConfig(username=SMB_USERNAME, password=SMB_PASSWORD)
+    file_path = f"\\\\{SMB_SERVER}\\{SMB_SHARE}"
+    try:
+        return [
+            file.smb_info._asdict()["file_name"]
+            for file in smbclient.scandir(file_path)
+            if file.name.endswith('.mp4')
+        ]
+    except Exception as e:
+        print(e)
+        return []
 
 
 @app.get("/video/{file_name}")
@@ -193,3 +193,30 @@ async def upload_video(file: UploadFile = File(...)):
 
     logging.info(f"Successfully uploaded {file.filename} to SMB share.")
     return {"message": f"File '{file.filename}' uploaded successfully"}
+
+
+@app.delete("/video/{file_name}")
+async def delete_video(file_name: str):
+    """Delete a video file from the SMB share."""
+    check_memory_usage()  # Check memory usage before starting the delete operation
+
+    # Configure smbclient with credentials
+    smbclient.ClientConfig(username=SMB_USERNAME, password=SMB_PASSWORD)
+    file_path = f"\\\\{SMB_SERVER}\\{SMB_SHARE}\\{file_name}"
+
+    try:
+        # Check if the file exists before trying to delete
+        if not smbclient.path.exists(file_path):
+            raise HTTPException(status_code=404, detail="File not found")
+
+        # Delete the file from the SMB share
+        smbclient.remove(file_path)
+        logging.info(f"Successfully deleted file: {file_name}")
+
+        return {"message": f"File '{file_name}' deleted successfully"}
+
+    except Exception as e:
+        # Log the exception and return an error response
+        logging.error(f"Error deleting file {file_name}: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Error deleting file: {str(e)}")
