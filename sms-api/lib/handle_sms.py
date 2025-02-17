@@ -13,7 +13,7 @@ async def handle_sms(data: SMSModel):
     # todo http > 1-2
     url_list: dict = {
 
-        "1": ,
+        "1": f"",
 
         "2": f"",
 
@@ -28,26 +28,21 @@ async def handle_sms(data: SMSModel):
             "one",
             "get_specified_vendor",
             phone_number=data.phone_number)
-        logger.info(f'[HANDLE SMS] Preferred vendor: {preferred_vendor}')
     except Exception as e:
-        logger.info(f'[HANDLE SMS] Error getting preferred vendor: {e}')
+        logger.info(
+            f'[HANDLE SMS] Error getting preferred vendor: {e}, debug info: {data}')
 
     # If phone number has preferred vendor, use preferred vendor
     if preferred_vendor is not None:
         vendor_id = str(preferred_vendor['限定廠商編號'])
-        logger.info(
-            f'[HANDLE SMS] Phone num has preferred vendor, vendor chosen: {vendor_id}')
 
     # If message content has http, randomize vendor 1 and 2
     elif data.message_content.find('http') != -1:
         vendor_id = str(random.randint(1, 2))
-        logger.info(
-            f'[HANDLE SMS] Content has http, vendor chosen: {vendor_id}')
 
         # If none of the above, randomize 1 to 3
     else:
         vendor_id = str(random.randint(1, 3))
-        logger.info(f'[HANDLE SMS] Vendor chosen: {vendor_id}')
 
     # If it is vendor 1 and 2...
     if vendor_id != "3":
@@ -84,20 +79,20 @@ async def handle_sms(data: SMSModel):
             logger.info(
                 f'[HANDLE SMS] FCM URL: ')
             res_data = {
-                "student_id": "",
-                    "phone": data.phone_number,
-                    "title": "簡訊通知",
-                    "body": data.message_content
-                }
+                "student_id": data.student_id,
+                "phone": data.phone_number,
+                "title": "簡訊通知",
+                "body": data.message_content
+            }
             res = await client.post(
                 "https://" + settings.notif_api + ".",
                 data=res_data,
                 headers={'Content-Type': 'application/x-www-form-urlencoded'})
-            logger.info(f'Res content: {res_data}')
-            logger.info(f' [HANDLE SMS {res.status_code} {res.json()}]')
+            logger.info(f'Res_data variable: {res_data}')
+            logger.info(f' [HANDLE SMS] {res.status_code} {res.json()}')
 
         except Exception as e:
-            logger.info(f'[HANDLE SMS] Error response from app notif: {e}')
+            logger.info(f'[HANDLE SMS] Error response from app notif API: {e}')
 
     try:
         await exec_sql(
