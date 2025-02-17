@@ -96,6 +96,19 @@ def stream_smb_file(file_name: str, start: int, end: int):
 
     logging.info("Streaming finished successfully")
 
+def get_all_smb_files():
+    global get_next_vid, video_queue
+    smbclient.ClientConfig(username=SMB_USERNAME, password=SMB_PASSWORD)
+    file_path = f"\\\\{SMB_SERVER}\\{SMB_SHARE}"
+    try:
+        return [
+            file.smb_info._asdict()["file_name"]
+            for file in smbclient.scandir(file_path)
+            if file.name.endswith('.mp4')
+        ]
+    except Exception as e:
+        print(e)
+        return []
 
 @app.middleware("http")
 async def limit_memory_usage(request: Request, call_next):
@@ -123,18 +136,8 @@ def get_next_file():
 
 @app.get('/all')
 def get_all_files():
-    global get_next_vid, video_queue
-    smbclient.ClientConfig(username=SMB_USERNAME, password=SMB_PASSWORD)
-    file_path = f"\\\\{SMB_SERVER}\\{SMB_SHARE}"
-    try:
-        return [
-            file.smb_info._asdict()["file_name"]
-            for file in smbclient.scandir(file_path)
-            if file.name.endswith('.mp4')
-        ]
-    except Exception as e:
-        print(e)
-        return []
+    return get_all_smb_files()
+   
 
 
 @app.get("/video/{file_name}")
