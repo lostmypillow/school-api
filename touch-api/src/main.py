@@ -8,7 +8,7 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from src.routers.ws import ws_router, active_connections
 from src.routers.auth import auth_router
 from src.routers.picture import picture_router
-# from src.routers.video import video_router, sync
+from src.routers.video import video_router, sync
 from src.database.async_operations import async_engine, exec_sql
 from src.lib.get_class_with_seats import get_class_with_seats
 from src.lib.get_classes_today import get_classes_today
@@ -46,7 +46,7 @@ async def send_updates():
 async def lifespan(app: FastAPI):
     scheduler = AsyncIOScheduler()
     scheduler.start()
-    # await sync()
+    await sync()
     scheduler.add_job(
         send_updates,
         "interval",
@@ -80,7 +80,7 @@ app.add_middleware(
 )
 
 
-# app.include_router(video_router)
+app.include_router(video_router)
 
 app.include_router(picture_router)
 
