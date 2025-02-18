@@ -1,10 +1,8 @@
 from lib.database.async_operations import exec_sql
 import random
-import xml.etree.ElementTree as ET
 from lib.sms_model import SMSModel
 from httpx import Response, AsyncClient
 from bs4 import BeautifulSoup
-import urllib.parse
 from lib.custom_logger import logger
 from config import settings
 
@@ -17,7 +15,7 @@ async def handle_sms(data: SMSModel):
 
         "2": f"",
 
-        "3": 
+        "3": f""
 
     }
 
@@ -36,12 +34,18 @@ async def handle_sms(data: SMSModel):
     if preferred_vendor is not None:
         vendor_id = str(preferred_vendor['限定廠商編號'])
 
+        # temporary logic to prevent use of 3rd sms API
+        # if vendor_id == "3":
+        #     vendor_id == "1"
+
     # If message content has http, randomize vendor 1 and 2
     elif data.message_content.find('http') != -1:
         vendor_id = str(random.randint(1, 2))
 
         # If none of the above, randomize 1 to 3
     else:
+
+        # temporarily prevent use of 3rd sms API
         vendor_id = str(random.randint(1, 3))
 
     # If it is vendor 1 and 2...
