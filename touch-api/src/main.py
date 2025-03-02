@@ -153,4 +153,4 @@ async def test():
 
 
 app.mount("/touch", StaticFiles(directory="public", html=True), name="dash")
-app.mount("/static", StaticFiles(directory="static"), name="static")
+# app.mount("/static", StaticFiles(directory="static"), name="static")
