@@ -7,12 +7,19 @@ import smbclient
 from config import settings
 from itertools import cycle
 import asyncio
+from fastapi.middleware.cors import CORSMiddleware
 # Initialize FastAPI
 app = FastAPI(
     title="",
     description="Handles streams and uploads for  (for now)",
     version="0.1.0")
-
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 # SMB Configuration
 smb_url = ''
 SMB_USERNAME = settings.SMB_USERNAME
