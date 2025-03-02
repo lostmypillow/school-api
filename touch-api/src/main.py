@@ -4,6 +4,7 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from .config import settings
 from pprint import pprint
+from fastapi.responses import HTMLResponse
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from src.routers.ws import ws_router, active_connections
 from src.routers.auth import auth_router
@@ -79,8 +80,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-
 # app.include_router(video_router)
 
 app.include_router(picture_router)
@@ -152,5 +151,5 @@ async def test():
     }
 
 
+
 app.mount("/touch", StaticFiles(directory="public", html=True), name="dash")
-# app.mount("/static", StaticFiles(directory="static"), name="static")
