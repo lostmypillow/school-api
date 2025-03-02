@@ -30,6 +30,7 @@ class SurveyInfo(BaseModel):
 
 
 async def send_updates():
+    # TODO check for problems
     if active_connections:
         for con in active_connections:
             await active_connections[con].send_json(
@@ -151,5 +152,5 @@ async def test():
     }
 
 
-app.mount("/dash", StaticFiles(directory="public", html=True), name="dash")
+app.mount("/touch", StaticFiles(directory="public", html=True), name="dash")
 app.mount("/static", StaticFiles(directory="static"), name="static")
