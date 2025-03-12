@@ -18,16 +18,7 @@ async def websocket_endpoint(websocket: WebSocket, client_name: str):
     global client_online
     await websocket.accept()
     active_connections[client_name] = websocket
-    if 'control' in active_connections:
-        await active_connections['control'].send_json({
-                "action": "update queue",
-                "message": list_local()
-            })
-    if 'control' in active_connections and 'client' in active_connections:
-        await active_connections['control'].send_json({
-                "action": "update client status",
-                "message": "connected"
-            })
+
     
     
 
@@ -40,11 +31,7 @@ async def websocket_endpoint(websocket: WebSocket, client_name: str):
 
     except WebSocketDisconnect:
         print(f"Client {client_name} disconnected.")
-        if 'control' in active_connections and client_name == 'client':
-            await active_connections['control'].send_json({
-                "action": "update client status",
-                "message": "disconnected"
-            })
+
 
     finally:
         # Ensure the connection is removed from the active connections

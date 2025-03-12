@@ -68,8 +68,8 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     lifespan=lifespan,
     title="觸控螢幕 API /  API",
-    version="0.1.4",
-    # Compatible with  0.1.5
+    version="0.2.2",
+    # Synced with latest frontend version
 )
 
 
@@ -144,12 +144,16 @@ async def rate_employee(survey_info: SurveyInfo):
         raise HTTPException(404, '發生錯誤')
 
 
-@app.get('/test')
-async def test():
+@app.get('/test_class_with_seats')
+async def test_class_with_seats():
     return {
-        "action": await exec_sql('one', 'single_get_remaining'),
+        "action": await get_class_with_seats(),
     }
 
-
+@app.get('/test_classes_today')
+async def test_classes_today():
+    return {
+        "action": await get_classes_today(),
+    }
 
 app.mount("/touch", StaticFiles(directory="public", html=True), name="dash")
