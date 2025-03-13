@@ -6,6 +6,7 @@ CREATE TABLE vm_details (
     human_owner NVARCHAR(100)  NULL,
     pc_owner NVARCHAR(100) NULL,
     pve BIT NOT NULL,
+    pve_host NVARCHAR(150) NOT NULL
     pve_token_username NVARCHAR(100) NULL,
     pve_token_name NVARCHAR(100) NULL,
     pve_token_value NVARCHAR(36) NULL,
