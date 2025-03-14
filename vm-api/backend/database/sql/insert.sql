@@ -3,7 +3,7 @@ INSERT INTO vm_details (
     human_owner,
     pc_owner,
     pve,
-    pve_host 
+    pve_host,
     pve_token_username,
     pve_token_name,
     pve_token_value,

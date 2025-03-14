@@ -30,6 +30,7 @@ class VMDetails(BaseModel):
     human_owner: str | None
     pc_owner: str | None
     pve: int = Literal[0, 1]
+    pve_host: str | None = None
     pve_token_username: str | None = None
     pve_token_name: str | None = None
     pve_token_value: str | None = None
