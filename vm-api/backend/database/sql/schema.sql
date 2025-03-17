@@ -6,7 +6,7 @@ CREATE TABLE vm_details (
     human_owner NVARCHAR(100) NULL,
     pc_owner NVARCHAR(100) NULL,
     pve BIT NOT NULL,
-    pve_host NVARCHAR(150) NOT NULL,
+    pve_host NVARCHAR(150) NULL,
     pve_token_username NVARCHAR(100) NULL,
     pve_token_name NVARCHAR(100) NULL,
     pve_token_value NVARCHAR(36) NULL,
@@ -54,7 +54,8 @@ VALUES
         '201350',
         NULL,
         1,
-        '192.168.2.13:8006' 'lostmypillow',
+        '192.168.2.13:8006',
+        'lostmypillow',
         'lostmypillow',
         '245a4a7a-581f-434d-be48-e393d9578aa0',
         -- Example UUID
@@ -62,5 +63,39 @@ VALUES
         'pve1.kaowei.tw:3128',
         '192.168.2.13:3128',
         NULL,
+        SYSDATETIME()
+    );
+
+INSERT INTO
+    vm_details (
+        vm_name,
+        human_owner,
+        pc_owner,
+        pve,
+        pve_host,
+        pve_token_username,
+        pve_token_name,
+        pve_token_value,
+        pve_vm_id,
+        pve_proxy,
+        spice_proxy,
+        vm_password,
+        created_at
+    )
+VALUES
+    (
+        'Win7',
+        '300003',
+        NULL,
+        0,
+        NULL,
+        NULL,
+        NULL,
+        NULL,
+        -- Example UUID
+        NULL,
+        NULL,
+        '192.168.2.21:8185',
+        '8185',
         SYSDATETIME()
     );
