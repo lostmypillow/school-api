@@ -2,12 +2,13 @@ from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.staticfiles import StaticFiles
 from .cardholder import Cardholder
 from .device import Device
+from .version import VERSION
 from typing import Optional
 
 # Entry of the FastAPI app
 app = FastAPI(
     title="數學輔導登記系統 / ",
-    version="0.1.0"
+    version=VERSION
 )
 
 app.mount("/dash", StaticFiles(directory="public", html=True), name="dashboard")
