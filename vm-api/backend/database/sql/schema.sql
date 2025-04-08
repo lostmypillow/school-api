@@ -27,8 +27,6 @@ CREATE TABLE vm_details (
             AND pve_vm_id IS NOT NULL
         )
     ),
-    CONSTRAINT uq_pve_vm_id UNIQUE (pve_vm_id),
-    -- Ensure pve_vm_id is unique
     CONSTRAINT uq_vm_name UNIQUE (vm_name)
 );
 

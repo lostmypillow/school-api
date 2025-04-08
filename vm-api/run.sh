@@ -2,10 +2,12 @@
 
 # Exit on error
 set -e
-APP_DIR="$(pwd)"
+APP_DIR="$(pwd)/backend"
 SERVICE_NAME=""
 PORT="8005"
 
+VERSION=$(python3 sync_version.py)
+echo "KwMathConsult v$VERSION SETUP STARTING..."
 
 echo "SETUP [Updating system...]"
 sudo apt-get update -y >/dev/null

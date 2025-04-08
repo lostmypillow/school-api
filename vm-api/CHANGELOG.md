@@ -7,19 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Fixed
-- Fixed proxmox toggle default to closed
 
-
-### Added
-
-
-
-### Changed
-- Improved Edit VM config dialog layout
-- Improved VM details table layout
-- Dialog box VM password input type is now text for clarity
-- Changed site name
 
 ### Removed
 

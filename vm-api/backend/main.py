@@ -8,14 +8,14 @@ from database.async_operations import async_engine, exec_sql
 from pydantic import BaseModel
 from typing import Literal
 from sqlalchemy.exc import IntegrityError
-
+from .version import VERSION
 
 async def lifespan(app: FastAPI):
     yield
     if async_engine:
         await async_engine.dispose()
 
-app = FastAPI(lifespan=lifespan)
+app = FastAPI(lifespan=lifespan, version=VERSION)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*",],
