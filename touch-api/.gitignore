@@ -3,3 +3,4 @@ src/__pycache__
 static/*
 .venv
 !.gitkeep
+src/config.py

@@ -15,7 +15,7 @@ from src.lib.get_class_with_seats import get_class_with_seats
 from src.lib.get_classes_today import get_classes_today
 from src.lib.custom_logger import logger
 from src.lib.deps import deps
-
+from .version import VERSION
 pprint(settings)
 
 class RegisterSeat(BaseModel):
@@ -68,7 +68,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     lifespan=lifespan,
     title="觸控螢幕 API /  API",
-    version="0.2.2",
+    version=VERSION,
     # Synced with latest frontend version
 )
 
