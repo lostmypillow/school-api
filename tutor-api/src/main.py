@@ -4,27 +4,31 @@ from .cardholder import Cardholder
 from .device import Device
 from .version import VERSION
 from typing import Optional
-
+from fastapi.responses import PlainTextResponse
+from typing import Literal, Union
 # Entry of the FastAPI app
 app = FastAPI(
-    title="數學輔導登記系統 / ",
+    title="高偉數學輔導系统",
     version=VERSION
 )
 
 app.mount("/dash", StaticFiles(directory="public", html=True), name="dashboard")
 
-# This stores the websocket connections used in @app.websocket("/ws") in this file. 
-# 
+# This stores the websocket connections used in @app.websocket("/ws") in this file.
+#
 # This only exists because I wanted to pass the websocket connection to other classes/files.
 active_websocket: Optional[WebSocket] = None
 
 
-
-# If you're wondering why card_id is a string and not an integer, it's cuz card IDs have letters in them. 
+# If you're wondering why card_id is a string and not an integer, it's cuz card IDs have letters in them.
 #
 # If you have a better idea of making sure the endpoint only gets card numbers and not some other arbitary string, go for it.
 
-@app.get('/{device_id}/{card_id}')
+@app.get(
+    '/{device_id}/{card_id}',
+    response_class=PlainTextResponse,
+    response_model=Union[Literal["OK"], str]
+)
 async def process_card(card_id: str, device_id: int) -> str:
     """Processes card ID based on a given device ID / 根據給的裝置 ID 處理卡號
 
@@ -48,13 +52,13 @@ async def process_card(card_id: str, device_id: int) -> str:
 
         # Initializes a Cardholder instance. See cardholder.py in the src folder for more details.
         cardholder = Cardholder(card_id)
-        
+
         # Calls the register function of the Device instance. *Sigh* you know where to look for more details.
         await device.register(cardholder, active_websocket)
 
         # Sends the message back to the Pi
         return device.message
-    
+
     except Exception as e:
 
         # I don't have any bright ideas for logging errors. So I just print it.
@@ -64,10 +68,10 @@ async def process_card(card_id: str, device_id: int) -> str:
         return "刷卡失敗"
 
 
-# Websocket connection to communicate with _vue, the frontend running on the (currently planned) TV screen. 
-# 
-# Yes, I do know that a better way would be server sent events, since the TV doesn't really send anything back. But if it ain't broke I'm not fixing it. 
-# 
+# Websocket connection to communicate with _vue, the frontend running on the (currently planned) TV screen.
+#
+# Yes, I do know that a better way would be server sent events, since the TV doesn't really send anything back. But if it ain't broke I'm not fixing it.
+#
 #  Have a go at it if you can.
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
@@ -87,13 +91,13 @@ async def websocket_endpoint(websocket: WebSocket):
 
     # Sets the current connection as the  active websocket connection
     active_websocket = websocket
-    
+
     # For every device (1-6, and also this only runs once when the client connects)...
     for n in range(1, 7):
 
         # Initialize a Device class.
         device = Device(n)
-        
+
         # If the device IS associated with a teacher...
         if device.teacher_id is not None:
 
@@ -114,9 +118,7 @@ async def websocket_endpoint(websocket: WebSocket):
     try:
         while True:
             message = await websocket.receive_text()
-    
+
     # Handles client disconnection
     except WebSocketDisconnect:
         active_websocket = None
-
-
