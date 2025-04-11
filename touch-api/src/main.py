@@ -4,6 +4,7 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from .config import settings
 from pprint import pprint
+from fastapi.responses import HTMLResponse
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from src.routers.ws import ws_router, active_connections
 from src.routers.auth import auth_router
@@ -30,6 +31,7 @@ class SurveyInfo(BaseModel):
 
 
 async def send_updates():
+    # TODO check for problems
     if active_connections:
         for con in active_connections:
             await active_connections[con].send_json(
@@ -66,8 +68,8 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     lifespan=lifespan,
     title="觸控螢幕 API /  API",
-    version="0.1.4",
-    # Compatible with  0.1.5
+    version="0.2.2",
+    # Synced with latest frontend version
 )
 
 
@@ -78,8 +80,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-
 # app.include_router(video_router)
 
 app.include_router(picture_router)
@@ -144,12 +144,16 @@ async def rate_employee(survey_info: SurveyInfo):
         raise HTTPException(404, '發生錯誤')
 
 
-@app.get('/test')
-async def test():
+@app.get('/test_class_with_seats')
+async def test_class_with_seats():
     return {
-        "action": await exec_sql('one', 'single_get_remaining'),
+        "action": await get_class_with_seats(),
     }
 
+@app.get('/test_classes_today')
+async def test_classes_today():
+    return {
+        "action": await get_classes_today(),
+    }
 
-app.mount("/dash", StaticFiles(directory="public", html=True), name="dash")
-app.mount("/static", StaticFiles(directory="static"), name="static")
+app.mount("/touch", StaticFiles(directory="public", html=True), name="dash")
