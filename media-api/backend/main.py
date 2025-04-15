@@ -2,34 +2,40 @@ import logging
 import os
 import shutil
 from fastapi import FastAPI, Request, HTTPException, Header, UploadFile, File
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, PlainTextResponse
 import smbclient
 from config import settings
 from itertools import cycle
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
-
-# Initialize FastAPI
-
-
-# Configuration
-smb_url = ''
+from pydantic import BaseModel
+# Static variables
+# TODO move them to .env
+SMB_URL = f'//{settings.SMB_HOST}{settings.SMB_FOLDER}'
 SMB_USERNAME = settings.SMB_USERNAME
 SMB_PASSWORD = settings.SMB_PASSWORD
 CHUNK_SIZE = 512 * 1024  # 512 KB
 STATIC_FOLDER = './static'
+video_cycler = None
 
 # Configure logging
 
+
 def open_smb_session():
-    smbclient.register_session(server="", username=SMB_USERNAME, password=SMB_PASSWORD)
+    try:
+        smbclient.register_session(
+            server="", username=SMB_USERNAME, password=SMB_PASSWORD)
+    except Exception as e:
+        logging.error(f"Error opening SMB session: {e}")
+
 
 def close_smb_session():
     try:
         smbclient.reset_connection_cache()
     except Exception as e:
         logging.error(f"Error closing SMB session: {e}")
-video_cycler = None
+
+
 def sync_from_smb():
     global video_cycler
     """Sync files from SMB to local static folder."""
@@ -38,12 +44,12 @@ def sync_from_smb():
 
     open_smb_session()
     try:
-        for file in smbclient.scandir(smb_url):
+        for file in smbclient.scandir(SMB_URL):
             if file.name.endswith('.mp4'):
                 local_file_path = os.path.join(STATIC_FOLDER, file.name)
                 if not os.path.exists(local_file_path):
                     logging.info(f"Downloading {file.name} from SMB")
-                    with smbclient.open_file(os.path.join(smb_url, file.name), mode='rb') as smb_file:
+                    with smbclient.open_file(os.path.join(SMB_URL, file.name), mode='rb') as smb_file:
                         with open(local_file_path, 'wb') as local_file:
                             shutil.copyfileobj(smb_file, local_file)
                     logging.info(f"Downloaded {file.name}")
@@ -52,27 +58,24 @@ def sync_from_smb():
     except Exception as e:
         logging.error(f"Error syncing files from SMB: {e}")
     finally:
-        video_cycler = cycle([f for f in os.listdir(STATIC_FOLDER) if f.endswith('.mp4')])
+        video_cycler = cycle([f for f in os.listdir(
+            STATIC_FOLDER) if f.endswith('.mp4')])
         close_smb_session()
-
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     logging.info("Starting app, syncing files from SMB...")
-    sync_from_smb()
+    # sync_from_smb()
     yield
     logging.info("Shutting down app...")
 
 
-
-
-
 app = FastAPI(
-    title="",
+    title="Kw_Stream",
     lifespan=lifespan,
-    description="Handles streams and uploads for  (for now)",
-    version="0.2.0"
+    description=,
+    version="0.2.1",
 )
 
 app.add_middleware(
@@ -84,23 +87,103 @@ app.add_middleware(
 )
 
 
-@app.get('/next')
-def get_next_file():
-    """Return the next file in the local static folder."""
-    files = [f for f in os.listdir(STATIC_FOLDER) if f.endswith('.mp4')]
+def get_local_filenames() -> list[str]:
+    return [
+        filename
+        for filename in os.listdir(STATIC_FOLDER)
+        if filename.endswith('.mp4')
+    ]
+
+
+@app.get('/next', response_model=str, response_class=PlainTextResponse, responses={
+    200: {
+        "description": "Returns the next video filename from the static folder",
+        "content": {
+            "text/plain": {
+                "example": "example_video.mp4"
+            }
+        }
+    },
+    404: {
+        "description": "No files available",
+        "content": {
+            "application/json": {
+                "example": {"detail": "No files available"}
+            }
+        }
+    }
+})
+def get_next_file() -> str:
+    """Return the next file in the local static folder.
+
+    Returns
+    -------
+    str
+        File name of the next file (e.g. xxx.mp4)
+
+    Raises
+    ------
+    HTTPException
+        When there are no files available
+    """
+    files: list[str] = get_local_filenames()
     if not files:
+
         raise HTTPException(status_code=404, detail="No files available")
+
     return next(video_cycler, None)
 
 
-@app.get('/all')
-def get_all_files():
-    """List all files in the local static folder."""
-    return [f for f in os.listdir(STATIC_FOLDER) if f.endswith('.mp4')]
+@app.get('/all', response_model=list[str], responses={
+    200: {
+        "description": "List of available .mp4 files",
+        "content": {
+            "application/json": {
+                "example": ["video1.mp4", "video2.mp4"]
+            }
+        }
+    }
+})
+def get_all_files() -> list[str]:
+    """Returns a list of .mp4 filenames from the server's local static folder
+
+    Returns
+    -------
+    list[str]
+        List of .mp4 filenames from the server's local static folder
+    """
+    return get_local_filenames()
+
+#  """Serve video files directly from the static folder."""
+
 
 @app.get("/video/{file_name}")
 async def get_video(file_name: str, request: Request, range: str = Header(None)):
-    """Serve video files directly from the static folder."""
+    """Fetches video from local static folder. Advise hitting this endpoint by typing the full URL in address bar.
+
+    Parameters
+    ----------
+    file_name : str
+        filename, duh. E.g. xxx.mp4
+    
+    request : Request
+        Unsure of what it's for, too scared to remove
+    
+    range : str, optional
+        _description_, by default Header(None). Also unsure of what it's for, too scared to remove
+
+    Returns
+    -------
+    FileResponse
+        FastAPI FileResponse: https://fastapi.tiangolo.com/advanced/custom-response/#fileresponse
+
+    Raises
+    ------
+    HTTPException
+        status_code=404, detail="File not found"
+    HTTPException
+        status_code=416, detail="Requested Range Not Satisfiable"
+    """
     file_path = os.path.join(STATIC_FOLDER, file_name)
     if not os.path.exists(file_path):
         raise HTTPException(status_code=404, detail="File not found")
@@ -111,10 +194,12 @@ async def get_video(file_name: str, request: Request, range: str = Header(None))
     if range:
         range_values = range.replace("bytes=", "").split("-")
         start = int(range_values[0]) if range_values[0] else 0
-        end = int(range_values[1]) if len(range_values) > 1 and range_values[1] else file_size - 1
+        end = int(range_values[1]) if len(
+            range_values) > 1 and range_values[1] else file_size - 1
 
         if start >= file_size or end >= file_size:
-            raise HTTPException(status_code=416, detail="Requested Range Not Satisfiable")
+            raise HTTPException(
+                status_code=416, detail="Requested Range Not Satisfiable")
 
     headers = {
         "Content-Range": f"bytes {start}-{end}/{file_size}",
@@ -125,11 +210,45 @@ async def get_video(file_name: str, request: Request, range: str = Header(None))
 
     return FileResponse(file_path, headers=headers, status_code=206)
 
-@app.post("/upload")
+# """Upload video to SMB and sync to local static folder."""
+@app.post("/upload", responses={
+    200: {
+        "description": "Successful upload",
+        "content": {
+            "application/json": {
+                "example": {"message": "File 'video1.mp4' uploaded successfully"}
+            }
+        }
+    },
+    500: {
+        "description": "Upload failed",
+        "content": {
+            "application/json": {
+                "example": {"detail": "Upload failed: [error message]"}
+            }
+        }
+    }
+})
 async def upload_video(file: UploadFile = File(...)):
-    """Upload video to SMB and sync to local static folder."""
+    """_summary_
+
+    Parameters
+    ----------
+    file : UploadFile, optional
+        _description_, by default File(...)
+
+    Returns
+    -------
+    _type_
+        _description_
+
+    Raises
+    ------
+    HTTPException
+        _description_
+    """
     open_smb_session()
-    file_path = os.path.join(smb_url, file.filename)
+    file_path = os.path.join(SMB_URL, file.filename)
 
     try:
         # Upload to SMB
@@ -151,11 +270,28 @@ async def upload_video(file: UploadFile = File(...)):
     finally:
         close_smb_session()
 
+#     """Delete video from SMB and local static folder."""
 @app.delete("/video/{file_name}")
 async def delete_video(file_name: str):
-    """Delete video from SMB and local static folder."""
+    """_summary_
+
+    Parameters
+    ----------
+    file_name : str
+        _description_
+
+    Returns
+    -------
+    _type_
+        _description_
+
+    Raises
+    ------
+    HTTPException
+        _description_
+    """
     open_smb_session()
-    smb_file_path = os.path.join(smb_url, file_name)
+    smb_file_path = os.path.join(SMB_URL, file_name)
 
     try:
         # Delete from SMB

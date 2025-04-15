@@ -1,0 +1,11 @@
+from pydantic_settings import BaseSettings
+
+
+class Settings(BaseSettings):
+    SMB_HOST: str = "192.168.x.x"
+    SMB_FOLDER: str = "/folder_1/folder_2/"
+    SMB_USERNAME: str = ""
+    SMB_PASSWORD: str = ""
+
+
+settings = Settings()
