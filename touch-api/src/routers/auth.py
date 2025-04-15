@@ -128,6 +128,7 @@ async def authorize_student(auth_data: AuthData) -> AuthResponse:
             course_id=class_with_seat['主檔號'],
             student_id=auth_data.student_id
         )
+        # TODO:  KeyError: '主檔號'
         print(check_already_selected)
         # OUTPUT:
         # [
