@@ -1,5 +1,4 @@
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
-from src.routers.video import  video_queue, list_local
 from src.lib.active_connections import active_connections
 from src.lib.custom_logger import logger
 
@@ -14,7 +13,6 @@ client_online = False
 @ws_router.websocket("/{client_name}")
 async def websocket_endpoint(websocket: WebSocket, client_name: str):
     global active_connections
-    global video_queue
     global client_online
     await websocket.accept()
     active_connections[client_name] = websocket
