@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Response, HTTPException, Path
 from typing import Literal
-from src.database.async_operations import exec_sql
+from src.database.exec_sql import exec_sql
 from src.lib.custom_logger import logger
 picture_router = APIRouter(
     prefix="/picture",

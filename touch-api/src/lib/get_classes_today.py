@@ -1,5 +1,5 @@
 from typing import Any, Union
-from src.database.async_operations import exec_sql
+from src.database.exec_sql import exec_sql
 from datetime import datetime
 import os
 
