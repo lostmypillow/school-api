@@ -1,6 +1,5 @@
 from typing import Union
-from src.database.async_operations import exec_sql
-import os
+from src.database.exec_sql import exec_sql
 
 
 async def get_class_with_seats() -> dict[str, Union[str, list[str]]]:

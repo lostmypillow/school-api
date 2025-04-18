@@ -1,40 +1,63 @@
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
-from src.routers.video import  video_queue, list_local
-from src.lib.active_connections import active_connections
 from src.lib.custom_logger import logger
-
+from src.lib.get_classes_today import get_classes_today
+from src.lib.get_class_with_seats import get_class_with_seats
+active_connections: dict[str, WebSocket] = {}
 ws_router = APIRouter(
     prefix="/ws",
     tags=["Websocket / Control"],
 )
 
-client_online = False
+
+async def send_updates():
+    if active_connections:
+        for client_name, con in list(active_connections.items()):
+            try:
+                await con.send_json({
+                    "action": "update class",
+                    "message": {
+                        "classes_today": await get_classes_today(),
+                        "class_with_seats": await get_class_with_seats()
+                    }
+                })
+            except Exception as e:
+                logger.warning(
+                    f"[WS:{client_name}] Failed to send update: {e}")
+                active_connections.pop(client_name, None)
 
 
 @ws_router.websocket("/{client_name}")
 async def websocket_endpoint(websocket: WebSocket, client_name: str):
+    """
+    WebSocket connection endpoint for real-time control interface.
+
+    Parameters
+    ----------
+    websocket : WebSocket
+        The WebSocket connection object.
+    client_name : str
+        Unique identifier for the client.
+
+    Description
+    -----------
+    Accepts real-time control or sync messages from clients.
+    Maintains a persistent connection and updates all connected clients 
+    with class and seat data when `send_updates()` is called.
+    """
     global active_connections
-    global video_queue
-    global client_online
     await websocket.accept()
     active_connections[client_name] = websocket
-
-    
-    
-
     try:
-        
         while True:
             data = await websocket.receive_json()
-            logger.info(data)
-
+            logger.info(f"[WS:{client_name}] {data}")
 
     except WebSocketDisconnect:
-        print(f"Client {client_name} disconnected.")
+        logger.warning(f"[WS:{client_name}] Disconnected")
 
+    except Exception as e:
+        logger.exception(f"[WS:{client_name}] Unexpected error: {e}")
 
     finally:
-        # Ensure the connection is removed from the active connections
         active_connections.pop(client_name, None)
-        
-        print(f"Removed {client_name} from active connections.")
+        logger.info(f"[WS:{client_name}] Removed from active connections")
