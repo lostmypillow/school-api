@@ -5,7 +5,7 @@ from src.models.error_response import ErrorResponse
 from src.models.success_message import SuccessMessage
 from src.models.seat_info import SeatInfo
 seat_router = APIRouter(
-    prefix="/seats",
+    prefix="/seat",
     tags=["Seat"],
 )
 
