@@ -3,7 +3,6 @@ from typing import Literal
 class AuthRequest(BaseModel):
     student_id: str = Field(
         ...,
-        pattern=r"^\d{6}$",
         example="",
         description="學生學號"
     )

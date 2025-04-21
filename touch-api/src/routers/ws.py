@@ -2,6 +2,7 @@ from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 from src.lib.custom_logger import logger
 from src.lib.get_classes_today import get_classes_today
 from src.lib.get_class_with_seats import get_class_with_seats
+from pprint import pformat
 active_connections: dict[str, WebSocket] = {}
 ws_router = APIRouter(
     prefix="/ws",
@@ -50,14 +51,15 @@ async def websocket_endpoint(websocket: WebSocket, client_name: str):
     try:
         while True:
             data = await websocket.receive_json()
-            logger.info(f"[WS:{client_name}] {data}")
+            logger.info("[WS:%s]\n%s", client_name, pformat(data))
 
     except WebSocketDisconnect:
-        logger.warning(f"[WS:{client_name}] Disconnected")
+        logger.warning(f"[WS:{client_name}]\nDisconnected")
 
     except Exception as e:
-        logger.exception(f"[WS:{client_name}] Unexpected error: {e}")
+        logger.exception(f"[WS:{client_name}]\nUnexpected error: {e}")
 
     finally:
         active_connections.pop(client_name, None)
-        logger.info(f"[WS:{client_name}] Removed from active connections")
+        logger.info(f"[WS:{client_name}]\nRemoved from active connections")
+

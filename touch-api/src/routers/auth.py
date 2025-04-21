@@ -10,6 +10,7 @@ from src.lib.deps import deps
 from src.models.auth_request import AuthRequest
 from src.models.auth_response import AuthResponse
 from src.models.error_response import ErrorResponse
+from src.models.rateable_employee import RateableEmployee
 auth_router = APIRouter(
     prefix="/auth",
     tags=["Auth"],
@@ -71,6 +72,7 @@ async def authorize_student(auth_request: AuthRequest):
 
         if class_with_seat == {}:
             raise HTTPException(404, "抱歉，目前沒有補位資料!")
+        print(class_with_seat)
 
         try:
             courses_of_student: list[dict[str, str]] = await exec_sql(
@@ -197,7 +199,7 @@ async def authorize_student(auth_request: AuthRequest):
             raise HTTPException(500, "抱歉，系統發生錯誤! Error 009")
 
         rateable_employees = [
-            employee
+           RateableEmployee(**employee)
             for employee in emp_working_today
             if employee['學號'] not in [
                 voted_emps['評分對象']

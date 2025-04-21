@@ -3,5 +3,5 @@ SELECT
 FROM
     學生滿意度調查
 WHERE
-    日期 > :monday
+    時間 > :monday
     AND 學號 = :student_id
