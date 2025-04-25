@@ -11,6 +11,7 @@ INSERT INTO vm_details (
     pve_proxy,
     spice_proxy,
     vm_password,
+    usb,
     created_at
 )
 VALUES (
@@ -26,5 +27,6 @@ VALUES (
     :pve_proxy,
     :spice_proxy,
     :vm_password,
+    :usb,
     SYSDATETIME()
 );

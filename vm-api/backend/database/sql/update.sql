@@ -13,6 +13,7 @@ SET
     pve_proxy = :pve_proxy,
     spice_proxy  = :spice_proxy,
     vm_password = :vm_password,
+    usb =:usb,
     updated_at = SYSDATETIME()
 WHERE
     id = :id;

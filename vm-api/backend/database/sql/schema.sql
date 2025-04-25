@@ -14,6 +14,7 @@ CREATE TABLE vm_details (
     pve_proxy NVARCHAR(150) NULL,
     spice_proxy NVARCHAR(150) NOT NULL,
     vm_password NVARCHAR(128) NULL,
+    usb BIT NOT NULL,
     created_at DATETIME2 DEFAULT SYSDATETIME() NOT NULL,
     updated_at DATETIME2 DEFAULT SYSDATETIME() NOT NULL,
     CONSTRAINT chk_proxmox CHECK (pve IN (0, 1)),
@@ -44,6 +45,7 @@ INSERT INTO
         pve_proxy,
         spice_proxy,
         vm_password,
+        usb,
         created_at
     )
 VALUES
@@ -56,11 +58,11 @@ VALUES
         'lostmypillow',
         'lostmypillow',
         '245a4a7a-581f-434d-be48-e393d9578aa0',
-        -- Example UUID
         301,
-        'pve1.kaowei.tw:3128',
+        'pve3.kaowei.tw:3128',
         '192.168.2.13:3128',
         NULL,
+        0,
         SYSDATETIME()
     );
 
@@ -78,22 +80,23 @@ INSERT INTO
         pve_proxy,
         spice_proxy,
         vm_password,
+        usb,
         created_at
     )
 VALUES
     (
-        'Win7',
-        '300003',
+        'hanWin7',
+        '200829',
         NULL,
         0,
         NULL,
         NULL,
         NULL,
         NULL,
-        -- Example UUID
         NULL,
         NULL,
-        '192.168.2.21:8185',
-        '8185',
+        '192.168.2.21:8283',
+        '8283',
+        0,
         SYSDATETIME()
     );

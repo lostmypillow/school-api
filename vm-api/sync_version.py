@@ -1,5 +1,5 @@
 import json
-
+import logging
 frontend_package = "frontend/package.json"
 version_py_path = "backend/version.py"
 
@@ -11,4 +11,4 @@ version = package.get("version", "0.0.0")
 with open(version_py_path, "w") as f:
     f.write(f'# Auto-generated file. Do not edit manually.\nVERSION = "{version}"\n')
 
-print(version)
+logging.info(version)
