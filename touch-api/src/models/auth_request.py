@@ -7,7 +7,7 @@ class AuthRequest(BaseModel):
         description="學生學號"
     )
     type: Literal[
-        'seats',
+        'seat',
         'survey',
         'awards'
     ] = Field(

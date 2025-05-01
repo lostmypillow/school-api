@@ -61,7 +61,7 @@ async def authorize_student(auth_request: AuthRequest):
 
         return auth_response
 
-    if auth_request.type == "seats":
+    if auth_request.type == "seat":
 
         try:
             class_with_seat = await get_class_with_seats()
@@ -123,7 +123,7 @@ async def authorize_student(auth_request: AuthRequest):
 
         if matches_course == False:
             logger.error(
-                f'[AUTH {auth_request.student_id}] Student s courses does NOT match course for seats')
+                f'[AUTH {auth_request.student_id}] Student s courses does NOT match course for seat')
             raise HTTPException(404, detail="抱歉，目前沒有您可選的補位資料!")
 
         try:
