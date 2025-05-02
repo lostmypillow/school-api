@@ -9,7 +9,7 @@ class AuthRequest(BaseModel):
     type: Literal[
         'seat',
         'survey',
-        'awards'
+        'award'
     ] = Field(
         ...,
         example="seats",
