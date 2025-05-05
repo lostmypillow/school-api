@@ -16,3 +16,5 @@ WHERE
     )
     AND GETDATE() BETWEEN [學生補位主檔].開始時間 AND [學生補位主檔].結束時間
     AND [學生補位主檔].日期 = CONVERT(char(10), GETDATE(), 111)
+    -- AND CAST('2024-08-22' AS datetime) BETWEEN [學生補位主檔].開始時間 AND [學生補位主檔].結束時間
+    -- AND [學生補位主檔].日期 = CONVERT(char(10), CAST('2024-08-22' AS datetime), 111)
