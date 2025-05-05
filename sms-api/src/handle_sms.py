@@ -1,7 +1,7 @@
 
 import logging
 import random
-from httpx import Response, AsyncClient
+from httpx import Response, AsyncClient, Timeout
 from bs4 import BeautifulSoup
 from src.schemas import SMSModel
 from src.database.exec_sql import exec_sql
@@ -33,13 +33,20 @@ async def handle_sms(data: SMSModel):
 
     # If phone number has preferred vendor, use preferred vendor
     if preferred_vendor is not None:
-        vendor_id = str(preferred_vendor['限定廠商編號'])
+        vendor_id = preferred_vendor.get('限定廠商編號')
+        if vendor_id is None or str(vendor_id) == '0':
+            logging.warning(
+                f"Vendor data missing key '限定廠商編號': {preferred_vendor}")
+            vendor_id = "3"  # or some default
+        else:
+            vendor_id = str(vendor_id)
         logging.info(f"{data.phone_number} has preferred vendor: {vendor_id}")
 
     # If message content has http, randomize vendor 1 and 2
     elif data.message_content.find('http') != -1:
         vendor_id = str(random.randint(1, 2))
-        logging.info(f"{data.phone_number} has http in message content, choosing vendor {vendor_id}")
+        logging.info(
+            f"{data.phone_number} has http in message content, choosing vendor {vendor_id}")
 
         # If none of the above, randomize 1 to 3
     else:
@@ -54,7 +61,8 @@ async def handle_sms(data: SMSModel):
         # ...and if length of message exceeds 7 characters...
         if len(data.message_content) >= 7:
 
-            logging.info(f"{data.phone_number} has message that exceeds 7 characters, appending longsms fragment")
+            logging.info(
+                f"{data.phone_number} has message that exceeds 7 characters, appending longsms fragment")
 
             # ...append longsms to url
             url_list[vendor_id] += "&longsms=Y"
@@ -62,22 +70,28 @@ async def handle_sms(data: SMSModel):
             # ...and if send_time is specified...
         if data.send_time is not None:
 
-            logging.info(f"{data.phone_number} sendtime is specified, adding sendtime fragment")
+            logging.info(
+                f"{data.phone_number} sendtime is specified, adding sendtime fragment")
 
             # append send time to url
             url_list[vendor_id] += f"&sendtime={data.send_time}"
 
-    logging.info(f'[HANDLE SMS] Vendor URL constructed: {url_list[vendor_id]} for {data.phone_number}')
+    if vendor_id not in url_list:
+        # last fallback
+        vendor_id = "3"
 
+    logging.info(
+        f'[HANDLE SMS] Vendor URL constructed: {url_list[vendor_id]} for {data.phone_number}')
+    sms_id = "N/A"
     # With httpx's AsyncClient
-    async with AsyncClient() as client:
+    async with AsyncClient(timeout=Timeout(10.0, connect=5.0)) as client:
 
         # Gets response from sms vendor
         try:
             response: Response = await client.get(url_list[vendor_id])
             soup = BeautifulSoup(response.text, 'html.parser')
-            sms_id = soup.find(
-                'msgid').text if vendor_id != "3" else soup.find('msg').text
+            tag = soup.find('msgid') if vendor_id != "3" else soup.find('msg')
+            sms_id = tag.text if tag else "NOT_FOUND"
             logging.info(
                 f'[HANDLE SMS] Got response from vendor. ID is {sms_id}')
         except Exception as e:
