@@ -1,4 +1,11 @@
 import logging
+import sys
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(message)s",
+    stream=sys.stderr  # <— send logs to stderr
+)
 from fastapi import FastAPI, BackgroundTasks, HTTPException, Query, status
 from fastapi.responses import HTMLResponse
 from src.database.exec_sql import async_engine
