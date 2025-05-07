@@ -1,7 +1,7 @@
 import json
 import logging
 frontend_package = "frontend/package.json"
-version_py_path = "backend/version.py"
+version_py_path = "backend/src/version.py"
 
 with open(frontend_package, "r") as f:
     package = json.load(f)

@@ -92,9 +92,10 @@ After=network.target
 [Service]
 User=$USER
 WorkingDirectory=$APP_DIR
-ExecStart=$APP_DIR/.venv/bin/gunicorn --bind 0.0.0.0:$PORT -k  -w 4 uvicorn.workers.UvicornWorker main:app
+ExecStart=$APP_DIR/.venv/bin/gunicorn --bind 0.0.0.0:$PORT -k uvicorn.workers.UvicornWorker src.main:app
 Restart=always
 Environment=PYTHONUNBUFFERED=1
+Environment="TZ=Asia/Taipei"
 
 [Install]
 WantedBy=multi-user.target

@@ -59,10 +59,8 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     lifespan=lifespan,
     version=VERSION,
-    title="VM Management API",
-    description="API for managing VM records, owners, and proxy routing",
-    contact={"name": "Your Team", "email": "your@email.com"},
-    license_info={"name": "MIT"},
+    title="Kaowei VM",
+   
 )
 
 app.add_middleware(
