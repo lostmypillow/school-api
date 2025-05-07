@@ -38,7 +38,7 @@ async def authorize_student(auth_request: AuthRequest):
             'student_details',
             card_id=auth_request.student_id
         )
-        print(student_details)
+        # print(student_details)
     # Example student_details value:
     # {
     #     "學號": "",
@@ -72,7 +72,7 @@ async def authorize_student(auth_request: AuthRequest):
 
         if class_with_seat == {}:
             raise HTTPException(404, "抱歉，目前沒有補位資料!")
-        print(class_with_seat)
+   
 
         try:
             courses_of_student: list[dict[str, str]] = await exec_sql(
@@ -80,7 +80,7 @@ async def authorize_student(auth_request: AuthRequest):
                 'student_match_course',
                 student_id=auth_request.student_id
             )
-            print(courses_of_student)
+    
         # Example courses_of_student value:
         # [
         #     {
