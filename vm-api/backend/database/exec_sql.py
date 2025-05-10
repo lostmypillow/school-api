@@ -7,7 +7,7 @@ from src.config import settings
 import pyodbc
 from typing import Literal, Any
 import traceback
-
+import logging
 pyodbc.pooling = False
 
 
@@ -66,14 +66,14 @@ async def exec_sql(
     )
 
     if not path.isfile(file_path):
-        logger.error(f"[exec_sql:{command_name}] SQL file does not exist at {file_path}")
+        logging.error(f"[exec_sql:{command_name}] SQL file does not exist at {file_path}")
         raise FileNotFoundError(f"SQL file {command_name}.sql not found")
 
     try:
         with open(file_path, 'r', encoding="utf-8") as file_buffer:
             sql_command = file_buffer.read()
     except Exception as e:
-        logger.exception(f"[exec_sql:{command_name}] Failed to read SQL file: {e}")
+        logging.exception(f"[exec_sql:{command_name}] Failed to read SQL file: {e}")
         raise
 
     try:
@@ -91,8 +91,8 @@ async def exec_sql(
             if mode == "all":
                 return [dict(row._mapping) for row in result.fetchall()]
     except (SQLAlchemyError, DBAPIError) as db_err:
-        logger.exception(f"[exec_sql:{command_name}] DB error in mode={mode}, params={kwargs}:\n{traceback.format_exc()}")
+        logging.exception(f"[exec_sql:{command_name}] DB error in mode={mode}, params={kwargs}:\n{traceback.format_exc()}")
         raise
     except Exception as e:
-        logger.exception(f"[exec_sql:{command_name}] Unexpected error:\n{traceback.format_exc()}")
+        logging.exception(f"[exec_sql:{command_name}] Unexpected error:\n{traceback.format_exc()}")
         raise
