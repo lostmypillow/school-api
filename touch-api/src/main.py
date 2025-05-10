@@ -12,7 +12,7 @@ from src.routers.picture import picture_router
 from src.routers.seat import seat_router
 from src.routers.survey import survey_router
 from src.database.exec_sql import async_engine, exec_sql
-from src.lib.custom_logger import logger
+import logging
 from .version import VERSION
 
 
@@ -32,11 +32,11 @@ async def lifespan(app: FastAPI):
     yield
     if async_engine:
         await async_engine.dispose()
-        logger.info('[SHUTDOWN] Disposed async SQLAlchemy Engine')
+        logging.info('[SHUTDOWN] Disposed async SQLAlchemy Engine')
 
     if scheduler:
         scheduler.shutdown()
-        logger.info('[SHUTDOWN] Shut down APScheduler')
+        logging.info('[SHUTDOWN] Shut down APScheduler')
 
 
 app = FastAPI(

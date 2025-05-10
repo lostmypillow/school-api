@@ -3,7 +3,7 @@ from sqlalchemy.exc import SQLAlchemyError, DBAPIError
 from sqlalchemy import text, URL
 import pathlib
 from os import path
-from src.lib.custom_logger import logger
+import logging
 from src.config import settings
 import pyodbc
 from typing import Literal, Any

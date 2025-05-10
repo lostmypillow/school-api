@@ -1,10 +1,8 @@
 from fastapi import APIRouter, HTTPException
-from typing import Literal
-from pydantic import BaseModel, Field
 from datetime import datetime, timedelta
 from src.config import settings
 from src.database.exec_sql import exec_sql
-from src.lib.custom_logger import logger
+import logging
 from src.lib.get_class_with_seats import get_class_with_seats
 from src.lib.deps import deps
 from src.models.auth_request import AuthRequest
@@ -46,12 +44,12 @@ async def authorize_student(auth_request: AuthRequest):
     #     "性別": "男"
     # }
     except Exception as e:
-        logger.exception(
+        logging.exception(
             f'[AUTH {auth_request.student_id}] DB query student_details failed, raising Error 500')
         raise HTTPException(500, detail="抱歉，系統發生錯誤! Error 001")
 
     if student_details is None or student_details == {}:
-        logger.error(
+        logging.error(
             f'[AUTH {auth_request.student_id}] No student found, raising Error 404')
         raise HTTPException(404, detail="抱歉，查無此人!")
 
@@ -66,7 +64,7 @@ async def authorize_student(auth_request: AuthRequest):
         try:
             class_with_seat = await get_class_with_seats()
         except Exception as e:
-            logger.exception(
+            logging.exception(
                 f'[AUTH {auth_request.student_id}] Error calling get_class_with_seats(), raising Error 500')
             raise HTTPException(500, detail="抱歉，系統發生錯誤! Error 003")
 
@@ -88,12 +86,12 @@ async def authorize_student(auth_request: AuthRequest):
         #     }
         # ]
         except Exception as e:
-            logger.exception(
+            logging.exception(
                 f'[AUTH {auth_request.student_id}] DB query student_match_course failed, raising Error 500')
             raise HTTPException(500, detail="抱歉，系統發生錯誤! Error 002")
 
         if courses_of_student is None or courses_of_student == []:
-            logger.error(
+            logging.error(
                 f'[AUTH {auth_request.student_id}] No courses for {auth_request.student_id} found, raising Error 404')
             raise HTTPException(404, detail="抱歉，您沒有任何課程!")
 
@@ -107,22 +105,22 @@ async def authorize_student(auth_request: AuthRequest):
                 for d in courses_of_student
             )
         except AssertionError:
-            logger.error(
+            logging.error(
                 f"[AUTH {auth_request.student_id}] Data structure issue")
             raise HTTPException(500, "抱歉，系統發生錯誤! Error 004")
 
         except KeyError as e:
-            logger.exception(
+            logging.exception(
                 f"[AUTH {auth_request.student_id}] Missing key: {e}")
             raise HTTPException(500, "抱歉，系統發生錯誤! Error 005")
 
         except Exception as e:
-            logger.exception(
+            logging.exception(
                 f"[AUTH {auth_request.student_id}] Unknown error: {e}")
             raise HTTPException(500, "抱歉，系統發生錯誤! Error 006")
 
         if matches_course == False:
-            logger.error(
+            logging.error(
                 f'[AUTH {auth_request.student_id}] Student s courses does NOT match course for seat')
             raise HTTPException(404, detail="抱歉，目前沒有您可選的補位資料!")
 
@@ -134,7 +132,7 @@ async def authorize_student(auth_request: AuthRequest):
                 student_id=auth_request.student_id
             )
         except Exception as e:
-            logger.exception(
+            logging.exception(
                 f'[AUTH {auth_request.student_id}] DB query student_already_selected failed, raising Error 500')
             raise HTTPException(500, detail="系統發生錯誤，error 007")
         # OUTPUT:
@@ -150,7 +148,7 @@ async def authorize_student(auth_request: AuthRequest):
 
         if matches_course is False or check_already_selected != []:
 
-            logger.error(f'[AUTH {auth_request.student_id}] 目前沒有您可選的補位資料')
+            logging.error(f'[AUTH {auth_request.student_id}] 目前沒有您可選的補位資料')
 
             raise HTTPException(404, "目前沒有您可選的補位資料")
 
@@ -163,7 +161,7 @@ async def authorize_student(auth_request: AuthRequest):
                 current_date=datetime.now().strftime('%Y-%m-%d')
             )
         except Exception as e:
-            logger.exception(
+            logging.exception(
                 f"[AUTH {auth_request.student_id}] Unknown error: {e}")
             raise HTTPException(500, "抱歉，系統發生錯誤! Error 008")
 
@@ -194,7 +192,7 @@ async def authorize_student(auth_request: AuthRequest):
                 student_id=auth_request.student_id
             )
         except Exception as e:
-            logger.exception(
+            logging.exception(
                 f"[AUTH {auth_request.student_id}] Unknown error: {e}")
             raise HTTPException(500, "抱歉，系統發生錯誤! Error 009")
 

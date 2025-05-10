@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Response, HTTPException, Path
 from typing import Literal
 from src.database.exec_sql import exec_sql
-from src.lib.custom_logger import logger
+import logging
 picture_router = APIRouter(
     prefix="/picture",
     tags=["Picture"],
@@ -53,5 +53,5 @@ async def get_image(
         return Response(content=image_bytes, media_type="image/png")
     except Exception as e:
         print(e)
-        logger.error(f'[PIC] {e}')
+        logging.error(f'[PIC] {e}')
         raise HTTPException(404, 'Image not found')
