@@ -1,7 +1,6 @@
-from .database.operations import execute_SQL
-from .cardholder import Cardholder
+from src.cardholder import Cardholder
 from fastapi import WebSocket
-
+from src.database import exec_sql
 class Device:
     """Class containing device related attributes and methods
 
@@ -41,17 +40,17 @@ class Device:
         self._check_table_exists()
         self._check_for_teacher()
 
-    def _check_table_exists(self):
+    async def _check_table_exists(self):
         """Check if the device info table exists.
         """
-        execute_SQL("check_device_db")
+        await exec_sql("one","check_device_db")
 
-    def _check_for_teacher(self):
+    async def _check_for_teacher(self):
         """Check if device is associated with a teacher.
         """
 
         # If a teacher had already scanned their card against a given device, the executeSQL will return the teacher_id 
-        device_teacher_data = execute_SQL(
+        device_teacher_data = await exec_sql("one",
             "check_for_teacher",
             device_id=self.id
         )
@@ -76,7 +75,7 @@ class Device:
         elif cardholder.role == "student" and self.teacher_id is not None:
 
             # Writes that data to DB
-            reservation_id = execute_SQL(
+            reservation_id = await exec_sql("one",
                 "register_select",
                 student_id=cardholder.id,
                 teacher_id=self.teacher_id
@@ -85,7 +84,7 @@ class Device:
 
             # If student has never scanned in, this func will fire the insert command first. This indicates they started class.
             if not reservation_id or reservation_id == None:
-                execute_SQL(
+                await exec_sql("one",
                     "register_insert",
                     student_id=cardholder.id,
                     teacher_id=self.teacher_id
@@ -94,7 +93,7 @@ class Device:
 
             # If the student HAS scanned this device before (meaning the students has ended the class), we update the DB of the time they ended class.
             else:
-                execute_SQL(
+                await exec_sql("one",
                     "register_update_student",
                     reservation_id=reservation_id.自動編號
                 )
@@ -107,7 +106,7 @@ class Device:
             if cardholder.device_id == self.id:
 
                 # If the device matches, clear this device and stop further processing
-                execute_SQL(
+                await exec_sql("one",
                     "register_update_teacher",
                     teacher_id=None,
                     device_id=self.id
@@ -129,7 +128,7 @@ class Device:
             elif cardholder.device_id is not None and cardholder.device_id != self.id:
 
                 # Clear the DB of the cardholder's old device
-                execute_SQL(
+                await exec_sql("one",
                     "register_update_teacher",
                     teacher_id=None,
                     device_id=cardholder.device_id
@@ -146,7 +145,7 @@ class Device:
                     )
 
             # Finally, assign this device to the cardholder
-            execute_SQL(
+            await exec_sql("one",
                 "register_update_teacher",
                 teacher_id=cardholder.id,
                 device_id=self.id

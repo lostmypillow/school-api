@@ -1,13 +1,24 @@
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.staticfiles import StaticFiles
-from .cardholder import Cardholder
-from .device import Device
+# from .cardholder import Cardholder
+# from .device import Device
 from .version import VERSION
 from typing import Optional
-from fastapi.responses import PlainTextResponse
-from typing import Literal, Union
+from src.database.exec_sql import async_engine, exec_sql
+from src.models.device import Device
+from src.models.cardholder import Cardholder
+from src.models.fetch_role import FetchRoleResponse
+# from fastapi.responses import PlainTextResponse
+# from typing import Literal, Union
 # Entry of the FastAPI app
+
+
+async def lifespan(app: FastAPI):
+    yield
+    if async_engine:
+        await async_engine.dispose()
 app = FastAPI(
+    lifespan=lifespan,
     title="高偉數學輔導系统",
     version=VERSION
 )
@@ -24,48 +35,139 @@ active_websocket: Optional[WebSocket] = None
 #
 # If you have a better idea of making sure the endpoint only gets card numbers and not some other arbitary string, go for it.
 
-@app.get(
-    '/{device_id}/{card_id}',
-    response_class=PlainTextResponse,
-    response_model=Union[Literal["OK"], str]
-)
-async def process_card(card_id: str, device_id: int) -> str:
-    """Processes card ID based on a given device ID / 根據給的裝置 ID 處理卡號
+@app.get('/{device_id}/{card_id}')
+async def test(device_id: int, card_id: str):
+    cardholder = Cardholder(**await exec_sql(
+        "one",
+        "fetch_role_student",
+        card_id=card_id
+    )
+    )
+    if type(cardholder.name) == str:
+        cardholder.role = "student"
 
-    Parameters
-    ----------
-    card_id : str
-        card ID from RPi device / 來自樹梅派的卡號
+    elif cardholder.name == None:
+        print("Not a student, trying teacher")
+        cardholder = Cardholder(**await exec_sql(
+            "one",
+            "fetch_role_teacher",
+            card_id=card_id
+        )
+        )
 
-    device_id : int
-        device ID of the RPi device / 樹梅派裝置ID
+        if cardholder.name == None:
+            # not found throw error
+            print("Not found")
+        elif type(cardholder.name) == str:
+            cardholder.role = "teacher"
+            associated_device = await exec_sql(
+                "one",
+                "fetch_associated_device",
+                teacher_id=cardholder.card_id
+            )
+            if associated_device != {}:
+                cardholder.device_id = associated_device['設備號碼']
 
-    Returns
-    -------
-    str
-        message to be sent for display on the RPi / 要顯示在樹梅派 GUI 上的訊息
-    """
-    try:
+    cardholder.card_id = cardholder.card_id.strip()
 
-        # Initializes a Device instance. See device.py in the src folder for more details.
-        device = Device(device_id)
+    if cardholder.role == 'teacher':
+        if cardholder.device_id == device_id:
+            # If the device matches, clear this device and stop further processing
+            await exec_sql(
+                "commit",
+                "register_update_teacher",
+                teacher_id=None,
+                device_id=device_id
+            )
+            return f'{cardholder.name}老師 刷卡成功'
+        #  If cardholder has a device assigned and it's not this device
+        elif cardholder.device_id is not None and cardholder.device_id != device_id:
+            # Clear the DB of the cardholder's old device
+            await exec_sql(
+                "commit",
+                "register_update_teacher",
+                teacher_id=None,
+                device_id=cardholder.device_id
+            )
+        # Finally, assign this device to the cardholder
+        await exec_sql(
+            "commit",
+            "register_update_teacher",
+            teacher_id=cardholder.card_id,
+            device_id=device_id
+        )
+        return f'{cardholder.name}老師 刷卡成功'
 
-        # Initializes a Cardholder instance. See cardholder.py in the src folder for more details.
-        cardholder = Cardholder(card_id)
+    # if cardholder.role == 'student':
+    #     print('is student')
+    #     device = Device(
+    #         device_id=device_id,
+    #         teacher_id=(
+    #             await exec_sql(
+    #                 "one",
+    #                 "check_for_teacher",
+    #                 device_id=str(device_id)
+    #             ))['老師編號']
 
-        # Calls the register function of the Device instance. *Sigh* you know where to look for more details.
-        await device.register(cardholder, active_websocket)
+    #     )
+    #     if device.teacher_id:
+    #         #  device has teacher, proceed
+    #     else:
+    #         # device has no teacher, throw error
+    #     print(device)
 
-        # Sends the message back to the Pi
-        return device.message
+    return cardholder
 
-    except Exception as e:
+    # return
 
-        # I don't have any bright ideas for logging errors. So I just print it.
-        print(str(e))
 
-        # This error message will be sent to and displayed on the Pi.
-        return "刷卡失敗"
+# @app.get(
+#     '/{device_id}/{card_id}',
+#     response_class=PlainTextResponse,
+#     responses= {
+#         200: {
+#             "description": "Success message",
+#             "model": Union[Literal["OK"], str]
+#         }
+#     }
+# )
+# async def process_card(card_id: str, device_id: int):
+#     """Processes card ID based on a given device ID / 根據給的裝置 ID 處理卡號
+
+#     Parameters
+#     ----------
+#     card_id : str
+#         card ID from RPi device / 來自樹梅派的卡號
+
+#     device_id : int
+#         device ID of the RPi device / 樹梅派裝置ID
+
+#     Returns
+#     -------
+#     str
+#         message to be sent for display on the RPi / 要顯示在樹梅派 GUI 上的訊息
+#     """
+#     try:
+
+#         # Initializes a Device instance. See device.py in the src folder for more details.
+#         device = Device(device_id)
+
+#         # Initializes a Cardholder instance. See cardholder.py in the src folder for more details.
+#         cardholder = Cardholder(card_id)
+
+#         # Calls the register function of the Device instance. *Sigh* you know where to look for more details.
+#         await device.register(cardholder, active_websocket)
+
+#         # Sends the message back to the Pi
+#         return device.message
+
+#     except Exception as e:
+
+#         # I don't have any bright ideas for logging errors. So I just print it.
+#         print(str(e))
+
+#         # This error message will be sent to and displayed on the Pi.
+#         return "刷卡失敗"
 
 
 # Websocket connection to communicate with _vue, the frontend running on the (currently planned) TV screen.

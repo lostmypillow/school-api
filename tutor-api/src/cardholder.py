@@ -1,4 +1,4 @@
-from .database.operations import execute_SQL
+from src
 class Cardholder:
     """Class containing cardholder related attributes and methods
 
@@ -25,7 +25,7 @@ class Cardholder:
         Determines the role of the cardholder
     """
 
-    def __init__(self, card_id):
+    async def __init__(self, card_id):
         self.role = None
         """Can be either 'student' or 'teacher'.
         """
@@ -43,10 +43,10 @@ class Cardholder:
         """
 
         # Fetches role upon initialization.
-        self._fetch_role(card_id)
+        await self._fetch_role(card_id)
         
 
-    def _fetch_role(self, card_id: str):
+    async def _fetch_role(self, card_id: str):
         """Determines the role of the cardholder
 
         Parameters
@@ -56,7 +56,7 @@ class Cardholder:
         """
 
         # Checks if the cardholder is a student..
-        student = execute_SQL(
+        student = await exec_sql("one",
             "fetch_role_student",
             card_id=card_id
         )
@@ -73,7 +73,7 @@ class Cardholder:
         else:
 
             # If not, we check if they're a teacher...    
-            teacher = execute_SQL(
+            teacher = await exec_sql("one",
                 "fetch_role_teacher",
                 card_id=card_id
             )
@@ -88,7 +88,7 @@ class Cardholder:
                 self.school = teacher.大學.strip()
 
                 # check if the teacher is associated with a device...
-                device_result = execute_SQL(
+                device_result = await exec_sql("one",
                     "fetch_associated_device",
                     teacher_id=teacher.學號
                     )
