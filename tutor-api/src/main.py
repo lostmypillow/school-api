@@ -1,226 +1,223 @@
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect, UploadFile
 from fastapi.staticfiles import StaticFiles
 # from .cardholder import Cardholder
 # from .device import Device
+from pydantic import TypeAdapter
 from .version import VERSION
 from typing import Optional
 from src.database.exec_sql import async_engine, exec_sql
 from src.models.device import Device
 from src.models.cardholder import Cardholder
 from src.models.fetch_role import FetchRoleResponse
+from src.models.device_info import DeviceInfo
+from src.config import settings
+import logging
+import traceback
+from pprint import pformat
+logger = logging.getLogger('uvicorn.error')
 # from fastapi.responses import PlainTextResponse
 # from typing import Literal, Union
 # Entry of the FastAPI app
+import smbclient
+
 
 
 async def lifespan(app: FastAPI):
+    logger.info(f' v{VERSION} starting...')
+    smbclient.register_session(
+    server=settings.SMB_HOST,  # Replace with your SMB server's IP or hostname
+    username=settings.SMB_USERNAME,
+    password=settings.SMB_PASSWORD
+)
     yield
+    smbclient
     if async_engine:
         await async_engine.dispose()
+
 app = FastAPI(
     lifespan=lifespan,
-    title="高偉數學輔導系统",
+    
     version=VERSION
 )
 
 app.mount("/dash", StaticFiles(directory="public", html=True), name="dashboard")
 
-# This stores the websocket connections used in @app.websocket("/ws") in this file.
-#
-# This only exists because I wanted to pass the websocket connection to other classes/files.
-active_websocket: Optional[WebSocket] = None
+active_connections: dict[str, WebSocket] = {}
+@app.post("/uploadfile/")
+async def create_upload_file(file: UploadFile):
+    smb_path = fr"\\{settings.SMB_HOST}\{settings.SMB_FOLDER}\{file.filename}"
+    return {"filename": file.filename}
+
+@app.get("/devices", response_model=list[Cardholder])
+async def return_all_devices() -> list[Cardholder]:
+    return [
+        Cardholder(
+            **await exec_sql(
+                "one",
+                "fetch_role_teacher",
+                card_id=device_info['老師編號']
+            ),
+            **device_info,
+            role="teacher"
+        ).model_dump()
+        for device_info in await exec_sql(
+            "all",
+            "select_device_db"
+        )
+    ]
 
 
-# If you're wondering why card_id is a string and not an integer, it's cuz card IDs have letters in them.
-#
-# If you have a better idea of making sure the endpoint only gets card numbers and not some other arbitary string, go for it.
+@app.get(
+    '/{device_id}/{card_id}',
+    responses={
+        200: {
+            "description": "XXX老師 刷卡成功 | XXX學生 刷卡成功 | 刷卡失敗: XXX",
 
-@app.get('/{device_id}/{card_id}')
-async def test(device_id: int, card_id: str):
-    cardholder = Cardholder(**await exec_sql(
-        "one",
-        "fetch_role_student",
-        card_id=card_id
-    )
-    )
-    if type(cardholder.name) == str:
-        cardholder.role = "student"
-
-    elif cardholder.name == None:
-        print("Not a student, trying teacher")
+        }
+    }
+)
+async def register_card_id(device_id: int, card_id: str):
+    try:
         cardholder = Cardholder(**await exec_sql(
             "one",
-            "fetch_role_teacher",
+            "fetch_role_student",
             card_id=card_id
         )
         )
 
-        if cardholder.name == None:
-            # not found throw error
-            print("Not found")
-        elif type(cardholder.name) == str:
-            cardholder.role = "teacher"
-            associated_device = await exec_sql(
+        if type(cardholder.name) == str:
+            cardholder.role = "student"
+            logger.info(
+                f"Cardholder is student: {pformat(cardholder.model_dump())}")
+
+        elif cardholder.name == None:
+            print("Cardholder is not a student, trying teacher")
+            cardholder = Cardholder(**await exec_sql(
                 "one",
-                "fetch_associated_device",
-                teacher_id=cardholder.card_id
+                "fetch_role_teacher",
+                card_id=card_id
             )
-            if associated_device != {}:
-                cardholder.device_id = associated_device['設備號碼']
+            )
 
-    cardholder.card_id = cardholder.card_id.strip()
+            if cardholder.name == None:
+                logger.error(f"Error: Can't find info for {card_id}")
+                return "刷卡失敗: 查無此人"
 
-    if cardholder.role == 'teacher':
-        if cardholder.device_id == device_id:
-            # If the device matches, clear this device and stop further processing
+            elif type(cardholder.name) == str:
+                cardholder.role = "teacher"
+                associated_device = await exec_sql(
+                    "one",
+                    "fetch_associated_device",
+                    teacher_id=cardholder.card_id
+                )
+                if associated_device != {}:
+                    cardholder.device_id = associated_device['設備號碼']
+                logger.info(
+                    f"Cardholder is teacher: {pformat(cardholder.model_dump())}")
+
+        cardholder.card_id = cardholder.card_id.strip()
+
+        if cardholder.role == 'teacher':
+            if cardholder.device_id == device_id:
+                logger.info(
+                    "Cardholder device_id matches incoming device_id, will clear this device and return early")
+                await exec_sql(
+                    "commit",
+                    "register_update_teacher",
+                    teacher_id=None,
+                    device_id=device_id
+                )
+                await sync_frontend()
+                return f'{cardholder.name}老師 刷卡成功'
+
+            elif cardholder.device_id is not None and cardholder.device_id != device_id:
+                logger.info(
+                    "Cardholder has a device assigned and it's not this device, will clear DB")
+                await exec_sql(
+                    "commit",
+                    "register_update_teacher",
+                    teacher_id=None,
+                    device_id=cardholder.device_id
+                )
+            logger.info(
+                "Assigning this device to the teacher and returning early.")
             await exec_sql(
                 "commit",
                 "register_update_teacher",
-                teacher_id=None,
+                teacher_id=cardholder.card_id,
                 device_id=device_id
             )
+            await sync_frontend()
             return f'{cardholder.name}老師 刷卡成功'
-        #  If cardholder has a device assigned and it's not this device
-        elif cardholder.device_id is not None and cardholder.device_id != device_id:
-            # Clear the DB of the cardholder's old device
-            await exec_sql(
-                "commit",
-                "register_update_teacher",
-                teacher_id=None,
-                device_id=cardholder.device_id
+
+        elif cardholder.role == 'student':
+            device = Device(
+                device_id=device_id,
+                teacher_id=(
+                    await exec_sql(
+                        "one",
+                        "check_for_teacher",
+                        device_id=str(device_id)
+                    ))['老師編號']
             )
-        # Finally, assign this device to the cardholder
-        await exec_sql(
-            "commit",
-            "register_update_teacher",
-            teacher_id=cardholder.card_id,
-            device_id=device_id
-        )
-        return f'{cardholder.name}老師 刷卡成功'
+            logger.info(f'Device info: {pformat(device.model_dump())}')
+            if device.teacher_id == None:
+                logger.info("Device has no teacher, returning error")
+                return '刷卡失敗: 輔導老師未刷卡'
 
-    # if cardholder.role == 'student':
-    #     print('is student')
-    #     device = Device(
-    #         device_id=device_id,
-    #         teacher_id=(
-    #             await exec_sql(
-    #                 "one",
-    #                 "check_for_teacher",
-    #                 device_id=str(device_id)
-    #             ))['老師編號']
-
-    #     )
-    #     if device.teacher_id:
-    #         #  device has teacher, proceed
-    #     else:
-    #         # device has no teacher, throw error
-    #     print(device)
-
-    return cardholder
-
-    # return
-
-
-# @app.get(
-#     '/{device_id}/{card_id}',
-#     response_class=PlainTextResponse,
-#     responses= {
-#         200: {
-#             "description": "Success message",
-#             "model": Union[Literal["OK"], str]
-#         }
-#     }
-# )
-# async def process_card(card_id: str, device_id: int):
-#     """Processes card ID based on a given device ID / 根據給的裝置 ID 處理卡號
-
-#     Parameters
-#     ----------
-#     card_id : str
-#         card ID from RPi device / 來自樹梅派的卡號
-
-#     device_id : int
-#         device ID of the RPi device / 樹梅派裝置ID
-
-#     Returns
-#     -------
-#     str
-#         message to be sent for display on the RPi / 要顯示在樹梅派 GUI 上的訊息
-#     """
-#     try:
-
-#         # Initializes a Device instance. See device.py in the src folder for more details.
-#         device = Device(device_id)
-
-#         # Initializes a Cardholder instance. See cardholder.py in the src folder for more details.
-#         cardholder = Cardholder(card_id)
-
-#         # Calls the register function of the Device instance. *Sigh* you know where to look for more details.
-#         await device.register(cardholder, active_websocket)
-
-#         # Sends the message back to the Pi
-#         return device.message
-
-#     except Exception as e:
-
-#         # I don't have any bright ideas for logging errors. So I just print it.
-#         print(str(e))
-
-#         # This error message will be sent to and displayed on the Pi.
-#         return "刷卡失敗"
+            reservation_id = await exec_sql(
+                "one",
+                "register_select",
+                student_id=cardholder.card_id,
+                teacher_id=device.teacher_id
+            )
+            if reservation_id == {}:
+                logger.info(
+                    "Student has no reservation ID associated, proceeding to create one")
+                await exec_sql(
+                    "commit",
+                    "register_insert",
+                    student_id=cardholder.card_id,
+                    teacher_id=device.teacher_id
+                )
+            else:
+                logger.info(
+                    "Student has reservation ID, proceeding to update time for end of class")
+                await exec_sql(
+                    "commit",
+                    "register_update_student",
+                    reservation_id=reservation_id['自動編號']
+                )
+            await sync_frontend()
+            return f'{cardholder.name}學生 刷卡成功'
+    except Exception as e:
+        logger.exception(f"[main] Unexpected error:\n{traceback.format_exc()}")
+        return '刷卡失敗: API 錯誤'
 
 
-# Websocket connection to communicate with _vue, the frontend running on the (currently planned) TV screen.
-#
-# Yes, I do know that a better way would be server sent events, since the TV doesn't really send anything back. But if it ain't broke I'm not fixing it.
-#
-#  Have a go at it if you can.
-@app.websocket("/ws")
-async def websocket_endpoint(websocket: WebSocket):
-    """Sends real time info on which teacher is associated with which device / 傳送哪位老師在哪個裝置的即時資訊
+async def sync_frontend():
+    for connection in active_connections:
+        await active_connections[connection].send_json(await return_all_devices())
 
-    Parameters
-    ----------
-    websocket : WebSocket
-        The websocket instance
-    """
 
-    # Uses the active_websocket variable at the beginning of this file
-    global active_websocket
+@app.websocket("/{client_name}")
+async def websocket_endpoint(websocket: WebSocket, client_name: str):
 
-    # Waits for...the client to accept? Idk, VSCode is not showing the docs for the accept() method dammit.
+    global active_connections
     await websocket.accept()
-
-    # Sets the current connection as the  active websocket connection
-    active_websocket = websocket
-
-    # For every device (1-6, and also this only runs once when the client connects)...
-    for n in range(1, 7):
-
-        # Initialize a Device class.
-        device = Device(n)
-
-        # If the device IS associated with a teacher...
-        if device.teacher_id is not None:
-
-            # Initialize a Cardholder instance of that teacher
-            teacher = Cardholder(device.teacher_id)
-
-            # Sends the details of that teacher to the device
-            await websocket.send_json(
-                {
-                    "device": device.id,
-                    "image": teacher.id,
-                    "teacher": teacher.name,
-                    "school": teacher.school
-                }
-            )
-
-    # This recieves messages from the client but completely useless for the reason detailed above @app.websocket("/ws")
+    active_connections[client_name] = websocket
+    await sync_frontend()
     try:
         while True:
-            message = await websocket.receive_text()
+            data = await websocket.receive_json()
+            logger.info(pformat(data))
 
-    # Handles client disconnection
     except WebSocketDisconnect:
-        active_websocket = None
+        logger.warning(f"[WS:{client_name}]\nDisconnected")
+
+    except Exception as e:
+        logger.exception(f"[WS:{client_name}]\nUnexpected error: {e}")
+
+    finally:
+        active_connections.pop(client_name, None)
+        logger.info(f"[WS:{client_name}]\nRemoved from active connections")
