@@ -2,6 +2,7 @@ from fastapi import APIRouter, Response, HTTPException, Path
 from typing import Literal
 from src.database.exec_sql import exec_sql
 import logging
+logger = logging.getLogger('uvicorn.error')
 picture_router = APIRouter(
     prefix="/picture",
     tags=["Picture"],
@@ -53,5 +54,5 @@ async def get_image(
         return Response(content=image_bytes, media_type="image/png")
     except Exception as e:
         print(e)
-        logging.error(f'[PIC] {e}')
+        logger.error(f'[PIC] {e}')
         raise HTTPException(404, 'Image not found')

@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel
 from src.database.exec_sql import exec_sql
 import logging
+logger = logging.getLogger('uvicorn.error')
 from src.models.success_message import SuccessMessage
 from src.models.error_response import ErrorResponse
 from src.models.survey_info import SurveyInfo
@@ -54,7 +54,7 @@ async def rate_employee(survey_info: SurveyInfo):
         )
         return SuccessMessage(message="success")
     except KeyError as e:
-        logging.error(f'[RATE ERROR] Invalid department: {survey_info.employee_dep} - {e}')
+        logger.error(f'[RATE ERROR] Invalid department: {survey_info.employee_dep} - {e}')
         raise HTTPException(status_code=400, detail="部門資訊有誤")
 
     except Exception as e:

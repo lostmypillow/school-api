@@ -13,6 +13,7 @@ from src.routers.seat import seat_router
 from src.routers.survey import survey_router
 from src.database.exec_sql import async_engine, exec_sql
 import logging
+logger = logging.getLogger('uvicorn.error')
 from .version import VERSION
 
 
@@ -21,6 +22,8 @@ from .version import VERSION
 
 
 async def lifespan(app: FastAPI):
+    logger.info(f"KwTouchscreen v{VERSION} starting...")
+    logger.info("Starting AsyncIOScheduler...")
     scheduler = AsyncIOScheduler()
     scheduler.start()
     scheduler.add_job(
@@ -32,11 +35,11 @@ async def lifespan(app: FastAPI):
     yield
     if async_engine:
         await async_engine.dispose()
-        logging.info('[SHUTDOWN] Disposed async SQLAlchemy Engine')
+        logger.info('[SHUTDOWN] Disposed async SQLAlchemy Engine')
 
     if scheduler:
         scheduler.shutdown()
-        logging.info('[SHUTDOWN] Shut down APScheduler')
+        logger.info('[SHUTDOWN] Shut down APScheduler')
 
 
 app = FastAPI(

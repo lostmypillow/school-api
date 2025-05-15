@@ -1,5 +1,6 @@
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 import logging
+logger = logging.getLogger('uvicorn.error')
 from src.lib.get_classes_today import get_classes_today
 from src.lib.get_class_with_seats import get_class_with_seats
 from pprint import pformat
@@ -22,7 +23,7 @@ async def send_updates():
                     }
                 })
             except Exception as e:
-                logging.warning(
+                logger.warning(
                     f"[WS:{client_name}] Failed to send update: {e}")
                 active_connections.pop(client_name, None)
 
@@ -51,15 +52,15 @@ async def websocket_endpoint(websocket: WebSocket, client_name: str):
     try:
         while True:
             data = await websocket.receive_json()
-            logging.info(pformat(data))
+            logger.info(pformat(data))
 
     except WebSocketDisconnect:
-        logging.warning(f"[WS:{client_name}]\nDisconnected")
+        logger.warning(f"[WS:{client_name}]\nDisconnected")
 
     except Exception as e:
-        logging.exception(f"[WS:{client_name}]\nUnexpected error: {e}")
+        logger.exception(f"[WS:{client_name}]\nUnexpected error: {e}")
 
     finally:
         active_connections.pop(client_name, None)
-        logging.info(f"[WS:{client_name}]\nRemoved from active connections")
+        logger.info(f"[WS:{client_name}]\nRemoved from active connections")
 

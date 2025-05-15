@@ -1,5 +1,6 @@
 from fastapi import APIRouter, HTTPException
 import logging
+logger = logging.getLogger('uvicorn.error')
 from src.database.exec_sql import exec_sql
 from src.models.error_response import ErrorResponse
 from src.models.success_message import SuccessMessage
@@ -41,6 +42,6 @@ async def register_seat(seat_info: SeatInfo):
         )
         return SuccessMessage(message="success")
     except Exception as e:
-        logging.exception(
+        logger.exception(
             f'[SEAT ERROR] 學號={seat_info.學號}, 號碼={seat_info.號碼} - {e}')
         raise HTTPException(status_code=500, detail="抱歉，系統發生錯誤! Error 010")
