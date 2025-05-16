@@ -1,4 +1,6 @@
+import smbclient
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, UploadFile
+from fastapi.exceptions import HTTPException
 from fastapi.staticfiles import StaticFiles
 # from .cardholder import Cardholder
 # from .device import Device
@@ -13,24 +15,28 @@ from src.models.device_info import DeviceInfo
 from src.config import settings
 import logging
 import traceback
+from src.routers.picture import router as picture_router
+from src.routers.ws import sync_frontend, router as ws_router
+import magic
 from pprint import pformat
 logger = logging.getLogger('uvicorn.error')
 # from fastapi.responses import PlainTextResponse
 # from typing import Literal, Union
 # Entry of the FastAPI app
-import smbclient
+from fastapi.middleware.cors import CORSMiddleware
 
 
 
 async def lifespan(app: FastAPI):
     logger.info(f' v{VERSION} starting...')
     smbclient.register_session(
-    server=settings.SMB_HOST,  # Replace with your SMB server's IP or hostname
-    username=settings.SMB_USERNAME,
-    password=settings.SMB_PASSWORD
-)
+        server=settings.SMB_HOST,
+        username=settings.SMB_USERNAME,
+        password=settings.SMB_PASSWORD
+    )
+    smbclient.ClientConfig(timeout=10)
+
     yield
-    smbclient
     if async_engine:
         await async_engine.dispose()
 
@@ -39,33 +45,21 @@ app = FastAPI(
     
     version=VERSION
 )
-
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # or specify your frontend origin
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+# app.mount("/static", StaticFiles(directory="pictures"), name="pictures")
 app.mount("/dash", StaticFiles(directory="public", html=True), name="dashboard")
 
 active_connections: dict[str, WebSocket] = {}
-@app.post("/uploadfile/")
-async def create_upload_file(file: UploadFile):
-    smb_path = fr"\\{settings.SMB_HOST}\{settings.SMB_FOLDER}\{file.filename}"
-    return {"filename": file.filename}
 
-@app.get("/devices", response_model=list[Cardholder])
-async def return_all_devices() -> list[Cardholder]:
-    return [
-        Cardholder(
-            **await exec_sql(
-                "one",
-                "fetch_role_teacher",
-                card_id=device_info['老師編號']
-            ),
-            **device_info,
-            role="teacher"
-        ).model_dump()
-        for device_info in await exec_sql(
-            "all",
-            "select_device_db"
-        )
-    ]
 
+app.include_router(picture_router)
+app.include_router(ws_router)
 
 @app.get(
     '/{device_id}/{card_id}',
@@ -195,29 +189,5 @@ async def register_card_id(device_id: int, card_id: str):
         return '刷卡失敗: API 錯誤'
 
 
-async def sync_frontend():
-    for connection in active_connections:
-        await active_connections[connection].send_json(await return_all_devices())
 
 
-@app.websocket("/{client_name}")
-async def websocket_endpoint(websocket: WebSocket, client_name: str):
-
-    global active_connections
-    await websocket.accept()
-    active_connections[client_name] = websocket
-    await sync_frontend()
-    try:
-        while True:
-            data = await websocket.receive_json()
-            logger.info(pformat(data))
-
-    except WebSocketDisconnect:
-        logger.warning(f"[WS:{client_name}]\nDisconnected")
-
-    except Exception as e:
-        logger.exception(f"[WS:{client_name}]\nUnexpected error: {e}")
-
-    finally:
-        active_connections.pop(client_name, None)
-        logger.info(f"[WS:{client_name}]\nRemoved from active connections")
