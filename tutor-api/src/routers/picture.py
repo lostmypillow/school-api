@@ -2,7 +2,6 @@ from fastapi import APIRouter, UploadFile, File
 from fastapi.responses import FileResponse
 from fastapi.exceptions import HTTPException
 from src.config import settings
-import magic
 import logging
 import smbclient
 from src.routers.ws import sync_frontend
@@ -10,6 +9,7 @@ from PIL import Image
 from io import BytesIO
 from pathlib import Path
 import os
+import filetype
 logger = logging.getLogger('uvicorn.error')
 router = APIRouter(prefix="/picture", tags=["Edit picture"])
 
@@ -17,17 +17,14 @@ router = APIRouter(prefix="/picture", tags=["Edit picture"])
 
 
 def get_smb_path(filename: str) -> str:
-    return fr"\\{settings.SMB_HOST}\{settings.SMB_FOLDER}\{filename}"
+    return os.path.join(fr'\\{settings.SMB_HOST}\\', *settings.SMB_FOLDER.split(','), filename)
 
 
 @router.post("/{card_id}")
 async def upload_file(card_id: int, file: UploadFile = File(...)):
-    mime = magic.from_buffer(await file.read(2048), mime=True)
-    await file.seek(0)
-
-    if not mime.startswith("image/"):
+    kind = filetype.guess(await file.read(2048))
+    if kind is None or not kind.mime.startswith("image/"):
         raise HTTPException(status_code=400, detail="Not a valid image")
-
     try:
         # Load the uploaded image into Pillow
         img = Image.open(BytesIO(await file.read()))

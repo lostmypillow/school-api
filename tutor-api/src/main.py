@@ -1,28 +1,20 @@
+import logging
+logger = logging.getLogger('uvicorn.error')
 import smbclient
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, UploadFile
 from fastapi.exceptions import HTTPException
 from fastapi.staticfiles import StaticFiles
-# from .cardholder import Cardholder
-# from .device import Device
-from pydantic import TypeAdapter
 from .version import VERSION
-from typing import Optional
 from src.database.exec_sql import async_engine, exec_sql
 from src.models.device import Device
 from src.models.cardholder import Cardholder
-from src.models.fetch_role import FetchRoleResponse
-from src.models.device_info import DeviceInfo
 from src.config import settings
-import logging
+
 import traceback
 from src.routers.picture import router as picture_router
 from src.routers.ws import sync_frontend, router as ws_router
-import magic
 from pprint import pformat
-logger = logging.getLogger('uvicorn.error')
-# from fastapi.responses import PlainTextResponse
-# from typing import Literal, Union
-# Entry of the FastAPI app
+
 from fastapi.middleware.cors import CORSMiddleware
 
 
@@ -41,7 +33,7 @@ async def lifespan(app: FastAPI):
         await async_engine.dispose()
 
 app = FastAPI(
-    lifespan=lifespan,
+    lifespan=lifespan, # type: ignore
     
     version=VERSION
 )
