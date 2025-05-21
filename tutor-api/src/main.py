@@ -1,39 +1,31 @@
+from fastapi.middleware.cors import CORSMiddleware
+from pprint import pformat
+from src.routers.ws import sync_frontend, router as ws_router
+from src.routers.picture import router as picture_router
+import traceback
+from typing import Literal
+from src.config import settings
+from src.models.cardholder import Cardholder
+from src.models.device import Device
+from src.database.exec_sql import async_engine, exec_sql
+from .version import VERSION
+from fastapi.staticfiles import StaticFiles
+from fastapi.exceptions import HTTPException
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect, UploadFile
+import smbclient
 import logging
 logger = logging.getLogger('uvicorn.error')
-import smbclient
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect, UploadFile
-from fastapi.exceptions import HTTPException
-from fastapi.staticfiles import StaticFiles
-from .version import VERSION
-from src.database.exec_sql import async_engine, exec_sql
-from src.models.device import Device
-from src.models.cardholder import Cardholder
-from src.config import settings
-
-import traceback
-from src.routers.picture import router as picture_router
-from src.routers.ws import sync_frontend, router as ws_router
-from pprint import pformat
-
-from fastapi.middleware.cors import CORSMiddleware
-
 
 
 async def lifespan(app: FastAPI):
     logger.info(f' v{VERSION} starting...')
-    smbclient.register_session(
-        server=settings.SMB_HOST,
-        username=settings.SMB_USERNAME,
-        password=settings.SMB_PASSWORD
-    )
-    smbclient.ClientConfig(timeout=10)
 
     yield
     if async_engine:
         await async_engine.dispose()
 
 app = FastAPI(
-    lifespan=lifespan, # type: ignore
+    lifespan=lifespan,  # type: ignore
     
     version=VERSION
 )
@@ -52,6 +44,16 @@ active_connections: dict[str, WebSocket] = {}
 
 app.include_router(picture_router)
 app.include_router(ws_router)
+
+
+@app.post('/update')
+async def update_info(cardholder: Cardholder):
+    try:
+        await exec_sql('commit', 'update_teacher_info', card_id=cardholder.card_id, college=cardholder.school)
+        await sync_frontend()
+    except Exception as e:
+        return HTTPException(404)
+
 
 @app.get(
     '/{device_id}/{card_id}',
@@ -104,6 +106,8 @@ async def register_card_id(device_id: int, card_id: str):
         cardholder.card_id = cardholder.card_id.strip()
 
         if cardholder.role == 'teacher':
+            if device_id == 0:
+                return cardholder
             if cardholder.device_id == device_id:
                 logger.info(
                     "Cardholder device_id matches incoming device_id, will clear this device and return early")
@@ -179,7 +183,3 @@ async def register_card_id(device_id: int, card_id: str):
     except Exception as e:
         logger.exception(f"[main] Unexpected error:\n{traceback.format_exc()}")
         return '刷卡失敗: API 錯誤'
-
-
-
-

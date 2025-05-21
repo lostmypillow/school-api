@@ -6,14 +6,23 @@ from src.config import settings
 import logging
 import smbclient
 from src.routers.ws import sync_frontend
+from src.utils.smb_retry import smb_retry
+
 from PIL import Image
 from io import BytesIO
 from pathlib import Path
 import os
 import filetype
+from smbprotocol.exceptions import UserSessionDeleted
+
 logger = logging.getLogger('uvicorn.error')
 router = APIRouter(prefix="/picture", tags=["Edit picture"])
-
+def register_session():
+     smbclient.register_session(
+        server=settings.SMB_HOST,
+        username=settings.SMB_USERNAME,
+        password=settings.SMB_PASSWORD
+    )
 # Helper to construct the full SMB path
 
 
@@ -23,6 +32,7 @@ def get_smb_path(filename: str) -> str:
 
 @router.post("/{card_id}")
 async def upload_file(card_id: int, file: UploadFile = File(...)):
+    register_session()
     kind = filetype.guess(await file.read(2048))
     await file.seek(0)
     if kind is None or not kind.mime.startswith("image/"):
@@ -45,6 +55,8 @@ async def upload_file(card_id: int, file: UploadFile = File(...)):
             dst.write(output_buffer.read())
 
         logger.info(f"Uploaded and converted file to SMB: {smb_path}")
+        if os.path.exists(os.path.join(os.getcwd(), "public", f"{card_id}.png")):
+            os.remove(os.path.join(os.getcwd(), "public", f"{card_id}.png"))
         await sync_frontend()
         return {"filename": f"{card_id}.png", "status": "success"}
 
@@ -57,26 +69,38 @@ async def upload_file(card_id: int, file: UploadFile = File(...)):
 
 @router.get("/{card_id}")
 async def get_image(card_id: int):
+    register_session()
     logger.info(f"getting stuff for {card_id}")
     filename = f"{card_id}.png"
     smb_path = get_smb_path(filename=filename)
     local_path = os.path.join(os.getcwd(), "public", filename)
-
-    if not smbclient.path.exists(smb_path):
-        logger.error(f"File not found for {card_id}")
-        raise HTTPException(status_code=404, detail="File not found")
-    if not os.path.exists(local_path):
+    try:
+        if not smbclient.path.exists(smb_path):
+            logger.error(f"File not found for {card_id}")
+            raise HTTPException(status_code=404, detail="File not found")
         try:
-            with smbclient.open_file(smb_path, mode="rb") as src, open(local_path, "wb") as dst:
-                dst.write(src.read())
+                with smbclient.open_file(smb_path, mode="rb") as src, open(local_path, "wb") as dst:
+                    dst.write(src.read())
         except Exception as e:
-            logger.exception(f"Failed to download file: {e}")
-            raise HTTPException(status_code=500, detail="Download failed")
-    return FileResponse(local_path, filename=filename)
+                logger.exception(f"Failed to download file: {e}")
+                raise HTTPException(status_code=500, detail="Download failed")
+        return FileResponse(local_path, filename=filename)
+    except UserSessionDeleted:
+            logger.warning("Caught UserSessionDeleted — refreshing SMB session and retrying.")
+            smbclient.reset_connection_cache()
+            smbclient.register_session(
+                server=settings.SMB_HOST,
+                username=settings.SMB_USERNAME,
+                password=settings.SMB_PASSWORD
+            )
+
+    
 
 
 @router.delete("/{card_id}")
+@smb_retry
 async def delete_file(card_id: int):
+    register_session()
     filename = f"{card_id}.png"
 
     smb_path = get_smb_path(filename)
