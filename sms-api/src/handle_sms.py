@@ -37,7 +37,7 @@ async def handle_sms(data: SMSModel):
         if vendor_id is None or str(vendor_id) == '0':
             logging.warning(
                 f"Vendor data missing key '限定廠商編號': {preferred_vendor}")
-            vendor_id = "3"  # or some default
+            vendor_id = str(random.randint(1, 3))  # or some default
         else:
             vendor_id = str(vendor_id)
         logging.info(f"{data.phone_number} has preferred vendor: {vendor_id}")
