@@ -1,6 +1,7 @@
 from fastapi import APIRouter, UploadFile, File
 from fastapi.responses import FileResponse
 from fastapi.exceptions import HTTPException
+import smbclient.path
 from src.config import settings
 import logging
 import smbclient
@@ -23,6 +24,7 @@ def get_smb_path(filename: str) -> str:
 @router.post("/{card_id}")
 async def upload_file(card_id: int, file: UploadFile = File(...)):
     kind = filetype.guess(await file.read(2048))
+    await file.seek(0)
     if kind is None or not kind.mime.startswith("image/"):
         raise HTTPException(status_code=400, detail="Not a valid image")
     try:
