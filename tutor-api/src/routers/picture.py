@@ -6,19 +6,19 @@ from src.config import settings
 import logging
 import smbclient
 from src.routers.ws import sync_frontend
-from src.utils.smb_retry import smb_retry
 
 from PIL import Image
 from io import BytesIO
-from pathlib import Path
 import os
 import filetype
 from smbprotocol.exceptions import UserSessionDeleted
 
 logger = logging.getLogger('uvicorn.error')
-router = APIRouter(prefix="/picture", tags=["Edit picture"])
+router = APIRouter(prefix="/picture", tags=["Get profile pictures"])
+
+
 def register_session():
-     smbclient.register_session(
+    smbclient.register_session(
         server=settings.SMB_HOST,
         username=settings.SMB_USERNAME,
         password=settings.SMB_PASSWORD
@@ -67,6 +67,7 @@ async def upload_file(card_id: int, file: UploadFile = File(...)):
     finally:
         await file.close()
 
+
 @router.get("/{card_id}")
 async def get_image(card_id: int):
     register_session()
@@ -79,26 +80,24 @@ async def get_image(card_id: int):
             logger.error(f"File not found for {card_id}")
             raise HTTPException(status_code=404, detail="File not found")
         try:
-                with smbclient.open_file(smb_path, mode="rb") as src, open(local_path, "wb") as dst:
-                    dst.write(src.read())
+            with smbclient.open_file(smb_path, mode="rb") as src, open(local_path, "wb") as dst:
+                dst.write(src.read())
         except Exception as e:
-                logger.exception(f"Failed to download file: {e}")
-                raise HTTPException(status_code=500, detail="Download failed")
+            logger.exception(f"Failed to download file: {e}")
+            raise HTTPException(status_code=500, detail="Download failed")
         return FileResponse(local_path, filename=filename)
     except UserSessionDeleted:
-            logger.warning("Caught UserSessionDeleted — refreshing SMB session and retrying.")
-            smbclient.reset_connection_cache()
-            smbclient.register_session(
-                server=settings.SMB_HOST,
-                username=settings.SMB_USERNAME,
-                password=settings.SMB_PASSWORD
-            )
-
-    
+        logger.warning(
+            "Caught UserSessionDeleted — refreshing SMB session and retrying.")
+        smbclient.reset_connection_cache()
+        smbclient.register_session(
+            server=settings.SMB_HOST,
+            username=settings.SMB_USERNAME,
+            password=settings.SMB_PASSWORD
+        )
 
 
 @router.delete("/{card_id}")
-@smb_retry
 async def delete_file(card_id: int):
     register_session()
     filename = f"{card_id}.png"

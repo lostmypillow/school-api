@@ -10,26 +10,28 @@ router = APIRouter(
 )
 active_connections: dict[str, WebSocket] = {}
 
+
 async def sync_frontend():
     for connection in active_connections:
         try:
             await active_connections[connection].send_json([
-            Cardholder(
-                **await exec_sql(
-                    "one",
-                    "fetch_role_teacher",
-                    card_id=device_info['老師編號']
-                ),
-                **device_info,
-                role="teacher"
-            ).model_dump()
-            for device_info in await exec_sql(
-                "all",
-                "select_device_db"
-            )
-        ])
+                Cardholder(
+                    **await exec_sql(
+                        "one",
+                        "fetch_role_teacher",
+                        card_id=device_info['老師編號']
+                    ),
+                    **device_info,
+                    role="teacher"
+                ).model_dump()
+                for device_info in await exec_sql(
+                    "all",
+                    "select_device_db"
+                )
+            ])
         except Exception as e:
             print(e)
+
 
 @router.websocket("/{client_name}")
 async def websocket_endpoint(websocket: WebSocket, client_name: str):

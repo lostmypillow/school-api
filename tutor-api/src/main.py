@@ -2,6 +2,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pprint import pformat
 from src.routers.ws import sync_frontend, router as ws_router
 from src.routers.picture import router as picture_router
+from src.routers.announcements import router as announcement_router
 import traceback
 from typing import Literal
 from src.config import settings
@@ -41,15 +42,20 @@ app.mount("/dash", StaticFiles(directory="public", html=True), name="dashboard")
 
 active_connections: dict[str, WebSocket] = {}
 
-
+app.include_router(announcement_router)
 app.include_router(picture_router)
 app.include_router(ws_router)
 
 
 @app.post('/update')
-async def update_info(cardholder: Cardholder):
+async def update_teacher_info(cardholder: Cardholder):
     try:
-        await exec_sql('commit', 'update_teacher_info', card_id=cardholder.card_id, college=cardholder.school)
+        await exec_sql(
+            'commit',
+            'update_teacher_info',
+            card_id=cardholder.card_id,
+            college=cardholder.school
+        )
         await sync_frontend()
     except Exception as e:
         return HTTPException(404)
@@ -103,7 +109,8 @@ async def register_card_id(device_id: int, card_id: str):
                 logger.info(
                     f"Cardholder is teacher: {pformat(cardholder.model_dump())}")
 
-        cardholder.card_id = cardholder.card_id.strip()
+        cardholder.card_id = cardholder.card_id.strip(
+        ) if cardholder.card_id is not None else cardholder.card_id
 
         if cardholder.role == 'teacher':
             if device_id == 0:
