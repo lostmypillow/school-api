@@ -83,6 +83,9 @@ async def register_card_id(device_id: int, card_id: str):
             cardholder.role = "student"
             logger.info(
                 f"Cardholder is student: {pformat(cardholder.model_dump())}")
+            if device_id == 0:
+                raise HTTPException(404, 'Not eligible')
+                
 
         elif cardholder.name == None:
             print("Cardholder is not a student, trying teacher")
