@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 from fastapi.exceptions import HTTPException
-from src.models.announcement import AddAnnouncement, Announcement
+from src.models.announcement import AddAnnouncement, UpdateAnnouncement
 from src.database.exec_sql import exec_sql
 import logging
 from src.models.api_response import APIResponse
@@ -32,12 +32,13 @@ async def add_announcement(announcement: AddAnnouncement):
 
 
 @router.put('/')
-async def update_announcement(announcement: Announcement):
+async def update_announcement(announcement: UpdateAnnouncement):
     try:
         await exec_sql(
             'commit',
             'update_announce',
-            id=announcement.id
+            id=announcement.id,
+            content=announcement.content,
         )
         return APIResponse(
             detail="Updating announcement successful!!"

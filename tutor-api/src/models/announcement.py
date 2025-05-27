@@ -3,7 +3,10 @@ from datetime import datetime
 class AddAnnouncement(BaseModel):
     content: str
     author: str
-    
+
+class UpdateAnnouncement(BaseModel):
+    id: int | None
+    content: str
 
 class Announcement(AddAnnouncement):
     id: int | None
