@@ -7,3 +7,4 @@ FROM
 WHERE
     卡號 = :card_id
     OR 學號 = :card_id
+    AND 主要部門 = '9'
