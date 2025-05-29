@@ -48,10 +48,11 @@ async def websocket_endpoint(websocket: WebSocket, client_name: str):
     """
     global active_connections
     await websocket.accept()
+    logger.info(f'[WS:{client_name}] Connected')
     active_connections[client_name] = websocket
     try:
         while True:
-            data = await websocket.receive_json()
+            data = await websocket.receive_text()
             logger.info(pformat(data))
 
     except WebSocketDisconnect:

@@ -1,3 +1,4 @@
+from .version import VERSION
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
@@ -5,6 +6,7 @@ from pydantic import BaseModel
 from .config import settings
 from pprint import pprint
 from fastapi.responses import HTMLResponse
+from src.routers.status import status_router
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from src.routers.ws import ws_router, send_updates
 from src.routers.auth import auth_router
@@ -14,11 +16,6 @@ from src.routers.survey import survey_router
 from src.database.exec_sql import async_engine, exec_sql
 import logging
 logger = logging.getLogger('uvicorn.error')
-from .version import VERSION
-
-
-
-
 
 
 async def lifespan(app: FastAPI):
@@ -45,9 +42,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     lifespan=lifespan,
     title="",
-    version=VERSION, # Synced with latest frontend version
-    swagger_ui_parameters={"syntaxHighlight": {"theme": "obsidian"}}
-    
+    version=VERSION,  # Synced with latest frontend version
 )
 
 app.add_middleware(
@@ -57,7 +52,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
+app.include_router(status_router)
 app.include_router(picture_router)
 
 app.include_router(auth_router)
