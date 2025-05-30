@@ -21,22 +21,22 @@ logger = logging.getLogger('uvicorn.error')
 async def lifespan(app: FastAPI):
     logger.info(f"KwTouchscreen v{VERSION} starting...")
     logger.info("Starting AsyncIOScheduler...")
-    scheduler = AsyncIOScheduler()
-    scheduler.start()
-    scheduler.add_job(
-        send_updates,
-        "interval",
-        seconds=5
-    )
+    # scheduler = AsyncIOScheduler()
+    # scheduler.start()
+    # scheduler.add_job(
+    #     send_updates,
+    #     "interval",
+    #     seconds=5
+    # )
 
     yield
     if async_engine:
         await async_engine.dispose()
         logger.info('[SHUTDOWN] Disposed async SQLAlchemy Engine')
 
-    if scheduler:
-        scheduler.shutdown()
-        logger.info('[SHUTDOWN] Shut down APScheduler')
+    # if scheduler:
+    #     scheduler.shutdown()
+    #     logger.info('[SHUTDOWN] Shut down APScheduler')
 
 
 app = FastAPI(
