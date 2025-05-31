@@ -53,15 +53,15 @@ async def websocket_endpoint(websocket: WebSocket, client_name: str):
     try:
         while True:
             data = await websocket.receive_text()
-            if debug_connections:
-                for c_name, con in list(debug_connections.items()):
-                    await con.send_text(data)
+            # if debug_connections:
+            #     for c_name, con in list(debug_connections.items()):
+            #         await con.send_text(data)
 
             logger.info(pformat(data))
             if data == 'debug':
-                debug_connections[client_name] = websocket
-                await websocket.send_text('debug_toggle')
-                await websocket.send_text(', '.join(client_connections))
+                for c_name, con in list(client_connections.items()):
+                    await con.send_text('debug_toggle')
+                    await con.send_text(', '.join(client_connections))
 
     except WebSocketDisconnect:
         logger.warning(f"[WS:{client_name}]\nDisconnected")
