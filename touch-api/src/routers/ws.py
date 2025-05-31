@@ -4,7 +4,8 @@ logger = logging.getLogger('uvicorn.error')
 from src.lib.get_classes_today import get_classes_today
 from src.lib.get_class_with_seats import get_class_with_seats
 from pprint import pformat
-active_connections: dict[str, WebSocket] = {}
+client_connections: dict[str, WebSocket] = {}
+debug_connections: dict[str, WebSocket] = {}
 ws_router = APIRouter(
     prefix="/ws",
     tags=["Websocket / Control"],
@@ -12,8 +13,8 @@ ws_router = APIRouter(
 
 
 async def send_updates():
-    if active_connections:
-        for client_name, con in list(active_connections.items()):
+    if client_connections:
+        for client_name, con in list(client_connections.items()):
             try:
                 await con.send_json({
                     "action": "update class",
@@ -25,7 +26,7 @@ async def send_updates():
             except Exception as e:
                 logger.warning(
                     f"[WS:{client_name}] Failed to send update: {e}")
-                active_connections.pop(client_name, None)
+                client_connections.pop(client_name, None)
 
 
 @ws_router.websocket("/{client_name}")
@@ -46,13 +47,21 @@ async def websocket_endpoint(websocket: WebSocket, client_name: str):
     Maintains a persistent connection and updates all connected clients 
     with class and seat data when `send_updates()` is called.
     """
-    global active_connections
+    global client_connections
     await websocket.accept()
-    active_connections[client_name] = websocket
+    client_connections[client_name] = websocket
     try:
         while True:
-            data = await websocket.receive_json()
+            data = await websocket.receive_text()
+            # if debug_connections:
+            #     for c_name, con in list(debug_connections.items()):
+            #         await con.send_text(data)
+
             logger.info(pformat(data))
+            if data == 'debug':
+                for c_name, con in list(client_connections.items()):
+                    await con.send_text('debug_toggle')
+                    await con.send_text(', '.join(client_connections))
 
     except WebSocketDisconnect:
         logger.warning(f"[WS:{client_name}]\nDisconnected")
@@ -61,6 +70,6 @@ async def websocket_endpoint(websocket: WebSocket, client_name: str):
         logger.exception(f"[WS:{client_name}]\nUnexpected error: {e}")
 
     finally:
-        active_connections.pop(client_name, None)
+        client_connections.pop(client_name, None)
         logger.info(f"[WS:{client_name}]\nRemoved from active connections")
 
