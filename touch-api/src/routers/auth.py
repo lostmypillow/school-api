@@ -6,6 +6,7 @@ import logging
 logger = logging.getLogger('uvicorn.error')
 from src.lib.get_class_with_seats import get_class_with_seats
 from src.lib.deps import deps
+from src.lib.get_class_with_seats import get_class_with_seats
 from src.models.auth_request import AuthRequest
 from src.models.auth_response import AuthResponse
 from src.models.error_response import ErrorResponse
@@ -71,7 +72,7 @@ async def authorize_student(auth_request: AuthRequest):
 
         if class_with_seat == {}:
             raise HTTPException(404, "抱歉，目前沒有補位資料!")
-   
+
 
         try:
             courses_of_student: list[dict[str, str]] = await exec_sql(
@@ -146,10 +147,10 @@ async def authorize_student(auth_request: AuthRequest):
         #         "登記時間": "2025-01-06T21:23:57.437000"
         #     }
         # ]
+        current_class_with_seats = await get_class_with_seats()
+        if matches_course is False or check_already_selected != [] or current_class_with_seats['class_with_seats'][auth_response.性別 + '座位'].length == 0:
 
-        if matches_course is False or check_already_selected != []:
-
-            logger.error(f'[AUTH {auth_request.student_id}] 目前沒有您可選的補位資料')
+            logger.error(f'[AUTH {auth_request.student_id}] 目前沒有您可選的補位資料!')
 
             raise HTTPException(404, "目前沒有您可選的補位資料!")
 

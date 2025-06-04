@@ -1,9 +1,7 @@
-from fastapi import APIRouter, Response, HTTPException, Path
-from typing import Literal, Union
+from fastapi import APIRouter
 from src.database.exec_sql import exec_sql
 import logging
 from datetime import datetime
-import os
 logger = logging.getLogger('uvicorn.error')
 status_router = APIRouter(
     prefix="/status",
