@@ -15,10 +15,11 @@ router = APIRouter(
 @router.post('/')
 async def add_announcement(announcement: AddAnnouncement):
     try:
+        print(announcement.model_dump())
         await exec_sql(
             'commit',
             'insert_announce',
-            **announcement.model_dump()
+            content=announcement.content
         )
         return APIResponse(
             detail="Adding announcement successful!!"
