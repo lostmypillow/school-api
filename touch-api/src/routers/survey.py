@@ -55,8 +55,8 @@ async def rate_employee(survey_info: SurveyInfo):
         return SuccessMessage(message="success")
     except KeyError as e:
         logger.error(f'[RATE ERROR] Invalid department: {survey_info.employee_dep} - {e}')
-        raise HTTPException(status_code=400, detail="部門資訊有誤")
+        raise HTTPException(status_code=400, detail="部門資訊有誤!")
 
     except Exception as e:
         logging.exception(f'[RATE ERROR] Failed to rate employee: {e}')
-        raise HTTPException(status_code=500, detail="抱歉，系統發生錯誤! Error 011")
+        raise HTTPException(status_code=500, detail="抱歉，系統發生錯誤，請洽導師! Error 011")

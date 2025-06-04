@@ -44,4 +44,4 @@ async def register_seat(seat_info: SeatInfo):
     except Exception as e:
         logger.exception(
             f'[SEAT ERROR] 學號={seat_info.學號}, 號碼={seat_info.號碼} - {e}')
-        raise HTTPException(status_code=500, detail="抱歉，系統發生錯誤! Error 010")
+        raise HTTPException(status_code=500, detail="抱歉，系統發生錯誤，請洽導師! Error 010")
