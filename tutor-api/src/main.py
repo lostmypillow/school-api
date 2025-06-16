@@ -60,8 +60,6 @@ app = FastAPI(
     redoc_url=None,
     root_path='/tutor/api'
 )
-# app.mount("/static", StaticFiles(directory="static"), name="static")
-# app.mount("/dash", StaticFiles(directory="public", html=True), name="dashboard")
 
 active_connections: dict[str, WebSocket] = {}
 app.add_middleware(
@@ -76,12 +74,12 @@ app.add_middleware(
 @app.get("/docs", include_in_schema=False)
 async def custom_swagger_ui_html():
     return get_swagger_ui_html(
-        openapi_url=app.openapi_url,
+        openapi_url=app.root_path + app.openapi_url,
         title=app.title + " - Swagger UI",
         oauth2_redirect_url=app.swagger_ui_oauth2_redirect_url,
-        swagger_js_url="/tutor/api/static/swagger-ui-bundle.js",
-        swagger_css_url="/tutor/api/static/swagger-ui.css",
-        swagger_favicon_url="/tutor/api/static/favicon.ico",
+        swagger_js_url=app.root_path + "/static/swagger-ui-bundle.js",
+        swagger_css_url=app.root_path + "/static/swagger-ui.css",
+        swagger_favicon_url=app.root_path + "/static/favicon.ico",
     )
 
 
