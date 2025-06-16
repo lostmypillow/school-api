@@ -58,6 +58,7 @@ app = FastAPI(
     version=version,
     docs_url=None,
     redoc_url=None,
+    root_path='/tutor/api'
 )
 app.mount("/static", StaticFiles(directory="static"), name="static")
 app.mount("/dash", StaticFiles(directory="public", html=True), name="dashboard")
