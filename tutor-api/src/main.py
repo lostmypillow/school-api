@@ -60,8 +60,8 @@ app = FastAPI(
     redoc_url=None,
     root_path='/tutor/api'
 )
-app.mount("/static", StaticFiles(directory="static"), name="static")
-app.mount("/dash", StaticFiles(directory="public", html=True), name="dashboard")
+# app.mount("/static", StaticFiles(directory="static"), name="static")
+# app.mount("/dash", StaticFiles(directory="public", html=True), name="dashboard")
 
 active_connections: dict[str, WebSocket] = {}
 app.add_middleware(
@@ -79,9 +79,9 @@ async def custom_swagger_ui_html():
         openapi_url=app.openapi_url,
         title=app.title + " - Swagger UI",
         oauth2_redirect_url=app.swagger_ui_oauth2_redirect_url,
-        swagger_js_url="/static/swagger-ui-bundle.js",
-        swagger_css_url="/static/swagger-ui.css",
-        swagger_favicon_url="/static/favicon.ico",
+        swagger_js_url="/tutor/api/static/swagger-ui-bundle.js",
+        swagger_css_url="/tutor/api/static/swagger-ui.css",
+        swagger_favicon_url="/tutor/api/static/favicon.ico",
     )
 
 
