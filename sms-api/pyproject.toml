@@ -1,7 +1,7 @@
 [project]
 name = ""
 version = "0.1.0"
-description = "Add your description here"
+description = "供 VB 前端呼叫之簡訊發送與推播後端 API"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
