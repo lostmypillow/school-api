@@ -134,9 +134,9 @@ async def custom_swagger_ui_html():
         openapi_url=app.root_path + app.openapi_url,
         title=app.title + " - Swagger UI",
         oauth2_redirect_url=app.swagger_ui_oauth2_redirect_url,
-        swagger_js_url=app.root_path + "/static/swagger-ui-bundle.js",
-        swagger_css_url=app.root_path + "/static/swagger-ui.css",
-        swagger_favicon_url=app.root_path + "/static/favicon.ico",
+        swagger_js_url="/api/tutor/static/swagger-ui-bundle.js",
+        swagger_css_url="/api/tutor/static/swagger-ui.css",
+        swagger_favicon_url="/api/tutor/static/favicon.ico",
     )
 
 
