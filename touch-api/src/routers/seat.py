@@ -1,6 +1,5 @@
 from fastapi import APIRouter, HTTPException
-import logging
-logger = logging.getLogger('uvicorn.error')
+from src.lib import logger
 from src.database.exec_sql import exec_sql
 from src.models.error_response import ErrorResponse
 from src.models.success_message import SuccessMessage

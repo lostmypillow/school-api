@@ -1,7 +1,5 @@
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
-import logging
-logger = logging.getLogger('uvicorn.error')
-from src.lib.get_classes_today import get_classes_today
+from src.lib import logger
 from src.lib.get_class_with_seats import get_class_with_seats
 from pprint import pformat
 client_connections: dict[str, WebSocket] = {}
@@ -18,10 +16,7 @@ async def send_updates():
             try:
                 await con.send_json({
                     "action": "update class",
-                    "message": {
-                        "classes_today": await get_classes_today(),
-                        "class_with_seats": await get_class_with_seats()
-                    }
+                    "message": await get_class_with_seats()
                 })
             except Exception as e:
                 logger.warning(
