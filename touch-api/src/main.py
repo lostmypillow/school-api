@@ -11,7 +11,7 @@ from .routers import (
     survey_router,
     status_router,
 )
-from src.lib import logger
+from .logger import logger
 from .database.exec_sql import async_engine
 from contextlib import asynccontextmanager
 from pathlib import Path as pathlib_Path

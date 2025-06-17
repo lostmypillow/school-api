@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 from src.database.exec_sql import exec_sql
-from src.lib import logger
+from ..logger import logger
 from datetime import datetime
 
 status_router = APIRouter(

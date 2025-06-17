@@ -2,7 +2,8 @@ from fastapi import APIRouter, HTTPException
 from datetime import datetime, timedelta
 from src.config import settings
 from src.database.exec_sql import exec_sql
-from src.lib import logger, get_class_with_seats, deps
+from src.lib import  get_class_with_seats, deps
+from ..logger import logger
 from src.models import AuthRequest, AuthResponse, ErrorResponse, RateableEmployee
 
 auth_router = APIRouter(

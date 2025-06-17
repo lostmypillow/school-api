@@ -4,7 +4,7 @@ from sqlalchemy import text, URL
 import pathlib
 from os import path
 from src.config import settings
-from src.lib import logger
+from ..logger import logger
 import pyodbc
 from typing import Literal, Any
 import traceback
