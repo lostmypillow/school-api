@@ -19,7 +19,7 @@ import shutil
 from fastapi import FastAPI, Request, HTTPException, Header, UploadFile, File
 from fastapi.responses import FileResponse, PlainTextResponse
 import smbclient
-from config import settings
+from src.config import settings
 from itertools import cycle
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
