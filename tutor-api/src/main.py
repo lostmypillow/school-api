@@ -5,32 +5,17 @@ import traceback
 from src.config import settings
 from .models import Cardholder, Device
 from src.database.exec_sql import async_engine, exec_sql
-from fastapi.staticfiles import StaticFiles
 from fastapi.exceptions import HTTPException
 from fastapi import FastAPI, WebSocket
 import tomllib
 from contextlib import asynccontextmanager
 from rich import print
-from rich.logging import RichHandler
-from rich.traceback import install
-import logging
+from .utils import logger
 from pathlib import Path as pathlib_Path
 from fastapi.openapi.docs import (
     get_swagger_ui_html,
     get_swagger_ui_oauth2_redirect_html,
 )
-
-install(show_locals=True)
-rich_handler = RichHandler(rich_tracebacks=True)
-logging.basicConfig(
-    level=logging.INFO, format="%(message)s", datefmt="[%X]", handlers=[rich_handler]
-)
-for name in ("uvicorn", "uvicorn.access", "uvicorn.error"):
-    logger = logging.getLogger(name)
-    logger.handlers = [rich_handler]
-    logger.setLevel(logging.INFO)
-
-logger = logging.getLogger("rich")
 
 
 current_file = pathlib_Path(__file__).resolve()
@@ -58,7 +43,7 @@ app = FastAPI(
     version=version,
     docs_url=None,
     redoc_url=None,
-    root_path='/api/tutor'
+    root_path="/api/tutor",
 )
 
 active_connections: dict[str, WebSocket] = {}
