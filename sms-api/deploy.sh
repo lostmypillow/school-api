@@ -2,7 +2,7 @@
 
 # Exit on error
 set -e
-APP_DIR="$(pwd)/backend"
+APP_DIR="$(pwd)"
 SERVICE_NAME=""
 PORT="8003"
 BACKEND_CONFIG="$APP_DIR/src/config.py"
