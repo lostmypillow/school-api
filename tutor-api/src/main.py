@@ -58,7 +58,7 @@ app = FastAPI(
     version=version,
     docs_url=None,
     redoc_url=None,
-    root_path='/tutor/api'
+    root_path='/api/tutor'
 )
 
 active_connections: dict[str, WebSocket] = {}
