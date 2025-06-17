@@ -97,7 +97,7 @@ description = backend_data.get("project", {}).get("description", "description he
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     logging.info("Starting app, syncing files from SMB...")
-    # sync_from_smb()
+    sync_from_smb()
     yield
     logging.info("Shutting down app...")
 
