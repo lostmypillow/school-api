@@ -1,4 +1,19 @@
+from rich.logging import RichHandler
+from rich.traceback import install
 import logging
+
+install(show_locals=True)
+rich_handler = RichHandler(rich_tracebacks=True)
+logging.basicConfig(
+    level=logging.INFO, format="%(message)s", datefmt="[%X]", handlers=[rich_handler]
+)
+for name in ("uvicorn", "uvicorn.access", "uvicorn.error"):
+    logger = logging.getLogger(name)
+    logger.handlers = [rich_handler]
+    logger.setLevel(logging.INFO)
+
+logger = logging.getLogger("rich")
+
 import os
 import shutil
 from fastapi import FastAPI, Request, HTTPException, Header, UploadFile, File
@@ -9,6 +24,13 @@ from itertools import cycle
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 from pydantic import BaseModel
+import tomllib
+from pathlib import Path as pathlib_Path
+from fastapi.openapi.docs import (
+    get_swagger_ui_html,
+    get_swagger_ui_oauth2_redirect_html,
+)
+
 # Static variables
 # TODO move them to .env
 SMB_URL = f'//{settings.SMB_HOST}{settings.SMB_FOLDER}'
@@ -63,6 +85,15 @@ def sync_from_smb():
         close_smb_session()
 
 
+
+current_file = pathlib_Path(__file__).resolve()
+backend_pyproject_path = current_file.parent.parent / "pyproject.toml"
+with backend_pyproject_path.open("rb") as f:
+    backend_data = tomllib.load(f)
+title = backend_data.get("project", {}).get("name", "Kw FastAPI Project")
+version = backend_data.get("project", {}).get("version", "0.0.0")
+description = backend_data.get("project", {}).get("description", "description here")
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     logging.info("Starting app, syncing files from SMB...")
@@ -72,10 +103,14 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(
-    title="Kw_Stream",
+    title=title,
+    description=description,
+    version=version,
+    docs_url=None,
+    redoc_url=None,
+    root_path="/api/media",
     lifespan=lifespan,
-    description=,
-    version="0.2.1",
+
 )
 
 app.add_middleware(
@@ -93,7 +128,21 @@ def get_local_filenames() -> list[str]:
         for filename in os.listdir(STATIC_FOLDER)
         if filename.endswith('.mp4')
     ]
+@app.get("/docs", include_in_schema=False)
+async def custom_swagger_ui_html():
+    return get_swagger_ui_html(
+        openapi_url=app.root_path + app.openapi_url,
+        title=app.title + " - Swagger UI",
+        oauth2_redirect_url=app.swagger_ui_oauth2_redirect_url,
+        swagger_js_url=app.root_path + "/static/swagger-ui-bundle.js",
+        swagger_css_url=app.root_path + "/static/swagger-ui.css",
+        swagger_favicon_url=app.root_path + "/static/favicon.ico",
+    )
 
+
+@app.get(app.swagger_ui_oauth2_redirect_url, include_in_schema=False)
+async def swagger_ui_redirect():
+    return get_swagger_ui_oauth2_redirect_html()
 
 @app.get('/next', response_model=str, response_class=PlainTextResponse, responses={
     200: {
@@ -113,7 +162,7 @@ def get_local_filenames() -> list[str]:
         }
     }
 })
-def get_next_file() -> str:
+def get_next_file():
     """Return the next file in the local static folder.
 
     Returns
