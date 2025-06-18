@@ -1,5 +1,6 @@
 from pydantic import BaseModel
-from typing import Literal,Union
+from typing import Literal, Union
+
 
 class VMDetails(BaseModel):
     vm_name: str

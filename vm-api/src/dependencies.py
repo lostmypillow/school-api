@@ -3,12 +3,10 @@
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
 from sqlalchemy.exc import SQLAlchemyError, DBAPIError
 from sqlalchemy import text, URL
-import pathlib
 from os import path, getcwd
 from src.config import settings
 import pyodbc
 from typing import Literal, Any, AsyncGenerator
-import traceback
 import logging
 
 logger = logging.getLogger("rich")

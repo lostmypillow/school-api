@@ -16,7 +16,9 @@ from rich.traceback import install
 import logging
 from .routers import vm
 import faulthandler
+
 faulthandler.enable()
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -51,16 +53,20 @@ is_linux = os.name == "posix" and os.uname().sysname == "Linux"
 common_kwargs = {
     "lifespan": lifespan,
     "title": backend_data.get("project", {}).get("name", "Kw FastAPI Project"),
-    "description": backend_data.get("project", {}).get("description", "description here"),
+    "description": backend_data.get("project", {}).get(
+        "description", "description here"
+    ),
     "version": backend_data.get("project", {}).get("version", "0.0.0"),
 }
 
 if is_linux:
-    common_kwargs.update({
-        "docs_url": None,
-        "redoc_url": None,
-        "root_path": "/api/vm",
-    })
+    common_kwargs.update(
+        {
+            "docs_url": None,
+            "redoc_url": None,
+            "root_path": "/api/vm",
+        }
+    )
 
 app = FastAPI(**common_kwargs)
 
@@ -89,4 +95,6 @@ async def custom_swagger_ui_html():
 @app.get(cast(str, app.swagger_ui_oauth2_redirect_url), include_in_schema=False)
 async def swagger_ui_redirect():
     return get_swagger_ui_oauth2_redirect_html()
+
+
 app.include_router(vm.router)
