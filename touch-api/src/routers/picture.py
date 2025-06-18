@@ -2,13 +2,13 @@ from fastapi import APIRouter, Response, HTTPException, Path
 from typing import Literal
 from src.database.exec_sql import exec_sql
 from ..logger import logger
-picture_router = APIRouter(
+router = APIRouter(
     prefix="/picture",
     tags=["Picture"],
 )
 
 
-@picture_router.get('/{role}/{id}',
+@router.get('/{role}/{id}',
                     summary="Get picture by role and ID",
                     description="Retrieves a PNG image of either an employee or a student based on the given role and ID.",
                     responses={

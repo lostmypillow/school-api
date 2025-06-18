@@ -3,13 +3,13 @@ from src.database.exec_sql import exec_sql
 from ..logger import logger
 from datetime import datetime
 
-status_router = APIRouter(
+router = APIRouter(
     prefix="/status",
     tags=["Status"],
 )
 
 
-@status_router.get('/')
+@router.get('/')
 async def get_class_with_seats():
 
     class_with_seats = await exec_sql('one', 'single_get_remaining')

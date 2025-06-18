@@ -4,7 +4,7 @@ from src.lib.get_class_with_seats import get_class_with_seats
 from pprint import pformat
 client_connections: dict[str, WebSocket] = {}
 debug_connections: dict[str, WebSocket] = {}
-ws_router = APIRouter(
+router = APIRouter(
     prefix="/ws",
     tags=["Websocket / Control"],
 )
@@ -24,7 +24,7 @@ async def send_updates():
                 client_connections.pop(client_name, None)
 
 
-@ws_router.websocket("/{client_name}")
+@router.websocket("/{client_name}")
 async def websocket_endpoint(websocket: WebSocket, client_name: str):
     """
     WebSocket connection endpoint for real-time control interface.

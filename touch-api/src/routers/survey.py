@@ -4,7 +4,7 @@ from ..logger import logger
 from src.models.success_message import SuccessMessage
 from src.models.error_response import ErrorResponse
 from src.models.survey_info import SurveyInfo
-survey_router = APIRouter(
+router = APIRouter(
     prefix="/survey",
     tags=["Survey"],
 )
@@ -15,7 +15,7 @@ deps: dict = {
                 : 9,
                 : 11
             }
-@survey_router.post("/",
+@router.post("/",
     summary="Submit a rating for an employee",
     response_model=SuccessMessage,
     responses={

@@ -6,13 +6,13 @@ from src.lib import  get_class_with_seats, deps
 from ..logger import logger
 from src.models import AuthRequest, AuthResponse, ErrorResponse, RateableEmployee
 
-auth_router = APIRouter(
+router = APIRouter(
     prefix="/auth",
     tags=["Auth"],
 )
 
 
-@auth_router.post(
+@router.post(
     "/",
     summary="學生身份驗證",
     description="根據學生 ID 與驗證種類進行身份驗證並回傳相關資訊",
