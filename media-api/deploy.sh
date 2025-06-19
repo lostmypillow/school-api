@@ -118,6 +118,6 @@ else
     exit 1
 fi
 
-echo "[✓] Access $SERVICE_NAME API at http://$(hostname -I | awk '{print $1}'):$PORT"
+echo "[✓] API deployed. Access $SERVICE_NAME Docs at http://$(hostname -I | awk '{print $1}')/api/media/docs"
 
 exit 0
