@@ -99,7 +99,7 @@ def get_local_filenames() -> list[str]:
 
 async def custom_swagger_ui_html():
     return get_swagger_ui_html(
-        openapi_url=app.root_path + cast(str, app.openapi_url),,
+        openapi_url=app.root_path + cast(str, app.openapi_url),
         title=app.title + " - Swagger UI",
         oauth2_redirect_url=app.swagger_ui_oauth2_redirect_url,
         swagger_js_url="/api/tutor/static/swagger-ui-bundle.js",
