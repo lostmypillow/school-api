@@ -5,7 +5,7 @@ from pprint import pformat
 import logging
 import orjson
 import ast
-logger = logging.getLogger('uvicorn.error')
+logger = logging.getLogger('rich')
 router = APIRouter(
     prefix="/ws",
     tags=["Websocket / Control"],
