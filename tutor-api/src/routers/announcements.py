@@ -5,7 +5,7 @@ from src.database.exec_sql import exec_sql
 import logging
 from src.models.api_response import APIResponse
 from uuid import uuid4
-logger = logging.getLogger('uvicorn.error')
+logger = logging.getLogger('rich')
 router = APIRouter(
     prefix="/announcements",
     tags=["Announcments"]

@@ -1,0 +1,4 @@
+*.pyc
+.venv
+.pytest_cache
+src/config.py
