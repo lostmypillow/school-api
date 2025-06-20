@@ -1,11 +1,11 @@
 from fastapi import APIRouter, HTTPException
 from src.database.exec_sql import exec_sql
 import logging
-logger = logging.getLogger('uvicorn.error')
+logger = logging.getLogger("rich")
 from src.models.success_message import SuccessMessage
 from src.models.error_response import ErrorResponse
 from src.models.survey_info import SurveyInfo
-survey_router = APIRouter(
+router = APIRouter(
     prefix="/survey",
     tags=["Survey"],
 )
@@ -16,7 +16,7 @@ deps: dict = {
                 : 9,
                 : 11
             }
-@survey_router.post("/",
+@router.post("/",
     summary="Submit a rating for an employee",
     response_model=SuccessMessage,
     responses={
@@ -58,5 +58,5 @@ async def rate_employee(survey_info: SurveyInfo):
         raise HTTPException(status_code=400, detail="部門資訊有誤!")
 
     except Exception as e:
-        logging.exception(f'[RATE ERROR] Failed to rate employee: {e}')
+        logger.exception(f'[RATE ERROR] Failed to rate employee: {e}')
         raise HTTPException(status_code=500, detail="抱歉，系統發生錯誤，請洽導師! Error 011")

@@ -1,16 +1,16 @@
 from fastapi import APIRouter, HTTPException
 import logging
-logger = logging.getLogger('uvicorn.error')
+logger = logging.getLogger("rich")
 from src.database.exec_sql import exec_sql
 from src.models.error_response import ErrorResponse
 from src.models.success_message import SuccessMessage
 from src.models.seat_info import SeatInfo
-seat_router = APIRouter(
+router = APIRouter(
     prefix="/seat",
     tags=["Seat"],
 )
 
-@seat_router.post("/",
+@router.post("/",
                   summary="Register a seat for student",
                   response_model=SuccessMessage,
                   responses={

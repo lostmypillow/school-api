@@ -1,15 +1,16 @@
 from fastapi import APIRouter
 from src.database.exec_sql import exec_sql
 import logging
+logger = logging.getLogger("rich")
 from datetime import datetime
-logger = logging.getLogger('uvicorn.error')
-status_router = APIRouter(
+
+router = APIRouter(
     prefix="/status",
     tags=["Status"],
 )
 
 
-@status_router.get('/')
+@router.get('/')
 async def get_class_with_seats():
 
     class_with_seats = await exec_sql('one', 'single_get_remaining')

@@ -3,8 +3,9 @@ from sqlalchemy.exc import SQLAlchemyError, DBAPIError
 from sqlalchemy import text, URL
 import pathlib
 from os import path
-import logging
 from src.config import settings
+import logging
+logger = logging.getLogger("rich")
 import pyodbc
 from typing import Literal, Any
 import traceback
