@@ -11,6 +11,7 @@ import tomllib
 from contextlib import asynccontextmanager
 from rich import print
 from .utils import logger
+from typing import cast
 from pathlib import Path as pathlib_Path
 from fastapi.openapi.docs import (
     get_swagger_ui_html,
@@ -59,16 +60,16 @@ app.add_middleware(
 @app.get("/docs", include_in_schema=False)
 async def custom_swagger_ui_html():
     return get_swagger_ui_html(
-        openapi_url=app.root_path + app.openapi_url,
+        openapi_url=app.root_path + cast(str, app.openapi_url),
         title=app.title + " - Swagger UI",
         oauth2_redirect_url=app.swagger_ui_oauth2_redirect_url,
-        swagger_js_url=app.root_path + "/static/swagger-ui-bundle.js",
-        swagger_css_url=app.root_path + "/static/swagger-ui.css",
-        swagger_favicon_url=app.root_path + "/static/favicon.ico",
+        swagger_js_url="/assets/swagger-ui-bundle.js",
+        swagger_css_url="/assets/swagger-ui.css",
+        swagger_favicon_url="/assets/favicon.ico",
     )
 
 
-@app.get(app.swagger_ui_oauth2_redirect_url, include_in_schema=False)
+@app.get(cast(str, app.swagger_ui_oauth2_redirect_url), include_in_schema=False)
 async def swagger_ui_redirect():
     return get_swagger_ui_oauth2_redirect_html()
 
