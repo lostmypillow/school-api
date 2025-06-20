@@ -24,8 +24,8 @@ backend_pyproject_path = (
 )
 with backend_pyproject_path.open("rb") as f:
     backend_data = tomllib.load(f)
-
-
+import logging
+logger = logging.getLogger('rich')
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     logger.info(f"Starting ...")
