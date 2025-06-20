@@ -60,7 +60,7 @@ async def authorize_student(auth_request: AuthRequest):
     if auth_request.type == "seat":
 
         try:
-            class_with_seat = await get_class_with_seats()
+            class_with_seat = (await get_class_with_seats())['class_with_seats']
         except Exception as e:
             logger.exception(
                 f"[AUTH {auth_request.student_id}] Error calling get_class_with_seats(), raising Error 500"
@@ -100,7 +100,7 @@ async def authorize_student(auth_request: AuthRequest):
             matches_course = any(
                 isinstance(d, dict)
                 and "班別" in d
-                and d["班別"] == class_with_seat.get("班別")
+                and d["班別"] == class_with_seat["班別"]
                 for d in courses_of_student
             )
         except AssertionError:
@@ -143,11 +143,11 @@ async def authorize_student(auth_request: AuthRequest):
         #         "登記時間": "2025-01-06T21:23:57.437000"
         #     }
         # ]
-        current_class_with_seats = await get_class_with_seats()
+        current_class_with_seats = (await get_class_with_seats())["class_with_seats"]
         if (
             matches_course is False
             or check_already_selected != []
-            or current_class_with_seats["class_with_seats"][
+            or current_class_with_seats[
                 auth_response.性別 + "座位"
             ].length
             == 0
