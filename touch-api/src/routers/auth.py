@@ -3,7 +3,8 @@ from datetime import datetime, timedelta
 from src.config import settings
 from src.database.exec_sql import exec_sql
 from src.lib import  get_class_with_seats, deps
-from ..logger import logger
+import logging
+logger = logging.getLogger("rich")
 from src.models import AuthRequest, AuthResponse, ErrorResponse, RateableEmployee
 
 router = APIRouter(

@@ -1,6 +1,7 @@
 from fastapi import APIRouter
 from src.database.exec_sql import exec_sql
-from ..logger import logger
+import logging
+logger = logging.getLogger("rich")
 from datetime import datetime
 
 router = APIRouter(

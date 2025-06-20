@@ -1,6 +1,7 @@
 from fastapi import APIRouter, HTTPException
 from src.database.exec_sql import exec_sql
-from ..logger import logger
+import logging
+logger = logging.getLogger("rich")
 from src.models.success_message import SuccessMessage
 from src.models.error_response import ErrorResponse
 from src.models.survey_info import SurveyInfo

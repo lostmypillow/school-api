@@ -7,20 +7,21 @@ from fastapi.openapi.docs import (
     get_swagger_ui_html,
     get_swagger_ui_oauth2_redirect_html,
 )
-
+from typing import cast
 from .routers import (
     ws,
     auth,
-    picture,
     seat,
     survey,
     status,
 )
-from .logger import logger
+
 from .database.exec_sql import async_engine
 
 
-backend_pyproject_path = pathlib_Path(__file__).resolve().parent.parent / "pyproject.toml"
+backend_pyproject_path = (
+    pathlib_Path(__file__).resolve().parent.parent / "pyproject.toml"
+)
 with backend_pyproject_path.open("rb") as f:
     backend_data = tomllib.load(f)
 
@@ -58,7 +59,7 @@ app.add_middleware(
 @app.get("/docs", include_in_schema=False)
 async def custom_swagger_ui_html():
     return get_swagger_ui_html(
-        openapi_url=app.root_path + app.openapi_url,
+        openapi_url=app.root_path + cast(str, app.openapi_url),
         title=app.title + " - Swagger UI",
         oauth2_redirect_url=app.swagger_ui_oauth2_redirect_url,
         swagger_js_url="/api/tutor/static/swagger-ui-bundle.js",
@@ -67,14 +68,12 @@ async def custom_swagger_ui_html():
     )
 
 
-@app.get(app.swagger_ui_oauth2_redirect_url, include_in_schema=False)
+@app.get(cast(str, app.swagger_ui_oauth2_redirect_url), include_in_schema=False)
 async def swagger_ui_redirect():
     return get_swagger_ui_oauth2_redirect_html()
 
 
 app.include_router(status.router)
-
-app.include_router(picture.router)
 
 app.include_router(auth.router)
 
@@ -83,5 +82,3 @@ app.include_router(ws.router)
 app.include_router(seat.router)
 
 app.include_router(survey.router)
-
-# app.mount("/touch", StaticFiles(directory="public", html=True), name="dash")

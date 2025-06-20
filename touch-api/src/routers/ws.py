@@ -1,5 +1,6 @@
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
-from ..logger import logger
+import logging
+logger = logging.getLogger("rich")
 from src.lib.get_class_with_seats import get_class_with_seats
 from pprint import pformat
 client_connections: dict[str, WebSocket] = {}
