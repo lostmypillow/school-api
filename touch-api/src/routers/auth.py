@@ -147,9 +147,9 @@ async def authorize_student(auth_request: AuthRequest):
         if (
             matches_course is False
             or check_already_selected != []
-            or current_class_with_seats[
+            or len(current_class_with_seats[
                 auth_response.性別 + "座位"
-            ].length
+            ])
             == 0
         ):
 
