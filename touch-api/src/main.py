@@ -20,16 +20,35 @@ import os
 from .database.exec_sql import async_engine
 
 
-
+from rich.logging import RichHandler
+from rich.traceback import install
 import logging
-logger = logging.getLogger('rich')
+
+logger = logging.getLogger("rich")
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+
+    install(show_locals=True)
+    rich_handler = RichHandler(rich_tracebacks=True)
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(message)s",
+        datefmt="[%X]",
+        handlers=[rich_handler],
+    )
+    for name in ("uvicorn", "uvicorn.access", "uvicorn.error"):
+        logger = logging.getLogger(name)
+        logger.handlers = [rich_handler]
+        logger.setLevel(logging.INFO)
     logger.info(f"Starting ...")
+
     yield
     if async_engine:
         await async_engine.dispose()
         logger.info("[SHUTDOWN] Disposed async SQLAlchemy Engine")
+
 
 backend_pyproject_path = (
     pathlib_Path(__file__).resolve().parent.parent / "pyproject.toml"
