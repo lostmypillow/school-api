@@ -97,5 +97,5 @@ async def swagger_ui_redirect():
     return get_swagger_ui_oauth2_redirect_html()
 
 
-app.include_router(vm.router)
+app.include_router(vm.router, prefix="/vm")
 app.include_router(vm.router, prefix="") 

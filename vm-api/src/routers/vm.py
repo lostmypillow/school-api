@@ -12,7 +12,6 @@ from src.dependencies import exec_sql, get_session
 
 logger = logging.getLogger("rich")
 router = APIRouter(
-    prefix="/vm",
     tags=["Virtual Machines"],
 )
 
