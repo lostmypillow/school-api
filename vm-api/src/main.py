@@ -98,3 +98,4 @@ async def swagger_ui_redirect():
 
 
 app.include_router(vm.router)
+app.include_router(vm.router, prefix="") 
