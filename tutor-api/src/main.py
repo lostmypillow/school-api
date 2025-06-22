@@ -22,6 +22,7 @@ from rich.logging import RichHandler
 from rich.traceback import install
 import logging
 
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     install(show_locals=True)
@@ -40,10 +41,9 @@ async def lifespan(app: FastAPI):
     if async_engine:
         await async_engine.dispose()
 
+
 logger = logging.getLogger("rich")
-backend_pyproject_path = (
-    pathlib_Path(__file__).resolve().parent.parent / "pyproject.toml"
-)
+backend_pyproject_path = pathlib_Path(__file__).resolve().parent.parent / "pyproject.toml"
 with backend_pyproject_path.open("rb") as f:
     backend_data = tomllib.load(f)
 
@@ -52,9 +52,7 @@ is_linux = os.name == "posix" and os.uname().sysname == "Linux"
 common_kwargs = {
     "lifespan": lifespan,
     "title": backend_data.get("project", {}).get("name", "Kw FastAPI Project"),
-    "description": backend_data.get("project", {}).get(
-        "description", "description here"
-    ),
+    "description": backend_data.get("project", {}).get("description", "description here"),
     "version": backend_data.get("project", {}).get("version", "0.0.0"),
 }
 
@@ -124,9 +122,7 @@ async def update_teacher_info(cardholder: Cardholder):
 )
 async def register_card_id(device_id: int, card_id: str):
     try:
-        cardholder = Cardholder(
-            **await exec_sql("one", "fetch_role_student", card_id=card_id)
-        )
+        cardholder = Cardholder(**await exec_sql("one", "fetch_role_student", card_id=card_id))
 
         if type(cardholder.name) == str:
             cardholder.role = "student"
@@ -136,9 +132,7 @@ async def register_card_id(device_id: int, card_id: str):
 
         elif cardholder.name == None:
             print("Cardholder is not a student, trying teacher")
-            cardholder = Cardholder(
-                **await exec_sql("one", "fetch_role_teacher", card_id=card_id)
-            )
+            cardholder = Cardholder(**await exec_sql("one", "fetch_role_teacher", card_id=card_id))
 
             if cardholder.name == None:
                 logger.error(f"Error: Can't find info for {card_id}")
@@ -151,14 +145,10 @@ async def register_card_id(device_id: int, card_id: str):
                 )
                 if associated_device != {}:
                     cardholder.device_id = associated_device["設備號碼"]
-                logger.info(
-                    f"Cardholder is teacher: {pformat(cardholder.model_dump())}"
-                )
+                logger.info(f"Cardholder is teacher: {pformat(cardholder.model_dump())}")
 
         cardholder.card_id = (
-            cardholder.card_id.strip()
-            if cardholder.card_id is not None
-            else cardholder.card_id
+            cardholder.card_id.strip() if cardholder.card_id is not None else cardholder.card_id
         )
 
         if cardholder.role == "teacher":
@@ -200,9 +190,9 @@ async def register_card_id(device_id: int, card_id: str):
         elif cardholder.role == "student":
             device = Device(
                 device_id=device_id,
-                teacher_id=(
-                    await exec_sql("one", "check_for_teacher", device_id=str(device_id))
-                )["老師編號"],
+                teacher_id=(await exec_sql("one", "check_for_teacher", device_id=str(device_id)))[
+                    "老師編號"
+                ],
             )
             logger.info(f"Device info: {pformat(device.model_dump())}")
             if device.teacher_id == None:
@@ -216,9 +206,7 @@ async def register_card_id(device_id: int, card_id: str):
                 teacher_id=device.teacher_id,
             )
             if reservation_id == {}:
-                logger.info(
-                    "Student has no reservation ID associated, proceeding to create one"
-                )
+                logger.info("Student has no reservation ID associated, proceeding to create one")
                 await exec_sql(
                     "commit",
                     "register_insert",
