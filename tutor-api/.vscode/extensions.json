@@ -1,0 +1,8 @@
+{
+    "recommendations": [
+        "njpwerner.autodocstring",
+        "charliermarsh.ruff",
+        "adpyke.vscode-sql-formatter",
+        "the0807.uv-toolkit"
+    ]
+}

@@ -1,0 +1,3 @@
+```powershell
+uvx ruff check 
+```

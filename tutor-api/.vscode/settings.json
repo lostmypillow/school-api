@@ -1,0 +1,14 @@
+{
+  "[python]": {
+    "editor.formatOnSaveMode": "file",
+    "editor.formatOnType": false,
+    "editor.formatOnSave": true,
+    "editor.codeActionsOnSave": {
+      "source.fixAll": "explicit",
+      "source.organizeImports": "explicit"
+    },
+    "editor.defaultFormatter": "charliermarsh.ruff"
+  },
+  "ruff.nativeServer": "on",
+ 
+}
