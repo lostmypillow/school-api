@@ -1,30 +1,29 @@
-from fastapi.middleware.cors import CORSMiddleware
-from pprint import pformat
-from .routers import sync_frontend, ws_router, announcement_router
-import traceback
-from src.config import settings
-from .models import Cardholder, Device
-from src.database.exec_sql import async_engine, exec_sql
-from fastapi.exceptions import HTTPException
-from fastapi import FastAPI, WebSocket
+import logging
+import os
 import tomllib
 from contextlib import asynccontextmanager
-from rich import print
-
-import os
-from typing import cast
 from pathlib import Path as pathlib_Path
+from typing import cast
+
+from fastapi import FastAPI, WebSocket, status
+from fastapi.exceptions import HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.openapi.docs import (
     get_swagger_ui_html,
     get_swagger_ui_oauth2_redirect_html,
 )
+from fastapi.responses import HTMLResponse
 from rich.logging import RichHandler
 from rich.traceback import install
-import logging
+
+from src.database.exec_sql import async_engine, exec_sql
+
+from .models import Cardholder, Device
+from .routers import announcement_router, sync_frontend, ws_router
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI):
+async def lifespan(app: FastAPI):  # noqa: ANN201, ARG001
     install(show_locals=True)
     rich_handler = RichHandler(rich_tracebacks=True)
     logging.basicConfig(
@@ -62,7 +61,7 @@ if is_linux:
             "docs_url": None,
             "redoc_url": None,
             "root_path": "/api/tutor",
-        }
+        },
     )
 
 app = FastAPI(**common_kwargs)
@@ -78,9 +77,9 @@ app.add_middleware(
 
 
 @app.get("/docs", include_in_schema=False)
-async def custom_swagger_ui_html():
+async def custom_swagger_ui_html() -> HTMLResponse:
     return get_swagger_ui_html(
-        openapi_url=app.root_path + cast(str, app.openapi_url),
+        openapi_url=app.root_path + cast("str", app.openapi_url),
         title=app.title + " - Swagger UI",
         oauth2_redirect_url=app.swagger_ui_oauth2_redirect_url,
         swagger_js_url="/swagger_assets/swagger-ui-bundle.js",
@@ -89,8 +88,8 @@ async def custom_swagger_ui_html():
     )
 
 
-@app.get(cast(str, app.swagger_ui_oauth2_redirect_url), include_in_schema=False)
-async def swagger_ui_redirect():
+@app.get(cast("str", app.swagger_ui_oauth2_redirect_url), include_in_schema=False)
+async def swagger_ui_redirect() -> HTMLResponse:
     return get_swagger_ui_oauth2_redirect_html()
 
 
@@ -98,18 +97,60 @@ app.include_router(announcement_router)
 app.include_router(ws_router)
 
 
+async def determine_role(card_id: str) -> Cardholder:
+    cardholder = Cardholder(**await exec_sql("one", "fetch_role_student", card_id=card_id))
+
+    if isinstance(str, cardholder.name):
+        cardholder.role = "student"
+        logger.info("Cardholder is student: %s", cardholder.model_dump_json(indent=2))
+
+    elif cardholder.name is None:
+        logger.info("Cardholder is not a student, trying teacher")
+        cardholder = Cardholder(**await exec_sql("one", "fetch_role_teacher", card_id=card_id))
+
+        if cardholder.name is None:
+            logger.error("Error: Can't find info for %s", card_id)
+            return "刷卡失敗: 查無此人"
+
+        if isinstance(cardholder.name, str):
+            cardholder.role = "teacher"
+            associated_device = await exec_sql(
+                "one",
+                "fetch_associated_device",
+                teacher_id=cardholder.card_id,
+            )
+            if associated_device != {}:
+                cardholder.device_id = associated_device["設備號碼"]
+            logger.info("Cardholder is teacher: %s", cardholder.model_dump_json(indent=2))
+
+    cardholder.card_id = (
+        cardholder.card_id.strip() if cardholder.card_id is not None else cardholder.card_id
+    )
+    return cardholder
+
+
 @app.post("/update")
-async def update_teacher_info(cardholder: Cardholder):
-    try:
-        await exec_sql(
-            "commit",
-            "update_teacher_info",
-            card_id=cardholder.card_id,
-            college=cardholder.school,
-        )
-        await sync_frontend()
-    except Exception as e:
-        return HTTPException(404)
+async def update_teacher_info(cardholder: Cardholder) -> dict:
+    # TODO(Johnny): Add granular Exception catching
+    await exec_sql(
+        "commit",
+        "update_teacher_info",
+        card_id=cardholder.card_id,
+        college=cardholder.school,
+    )
+    await sync_frontend()
+
+    return {
+        "detail": "Update success",
+    }
+
+
+def handle_device_zero(cardholder: Cardholder) -> Cardholder | None:
+    if cardholder.role == "teacher":
+        return cardholder
+    if cardholder.role == "student":
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Not found for device 0")
+    return None
 
 
 @app.get(
@@ -117,46 +158,19 @@ async def update_teacher_info(cardholder: Cardholder):
     responses={
         200: {
             "description": "XXX老師 刷卡成功 | XXX學生 刷卡成功 | 刷卡失敗: XXX",
-        }
+        },
     },
 )
-async def register_card_id(device_id: int, card_id: str):
+async def register_card_id(device_id: int, card_id: str) -> Cardholder | str | None:
     try:
-        cardholder = Cardholder(**await exec_sql("one", "fetch_role_student", card_id=card_id))
-
-        if type(cardholder.name) == str:
-            cardholder.role = "student"
-            logger.info(f"Cardholder is student: {pformat(cardholder.model_dump())}")
-            if device_id == 0:
-                raise HTTPException(404, "Not eligible")
-
-        elif cardholder.name == None:
-            print("Cardholder is not a student, trying teacher")
-            cardholder = Cardholder(**await exec_sql("one", "fetch_role_teacher", card_id=card_id))
-
-            if cardholder.name == None:
-                logger.error(f"Error: Can't find info for {card_id}")
-                return "刷卡失敗: 查無此人"
-
-            elif type(cardholder.name) == str:
-                cardholder.role = "teacher"
-                associated_device = await exec_sql(
-                    "one", "fetch_associated_device", teacher_id=cardholder.card_id
-                )
-                if associated_device != {}:
-                    cardholder.device_id = associated_device["設備號碼"]
-                logger.info(f"Cardholder is teacher: {pformat(cardholder.model_dump())}")
-
-        cardholder.card_id = (
-            cardholder.card_id.strip() if cardholder.card_id is not None else cardholder.card_id
-        )
+        cardholder = await determine_role(card_id=card_id)
+        if device_id == 0:
+            handle_device_zero(cardholder=cardholder)
 
         if cardholder.role == "teacher":
-            if device_id == 0:
-                return cardholder
             if cardholder.device_id == device_id:
                 logger.info(
-                    "Cardholder device_id matches incoming device_id, will clear this device and return early"
+                    "Cardholder device_id matches incoming device_id",
                 )
                 await exec_sql(
                     "commit",
@@ -164,12 +178,13 @@ async def register_card_id(device_id: int, card_id: str):
                     teacher_id=None,
                     device_id=device_id,
                 )
+                logger.info("Clearing device and return early")
                 await sync_frontend()
                 return f"{cardholder.name}老師 刷卡成功"
 
-            elif cardholder.device_id is not None and cardholder.device_id != device_id:
+            if cardholder.device_id is not None and cardholder.device_id != device_id:
                 logger.info(
-                    "Cardholder has a device assigned and it's not this device, will clear DB"
+                    "Cardholder has a device assigned and it's not this device, will clear DB",
                 )
                 await exec_sql(
                     "commit",
@@ -187,15 +202,15 @@ async def register_card_id(device_id: int, card_id: str):
             await sync_frontend()
             return f"{cardholder.name}老師 刷卡成功"
 
-        elif cardholder.role == "student":
+        if cardholder.role == "student":
             device = Device(
                 device_id=device_id,
                 teacher_id=(await exec_sql("one", "check_for_teacher", device_id=str(device_id)))[
                     "老師編號"
                 ],
             )
-            logger.info(f"Device info: {pformat(device.model_dump())}")
-            if device.teacher_id == None:
+            logger.info("Device info: %s", device.model_dump_json(indent=2))
+            if device.teacher_id is None:
                 logger.info("Device has no teacher, returning error")
                 return "刷卡失敗: 輔導老師未刷卡"
 
@@ -215,7 +230,7 @@ async def register_card_id(device_id: int, card_id: str):
                 )
             else:
                 logger.info(
-                    "Student has reservation ID, proceeding to update time for end of class"
+                    "Student has reservation ID, proceeding to update time for end of class",
                 )
                 await exec_sql(
                     "commit",
@@ -224,6 +239,6 @@ async def register_card_id(device_id: int, card_id: str):
                 )
             await sync_frontend()
             return f"{cardholder.name}學生 刷卡成功"
-    except Exception as e:
-        logger.exception(f"[main] Unexpected error:\n{traceback.format_exc()}")
+    except Exception:
+        logger.exception("Unexpected error")
         return "刷卡失敗: API 錯誤"

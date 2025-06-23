@@ -1,10 +1,12 @@
+import logging
+from uuid import uuid4
+
 from fastapi import APIRouter
 from fastapi.exceptions import HTTPException
-from src.models.announcement import AddAnnouncement, UpdateAnnouncement
+
 from src.database.exec_sql import exec_sql
-import logging
+from src.models.announcement import AddAnnouncement, UpdateAnnouncement
 from src.models.api_response import APIResponse
-from uuid import uuid4
 
 logger = logging.getLogger("rich")
 router = APIRouter(prefix="/announcements", tags=["Announcments"])
@@ -18,7 +20,7 @@ async def add_announcement(announcement: AddAnnouncement):
         return APIResponse(detail="Adding announcement successful!!")
     except Exception as e:
         logger.exception(e)
-        raise HTTPException(status_code=404, detail=f"Error {str(uuid4())}")
+        raise HTTPException(status_code=404, detail=f"Error {uuid4()!s}")
 
 
 @router.put("/")
@@ -33,7 +35,7 @@ async def update_announcement(announcement: UpdateAnnouncement):
         return APIResponse(detail="Updating announcement successful!!")
     except Exception as e:
         logger.exception(e)
-        raise HTTPException(status_code=404, detail=f"Error {str(uuid4())}")
+        raise HTTPException(status_code=404, detail=f"Error {uuid4()!s}")
 
 
 @router.delete("/{id}")
@@ -44,7 +46,7 @@ async def delete_announcement(id: int):
 
     except Exception as e:
         logger.exception(e)
-        raise HTTPException(status_code=404, detail=f"Error {str(uuid4())}")
+        raise HTTPException(status_code=404, detail=f"Error {uuid4()!s}")
 
 
 @router.get("/")
@@ -53,4 +55,4 @@ async def get_announcements():
         return await exec_sql("all", "get_announce")
     except Exception as e:
         logger.exception(e)
-        raise HTTPException(status_code=404, detail=f"Error {str(uuid4())}")
+        raise HTTPException(status_code=404, detail=f"Error {uuid4()!s}")

@@ -9,6 +9,10 @@
     },
     "editor.defaultFormatter": "charliermarsh.ruff"
   },
-  "ruff.nativeServer": "on",
+  // "ruff.nativeServer": "on",
+  "python.analysis.ignore": [
+        "*"
+    ]
+
  
 }
