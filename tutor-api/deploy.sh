@@ -13,13 +13,13 @@ echo ""
 
 if [ ! -f "$(pwd)/src/config.py" ]; then
     cp "$(pwd)/src/config.py.example" "$(pwd)/src/config.py" 
-    echo "[✓] No backend config.py found, created at $BACKEND_CONFIG"
+    echo "[✓] No backend config.py found, created at $(pwd)/src/config.py"
     echo ""
 fi
 
 
 echo "[*] Checking backend config.py..."
-nano "$BACKEND_CONFIG"
+nano "$(pwd)/src/config.py"
 echo ""
 
 UPDATE_STAMP="$HOME/.cache/last-apt-update"
