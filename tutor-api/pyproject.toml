@@ -33,6 +33,7 @@ dependencies = [
     "markdown-it-py==3.0.0",
     "markupsafe==3.0.2",
     "mdurl==0.1.2",
+    "nh3>=0.2.21",
     "orjson==3.10.18",
     "packaging==24.2",
     "pillow==11.2.1",
