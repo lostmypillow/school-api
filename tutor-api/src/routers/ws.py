@@ -1,11 +1,13 @@
-from fastapi import APIRouter, WebSocket, WebSocketDisconnect
-from src.models.cardholder import Cardholder
-from src.database.exec_sql import exec_sql
-from pprint import pformat
 import logging
+from pprint import pformat
+
 import orjson
-import ast
-logger = logging.getLogger('rich')
+from fastapi import APIRouter, WebSocket, WebSocketDisconnect
+
+from src.database.exec_sql import exec_sql
+from src.models.cardholder import Cardholder
+
+logger = logging.getLogger("rich")
 router = APIRouter(
     prefix="/ws",
     tags=["Websocket / Control"],
@@ -21,20 +23,15 @@ async def sync_frontend():
                     "teachers": [
                         Cardholder(
                             **await exec_sql(
-                                "one",
-                                "fetch_role_teacher",
-                                card_id=device_info['老師編號']
+                                "one", "fetch_role_teacher", card_id=device_info["老師編號"],
                             ),
                             **device_info,
-                            role="teacher"
+                            role="teacher",
                         ).model_dump()
-                        for device_info in await exec_sql(
-                            "all",
-                            "select_device_db"
-                        )
+                        for device_info in await exec_sql("all", "select_device_db")
                     ],
-                    "announce": orjson.dumps(await exec_sql('all', 'get_announce')).decode()
-                }
+                    "announce": orjson.dumps(await exec_sql("all", "get_announce")).decode(),
+                },
             )
         except Exception as e:
             print(e)
@@ -42,7 +39,6 @@ async def sync_frontend():
 
 @router.websocket("/{client_name}")
 async def websocket_endpoint(websocket: WebSocket, client_name: str):
-
     global active_connections
     await websocket.accept()
     active_connections[client_name] = websocket
@@ -51,7 +47,7 @@ async def websocket_endpoint(websocket: WebSocket, client_name: str):
         while True:
             data = await websocket.receive_text()
             logger.info(pformat(data))
-            if data == 'sync':
+            if data == "sync":
                 await sync_frontend()
 
     except WebSocketDisconnect:
