@@ -22,59 +22,7 @@ echo "[*] Checking backend config.py..."
 nano "$(pwd)/src/config.py"
 echo ""
 
-UPDATE_STAMP="$HOME/.cache/last-apt-update"
-mkdir -p "$(dirname "$UPDATE_STAMP")"
 
-MAX_AGE=3600
-
-if [ ! -f "$UPDATE_STAMP" ] || [ $(( $(date +%s) - $(stat -c %Y "$UPDATE_STAMP") )) -ge $MAX_AGE ]; then
-    echo "[*] Running apt-get update..."
-    sudo apt-get update && touch "$UPDATE_STAMP"
-else
-    echo "[✓] apt-get update was run recently, skipping."
-fi
-echo ""
-
-echo "[*] Ensuring necessary packages are installed..."
-install_if_missing() {
-    for pkg in "$@"; do
-        if ! dpkg -s "$pkg" >/dev/null 2>&1; then
-            echo "Installing $pkg..."
-            sudo apt-get install -y "$pkg" >/dev/null
-        else
-            echo "$pkg is already installed."
-        fi
-    done
-}
-
-# Install core utilities
-install_if_missing python3-venv python3-pip wget curl gnupg nginx
-
-# Add Microsoft repository if not already present
-if ! grep -q "packages.microsoft.com" /etc/apt/sources.list /etc/apt/sources.list.d/* 2>/dev/null; then
-    curl -sSL -O https://packages.microsoft.com/config/ubuntu/24.04/packages-microsoft-prod.deb
-    sudo dpkg -i packages-microsoft-prod.deb >/dev/null
-    rm packages-microsoft-prod.deb
-    sudo apt-get update -y >/dev/null
-fi
-
-# Install Microsoft SQL tools with license acceptance
-install_if_missing msodbcsql18
-install_if_missing mssql-tools18
-install_if_missing unixodbc-dev
-
-# Add to PATH if not already present
-if ! grep -q 'mssql-tools18/bin' ~/.bashrc; then
-    echo 'export PATH="$PATH:/opt/mssql-tools18/bin"' >> ~/.bashrc
-    source ~/.bashrc
-fi
-
-echo "[✓] ok"
-echo ""
-
-cd ..
-chmod o+x "$(pwd)"
-chmod o+x "$HOME"
 chmod o+x "$APP_DIR"
 echo "[✓] ok"
 echo ""

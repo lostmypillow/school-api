@@ -15,15 +15,17 @@ router = APIRouter(
 active_connections: dict[str, WebSocket] = {}
 
 
-async def sync_frontend():
-    for connection in active_connections:
+async def sync_frontend() -> None:
+    for connection in active_connections.items():
         try:
             await active_connections[connection].send_json(
                 {
                     "teachers": [
                         Cardholder(
                             **await exec_sql(
-                                "one", "fetch_role_teacher", card_id=device_info["老師編號"],
+                                "one",
+                                "fetch_role_teacher",
+                                card_id=device_info["老師編號"],
                             ),
                             **device_info,
                             role="teacher",
@@ -33,13 +35,15 @@ async def sync_frontend():
                     "announce": orjson.dumps(await exec_sql("all", "get_announce")).decode(),
                 },
             )
-        except Exception as e:
-            print(e)
+        except WebSocketDisconnect:
+            logger.exception("Websocket Disconnected")
+
+        except Exception:
+            logger.exception("Unexpected error")
 
 
 @router.websocket("/{client_name}")
-async def websocket_endpoint(websocket: WebSocket, client_name: str):
-    global active_connections
+async def websocket_endpoint(websocket: WebSocket, client_name: str) -> None:
     await websocket.accept()
     active_connections[client_name] = websocket
     await sync_frontend()
@@ -51,11 +55,11 @@ async def websocket_endpoint(websocket: WebSocket, client_name: str):
                 await sync_frontend()
 
     except WebSocketDisconnect:
-        logger.warning(f"[WS:{client_name}]\nDisconnected")
+        logger.exception("Websocket Disconnected for client: %s", client_name)
 
-    except Exception as e:
-        logger.exception(f"[WS:{client_name}]\nUnexpected error: {e}")
+    except Exception:
+        logger.exception("Unexpected error  for client: %s", client_name)
 
     finally:
         active_connections.pop(client_name, None)
-        logger.info(f"[WS:{client_name}]\nRemoved from active connections")
+        logger.info("Client %s removed from active connections", client_name)

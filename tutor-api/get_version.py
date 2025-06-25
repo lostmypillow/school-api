@@ -1,8 +1,7 @@
-import json
 try:
-    import tomllib 
+    import tomllib
 except ModuleNotFoundError:
-    import tomli as tomllib 
+    import tomli as tomllib
 
 
 from pathlib import Path
