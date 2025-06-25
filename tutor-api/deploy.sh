@@ -34,8 +34,8 @@ After=network.target
 
 [Service]
 User=$USER
-WorkingDirectory=$APP_DIR
-ExecStart=$APP_DIR/.venv/bin/fastapi run src/main.py --port $PORT 
+WorkingDirectory=$(pwd)
+ExecStart=$(pwd)/.venv/bin/fastapi run src/main.py --port $PORT 
 Restart=always
 Environment=PYTHONUNBUFFERED=1
 Environment=TZ=Asia/Taipei
