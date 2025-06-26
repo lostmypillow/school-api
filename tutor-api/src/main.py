@@ -100,7 +100,7 @@ app.include_router(ws_router)
 async def determine_role(card_id: str) -> Cardholder:
     cardholder = Cardholder(**await exec_sql("one", "fetch_role_student", card_id=card_id))
 
-    if isinstance(str, cardholder.name):
+    if isinstance(cardholder.name, str):
         cardholder.role = "student"
         logger.info("Cardholder is student: %s", cardholder.model_dump_json(indent=2))
 
