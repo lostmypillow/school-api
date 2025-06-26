@@ -52,3 +52,34 @@ dependencies = [
     "watchfiles==1.0.3",
     "websockets==14.1",
 ]
+[tool.ruff]
+target-version = "py311"
+line-length = 100
+indent-width = 4
+extend-exclude = [".venv", ".vscode", "__pycache__",  "**/uv/python/**"]
+
+[tool.ruff.format]
+indent-style = "space"
+line-ending = "lf"
+docstring-code-format = true
+docstring-code-line-length = 100
+
+[tool.ruff.lint]
+select = ["ALL"]
+ignore = ["D100", "D103", "D101", "TD003", "D104"]
+
+[tool.ruff.lint.pydocstyle]
+convention = "numpy"
+
+[tool.ruff.lint.mccabe]
+max-complexity = 10
+
+[tool.ruff.lint.pylint]
+max-args = 10
+max-locals = 15
+max-returns = 10
+max-statements = 100
+max-branches = 12
+max-public-methods = 20
+max-nested-blocks = 5
+max-positional-args = 6

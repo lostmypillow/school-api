@@ -4,7 +4,6 @@ from pprint import pformat
 from urllib.parse import unquote
 import chardet
 from src.config import settings
-import logging
 
 logger = logging.getLogger("rich")
 
