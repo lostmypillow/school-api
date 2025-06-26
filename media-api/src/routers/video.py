@@ -13,7 +13,7 @@ router = APIRouter(
     prefix="/video",
     tags=["Videos"],
 )
-STATIC_FOLDER = os.path.join(os.path.expanduser("~"), "dl_videos")
+STATIC_FOLDER = "/srv/dl_videos"
 SMB_URL = f"//{settings.SMB_HOST}{settings.SMB_FOLDER}"
 
 from itertools import cycle
