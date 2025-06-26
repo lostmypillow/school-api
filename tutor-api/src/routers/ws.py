@@ -16,30 +16,36 @@ active_connections: dict[str, WebSocket] = {}
 
 
 async def sync_frontend() -> None:
-    for connection in active_connections.items():
-        try:
-            await active_connections[connection].send_json(
-                {
-                    "teachers": [
-                        Cardholder(
-                            **await exec_sql(
-                                "one",
-                                "fetch_role_teacher",
-                                card_id=device_info["老師編號"],
-                            ),
-                            **device_info,
-                            role="teacher",
-                        ).model_dump()
-                        for device_info in await exec_sql("all", "select_device_db")
-                    ],
-                    "announce": orjson.dumps(await exec_sql("all", "get_announce")).decode(),
-                },
-            )
-        except WebSocketDisconnect:
-            logger.exception("Websocket Disconnected")
+    try:
+        # Fetch and prepare teacher data once
+        teachers = [
+            Cardholder(
+                **await exec_sql("one", "fetch_role_teacher", card_id=device_info["老師編號"]),
+                **device_info,
+                role="teacher",
+            ).model_dump()
+            for device_info in await exec_sql("all", "select_device_db")
+        ]
 
+        # Fetch and serialize announcements
+        announce = orjson.dumps(await exec_sql("all", "get_announce")).decode()
+
+    except Exception:
+        logger.exception("Error preparing frontend data")
+        return
+
+    for websocket in active_connections.values():
+        try:
+            await websocket.send_json({
+                "teachers": teachers,
+                "announce": announce,
+            })
+        except WebSocketDisconnect:
+            logger.exception("WebSocket Disconnected")
         except Exception:
             logger.exception("Unexpected error")
+
+
 
 
 @router.websocket("/{client_name}")
