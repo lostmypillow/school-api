@@ -1,6 +1,6 @@
 [project]
 name = "touch"
-version = "0.4.0"
+version = "2025.7.0"
 description = ""
 readme = "README.md"
 requires-python = ">=3.12"
