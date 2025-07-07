@@ -16,9 +16,7 @@ from .routers import (
     status,
 )
 import os
-
 from .database.exec_sql import async_engine
-
 
 from rich.logging import RichHandler
 from rich.traceback import install
@@ -42,7 +40,8 @@ async def lifespan(app: FastAPI):
         logger = logging.getLogger(name)
         logger.handlers = [rich_handler]
         logger.setLevel(logging.INFO)
-    logger.info(f"Starting ...")
+    
+
 
     yield
     if async_engine:
