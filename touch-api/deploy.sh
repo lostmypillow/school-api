@@ -4,9 +4,8 @@
 set -e
 SERVICE_NAME="touch"
 PORT="8002"
-VERSION=$(python3 get_version.py)
 
-echo "[*] $SERVICE_NAME v$VERSION starting deployment..."
+echo "[*] $SERVICE_NAME v$(uv version --short) starting deployment..."
 echo ""
 
 echo "[*] Checking config.py..."
