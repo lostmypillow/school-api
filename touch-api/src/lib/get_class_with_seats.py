@@ -30,9 +30,9 @@ async def get_class_with_seats():
     current_date = datetime.now().strftime('%Y/%m/%d')
 
     h = datetime.now().hour
-    if 12 <= h <= 17:
+    if 11 <= h <= 16:
         current_period = 2
-    elif h <= 11:
+    elif h <= 10:
         current_period = 1
     else:
         current_period = 3
