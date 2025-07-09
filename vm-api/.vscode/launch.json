@@ -1,0 +1,19 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "fastapi dev",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "fastapi",
+      "cwd": "${workspaceFolder}/app/",
+      "args": [
+        "dev"
+      ],
+      "justMyCode": false,
+      "env": {
+        "ENVIRONMENT": "dev"
+      }
+    },
+  ]
+}
