@@ -12,7 +12,8 @@ origins = [
      "https://jsearch-latest.onrender.com",
      "https://jsearch.lostmypillow.duckdns.org",
      "https://lostmypillow.github.io",
-     "http://localhost:3000"
+     "http://localhost:3000",
+     "https://jsearch.pages.dev"
 
     
 ]
