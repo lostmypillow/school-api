@@ -1,10 +1,14 @@
-from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 import logging
+
+from fastapi import APIRouter, WebSocket, WebSocketDisconnect
+
 logger = logging.getLogger("rich")
-from src.lib.get_class_with_seats import get_class_with_seats
+from pprint import pformat
+
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
-from pprint import pformat
+from src.lib.get_class_with_seats import get_class_with_seats
+
 client_connections: dict[str, WebSocket] = {}
 debug_connections: dict[str, WebSocket] = {}
 router = APIRouter(
@@ -66,10 +70,10 @@ async def websocket_endpoint(websocket: WebSocket, client_name: str):
             logger.info(pformat(data))
             if data == "update":
                 await send_updates()
-            if data == 'debug':
+            if data == "debug":
                 for c_name, con in list(client_connections.items()):
-                    await con.send_text('debug_toggle')
-                    await con.send_text(', '.join(client_connections))
+                    await con.send_text("debug_toggle")
+                    await con.send_text(", ".join(client_connections))
 
     except WebSocketDisconnect:
         logger.warning(f"[WS:{client_name}]\nDisconnected")

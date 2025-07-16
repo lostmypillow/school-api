@@ -1,10 +1,14 @@
-from fastapi import APIRouter, HTTPException
-from src.database.exec_sql import exec_sql
 import logging
+
+from fastapi import APIRouter, HTTPException
+
+from src.database.exec_sql import exec_sql
+
 logger = logging.getLogger("rich")
-from src.models.success_message import SuccessMessage
 from src.models.error_response import ErrorResponse
+from src.models.success_message import SuccessMessage
 from src.models.survey_info import SurveyInfo
+
 router = APIRouter(
     prefix="/survey",
     tags=["Survey"],
@@ -14,7 +18,7 @@ deps: dict = {
                 "": 4,
                 : 8,
                 : 9,
-                : 11
+                : 11,
             }
 @router.post("/",
     summary="Submit a rating for an employee",
@@ -27,7 +31,7 @@ deps: dict = {
         500: {
             "description": "Internal server error",
             "model": ErrorResponse,
-        }
+        },
     })
 async def rate_employee(survey_info: SurveyInfo):
     """Rates employee..idk self explanatory
@@ -45,18 +49,18 @@ async def rate_employee(survey_info: SurveyInfo):
     global deps
     try:
         await exec_sql(
-            'commit',
-            'rate_employee',
+            "commit",
+            "rate_employee",
             student_id=survey_info.student_id,
             department=deps[survey_info.employee_dep],
             employee_id=survey_info.employee_id,
-            rating=survey_info.rating
+            rating=survey_info.rating,
         )
         return SuccessMessage(message="success")
     except KeyError as e:
-        logger.error(f'[RATE ERROR] Invalid department: {survey_info.employee_dep} - {e}')
+        logger.error(f"[RATE ERROR] Invalid department: {survey_info.employee_dep} - {e}")
         raise HTTPException(status_code=400, detail="部門資訊有誤!")
 
     except Exception as e:
-        logger.exception(f'[RATE ERROR] Failed to rate employee: {e}')
+        logger.exception(f"[RATE ERROR] Failed to rate employee: {e}")
         raise HTTPException(status_code=500, detail="抱歉，系統發生錯誤，請洽導師! Error 011")

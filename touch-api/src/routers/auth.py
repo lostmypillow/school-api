@@ -1,9 +1,11 @@
-from fastapi import APIRouter, HTTPException
-from datetime import datetime, timedelta
-from src.config import settings
-from src.database.exec_sql import exec_sql
-from src.lib import  get_class_with_seats, deps
 import logging
+from datetime import datetime, timedelta
+
+from fastapi import APIRouter, HTTPException
+
+from src.database.exec_sql import exec_sql
+from src.lib import deps, get_class_with_seats
+
 logger = logging.getLogger("rich")
 from src.models import AuthRequest, AuthResponse, ErrorResponse, RateableEmployee
 
@@ -30,7 +32,7 @@ async def authorize_student(auth_request: AuthRequest):
     global settings
     try:
         student_details: dict[str, str] = await exec_sql(
-            "one", "student_details", card_id=auth_request.student_id
+            "one", "student_details", card_id=auth_request.student_id,
         )
         # print(student_details)
     # Example student_details value:
@@ -39,15 +41,15 @@ async def authorize_student(auth_request: AuthRequest):
     #     "姓名": "",
     #     "性別": "男"
     # }
-    except Exception as e:
+    except Exception:
         logger.exception(
-            f"[AUTH {auth_request.student_id}] DB query student_details failed, raising Error 500"
+            f"[AUTH {auth_request.student_id}] DB query student_details failed, raising Error 500",
         )
         raise HTTPException(500, detail="抱歉，系統發生錯誤，請洽導師! Error 001")
 
     if student_details is None or student_details == {}:
         logger.error(
-            f"[AUTH {auth_request.student_id}] No student found, raising Error 404"
+            f"[AUTH {auth_request.student_id}] No student found, raising Error 404",
         )
         raise HTTPException(404, detail="抱歉，查無此人!")
 
@@ -60,10 +62,10 @@ async def authorize_student(auth_request: AuthRequest):
     if auth_request.type == "seat":
 
         try:
-            class_with_seat = (await get_class_with_seats())['class_with_seats']
-        except Exception as e:
+            class_with_seat = (await get_class_with_seats())["class_with_seats"]
+        except Exception:
             logger.exception(
-                f"[AUTH {auth_request.student_id}] Error calling get_class_with_seats(), raising Error 500"
+                f"[AUTH {auth_request.student_id}] Error calling get_class_with_seats(), raising Error 500",
             )
             raise HTTPException(500, detail="抱歉，系統發生錯誤，請洽導師! Error 003")
 
@@ -72,7 +74,7 @@ async def authorize_student(auth_request: AuthRequest):
 
         try:
             courses_of_student: list[dict[str, str]] = await exec_sql(
-                "all", "student_match_course", student_id=auth_request.student_id
+                "all", "student_match_course", student_id=auth_request.student_id,
             )
 
         # Example courses_of_student value:
@@ -81,15 +83,15 @@ async def authorize_student(auth_request: AuthRequest):
         #         "班別": ""
         #     }
         # ]
-        except Exception as e:
+        except Exception:
             logger.exception(
-                f"[AUTH {auth_request.student_id}] DB query student_match_course failed, raising Error 500"
+                f"[AUTH {auth_request.student_id}] DB query student_match_course failed, raising Error 500",
             )
             raise HTTPException(500, detail="抱歉，系統發生錯誤，請洽導師! Error 002")
 
         if courses_of_student is None or courses_of_student == []:
             logger.error(
-                f"[AUTH {auth_request.student_id}] No courses for {auth_request.student_id} found, raising Error 404"
+                f"[AUTH {auth_request.student_id}] No courses for {auth_request.student_id} found, raising Error 404",
             )
             raise HTTPException(404, detail="抱歉，您沒有任何可補位之課程，請洽導師!")
 
@@ -117,7 +119,7 @@ async def authorize_student(auth_request: AuthRequest):
 
         if matches_course == False:
             logger.error(
-                f"[AUTH {auth_request.student_id}] Student s courses does NOT match course for seat"
+                f"[AUTH {auth_request.student_id}] Student s courses does NOT match course for seat",
             )
             raise HTTPException(404, detail="抱歉，目前沒有您可選的補位資料，請洽導師!")
 
@@ -128,9 +130,9 @@ async def authorize_student(auth_request: AuthRequest):
                 course_id=class_with_seat["主檔號"],
                 student_id=auth_request.student_id,
             )
-        except Exception as e:
+        except Exception:
             logger.exception(
-                f"[AUTH {auth_request.student_id}] DB query student_already_selected failed, raising Error 500"
+                f"[AUTH {auth_request.student_id}] DB query student_already_selected failed, raising Error 500",
             )
             raise HTTPException(500, detail="系統發生錯誤，請洽導師! Error 007")
         # OUTPUT:
@@ -181,7 +183,7 @@ async def authorize_student(auth_request: AuthRequest):
             if "主要部門" in employee:
 
                 employee["主要部門"] = next(
-                    (k for k, v in deps.items() if v == employee["主要部門"]), None
+                    (k for k, v in deps.items() if v == employee["主要部門"]), None,
                 )
 
         try:
