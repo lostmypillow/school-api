@@ -1,5 +1,5 @@
 #!/bin/bash
-
+# TODO:ADD DOCSTRING: https://google.github.io/styleguide/shellguide.html
 # Exit on error
 set -e
 SERVICE_NAME="touch"

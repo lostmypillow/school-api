@@ -31,6 +31,7 @@ dependencies = [
     "markdown-it-py==3.0.0",
     "markupsafe==3.0.2",
     "mdurl==0.1.2",
+    "pdoc3>=0.11.6",
     "pycparser==2.22",
     "pydantic==2.10.2",
     "pydantic-core==2.27.1",

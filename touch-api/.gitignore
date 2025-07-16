@@ -4,3 +4,4 @@ static/*
 .venv
 !.gitkeep
 src/config.py
+.ruff_cache

@@ -1,3 +1,8 @@
+"""SQL Executor.
+
+.. todo::
+See `src.database` for refactoring tips.
+"""
 import logging
 import pathlib
 from os import path
