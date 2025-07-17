@@ -1,9 +1,14 @@
-"""Dictionary of departments (keys) to their department number (values).
+"""部門名稱 (key) 對應其部門編號 (value) 的字典.
 
-Honestly this is such a stupid file, it shouldn't exist, but yet it does.
+老實說, 這是一個很蠢的檔案, 它根本不該存在, 但它偏偏就存在了.
 .. todo::
-Find a way to not rely on this file. Should be quite easy, I'm just lazy.
+    想個辦法不要依賴這個檔案. 這應該很簡單, 只是我懶得弄.
+
+
+
 """
+
+
 deps: dict = {
                 : 2,
                 "": 4,

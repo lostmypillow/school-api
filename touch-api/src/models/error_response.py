@@ -1,6 +1,9 @@
-# TODO:ADD DOCSTRING
-from pydantic import BaseModel, Field
+"""錯誤回傳資訊.
 
 
-class ErrorResponse(BaseModel):
-    detail: str = Field(..., example="抱歉，系統發生錯誤! Error xxx")
+"""
+from pydantic import BaseModel
+
+
+class ErrorResponse(BaseModel):  # noqa: D101
+    detail: str

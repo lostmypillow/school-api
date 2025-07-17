@@ -1,23 +1,16 @@
-"""Database related functions and variables.
+"""與資料庫相關的函式與變數.
 
 .. todo::
-**If you're interested in refactoring:**
+    在 `` 中, 這個資料夾不是單一檔案, 而是由三個檔案構成: `dependencies.py`, `engine.py`, `exec_sql.py`
 
-In ``, this folder has 3 files instead of 1: 
-```
-Mode                 LastWriteTime         Length Name
-----                 -------------         ------ ----
-d----           7/16/2025  6:15 PM                sql
--a---           7/16/2025  6:15 PM              0 __init__.py
--a---           7/16/2025  6:15 PM            313 dependencies.py
--a---           7/16/2025  6:15 PM            671 engine.py
--a---           7/16/2025  6:15 PM           2068 exec_sql.py
-```
-Basically what you can do is extract the FastAPI Depends compatible function and the engine variable from the current `src.database.exec_sql`. Alternatively, just copy the same 3 files from ``'s `app.database` and it should work...not yet.
+    基本上你可以將目前 `src.database.exec_sql` 中的 FastAPI Depends 相容函式與 `engine` 變數抽出來. 另一種做法是直接從 `` 的 `app.database` 中複製上述三個檔案過來, 基本上應該可以運作……但目前還不行.
 
-Our current `exec_sql` function, yes I mean the function named 'exec_sql' in the file `src.database.exec_sql`, is a function that does not need to pass a session in order to use it. 
+    目前的 `exec_sql` 函式 (也就是 `src.database.exec_sql` 檔案中名為 'exec_sql' 的函式), 是一個**不需要**傳入 session 的函式.
 
-The exec_sql from ``, **however**, requires a session. That session will either come from wrapping function in `app.database.dependencies.get_session` in FastAPI Depends() OR using the function directly to get a session. In ``, I use Depends to get the session at the router, and pass it into the service class.
+    然而, 在 `` 中的 exec_sql 函式則**需要** session. 該 session 可以透過 FastAPI 的 Depends() 包裹 `app.database.dependencies.get_session` 函式取得, 也可以直接呼叫該函式來取得 session. 在 `` 中, 我是在 router 端使用 Depends 取得 session, 並傳入 service class.
 
-Long story short, watch out for the extra parameter 'session' of type `sqlalchemy.ext.asyncio.AsyncSession` in the new exec_sql function of ``'s `app.database.exec_sql` module, it's a **required** parameter.
+    簡而言之, 要注意新的 `exec_sql` 函式 (位於 `` 的 `app.database.exec_sql` 模組中) 需要額外的 `session` 參數, 其型別為 `sqlalchemy.ext.asyncio.AsyncSession`, 而這是一個**必要**參數.
+
+
 """  # noqa: E501
+

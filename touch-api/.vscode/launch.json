@@ -15,5 +15,20 @@
         "ENVIRONMENT": "dev"
       }
     },
+    {
+      "name": "pdoc HTTP server",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "uv",
+      "runtimeArgs": [
+        "run",
+        "pdoc",
+        "--http",
+        ":",
+        "src"
+      ],
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen"
+    }
   ]
 }

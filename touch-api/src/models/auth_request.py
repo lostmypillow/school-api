@@ -1,13 +1,15 @@
-# TODO:ADD DOCSTRING
+"""補位學生登入資訊.
+
+
+"""
 from typing import Literal
 
 from pydantic import BaseModel, Field
 
 
-class AuthRequest(BaseModel):
+class AuthRequest(BaseModel):  # noqa: D101
     student_id: str = Field(
         ...,
-        example="",
         description="學生學號",
     )
     type: Literal[
@@ -16,6 +18,5 @@ class AuthRequest(BaseModel):
         "award",
     ] = Field(
         ...,
-        example="seats",
         description="驗證種類: 補位、評分或獎學金",
     )

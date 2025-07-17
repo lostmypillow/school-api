@@ -1,4 +1,7 @@
-# TODO:ADD DOCSTRING
+"""補位學生補位.
+
+
+"""
 import logging
 
 from fastapi import APIRouter, HTTPException
@@ -29,13 +32,14 @@ router = APIRouter(
                       },
                   })
 async def register_seat(seat_info: SeatInfo):
-    """
-    Registers a seat number for the student.
+    """為學生註冊補位.
 
     Parameters
     ----------
     seat_info : SeatInfo
-        The seat info including student ID and seat serial number.
+        包含學生 ID 與座位序號的資訊. 詳情請見 `src.models.seat_info`.
+
+    
     """
     try:
         await exec_sql(

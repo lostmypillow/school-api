@@ -1,24 +1,22 @@
-"""Main entry file of the entire FastAPI app.
+"""FastAPI 入口檔案.
 
-From top to bottom of the `src.main` source code:
+依照 `src.main` 原始碼自上而下的順序:
 
-1. Defines `src.main.lifespan`.
-2. Extracts title (key 'name' in `pyproject.toml`), description and version from `pyproject.toml`.
-3. Combine them with a key 'lifespan' and value `src.main.lifespan` into `common_kwargs` dictionary.
-4. If this FastAPI is being deployed on Linux, disable built-in Swagger, ReDoc and updates root_path. This assumes all deployment will happen on Linux while developing happens on Windows. Now question: I can still access `http://IP_OR_DOMAIN/api/touch/docs` in production, though?
-> Answer: Well we DO serve a custom Swagger on "/docs", using `src.main.custom_swagger_ui_html`.
-5. Pass the combined kwargs to FastAPI.
-6. Defines `src.main.custom_swagger_ui_html` and `src.main.swagger_ui_redirect`.
-7. Adds all the routers to FastAPI via `include_router` functions.
-
+1. 定義 `src.main.lifespan`.
+2. 從 `pyproject.toml` 中擷取標題 (key 為 'name')、描述與版本.
+3. 將上述資訊與鍵 'lifespan' 和值 `src.main.lifespan` 一起組成 `common_kwargs` 字典.
+4. 如果此 FastAPI 正在 Linux 上部署, 則停用內建 Swagger、ReDoc 並更新 root_path.這假設開發發生於 Windows, 而部署則在 Linux 上.那現在的問題是: 我在 production 中還能存取 `http://IP_OR_DOMAIN/api/touch/docs` 嗎?
+> 解答: 其實我們在 "/docs" 路徑上提供了自定義的 Swagger, 使用的是 `src.main.custom_swagger_ui_html`.
+5. 將合併後的 kwargs 傳入 FastAPI.
+6. 定義 `src.main.custom_swagger_ui_html` 與 `src.main.swagger_ui_redirect`.
+7. 使用 `include_router` 函式將所有路由加入 FastAPI.
 
 .. todo::
-**If you're interested in refactoring:**
+    - 強制設定 CORS: 目前在加上 CORSMiddleware 時, allow_origins 被設為 `["*"]`, 這是**不安全**的, 應改為 `["FRONTEND_URL"]`. 詳情請見: https://fastapi.tiangolo.com/tutorial/cors/.
+    - 步驟 2 到 4: 在 `` 中, 這些步驟已被移到 `app.core.config` 模組中, 並從該模組匯入字典後傳入 FastAPI 作為 kwargs.請參考 `` 的 `app.core.config` 模組來了解如何重構.
 
-1. Enforce CORS: right now when adding CORSMiddleware, allow_origins is set to `["*"]`, this is **unsafe** and should be changed to `["FRONTEND_URL"]`. Read this for the 'why': https://fastapi.tiangolo.com/tutorial/cors/.
-2. Steps 2 to 4: In ``, these steps have been moved to `app.core.config`, we import the dictionary from that module and still pass it into FastAPI as kwargs. See `ka-tutor-api`'s `app.core.config` to get an idea how to refactor.
 
-"""  # noqa: E501
+""" # noqa: E501
 import logging
 import os
 import tomllib
@@ -50,19 +48,20 @@ logger = logging.getLogger("rich")
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):  # noqa: ANN201, ARG001
-    """Set up Rich logger. Disposes of SQLAlchemy async_engine on shutdown.
+    """設定 Rich logger. 在 FastAPI 關閉時釋放 SQLAlchemy 的 async_engine.
 
     Parameters
     ----------
     app : FastAPI
-        FastAPI class, see https://fastapi.tiangolo.com/reference/fastapi/
+        FastAPI 類別, 請參見 https://fastapi.tiangolo.com/reference/fastapi/
+
     .. todo::
-    **If you're interested in refactoring:**
+        - 在 `` 中, 這整個函式 (包含 @asynccontextmanager 裝飾器)已被移至 `app.core.lifespan`. 
+        - 至於為什麼是 "app" 而不是 "src", 請參見 `src` 的說明.
+        - 此外, 在 `` 中, 所有日誌記錄邏輯也都已重構並移至 `app.core.log`, 詳情請見該專案的 `app.core.log` 模組.
 
-    In ``, this entire function (including the @asynccontextmanager decorator) has been moved to `app.core.lifespan`, see `src` for why the path starts with "app" and not "src".
-
-    In ``, the logging logic has also entirely revamped and moved to `app.core.log`, see ``'s `app.core.log` for more information.
-    """  # noqa: E501
+    
+    """ # noqa: E501
     install(show_locals=True)
     rich_handler = RichHandler(rich_tracebacks=True)
     logging.basicConfig(
@@ -125,25 +124,26 @@ app.add_middleware(
 
 @app.get("/docs", include_in_schema=False)
 async def custom_swagger_ui_html() -> HTMLResponse:
-    """Serve self-hosted Swagger.
+    """提供自架設的 Swagger 文件頁面.
 
-    Follows this guide to self host Swagger assets and set up routing: https://fastapi.tiangolo.com/how-to/custom-docs-ui-assets/?h=hos#self-hosting-javascript-and-css-for-docs
-
-    Now why is openapi_url set this way instead of just `app.openapi_url`?
-
-    > Well, if we're on Linux and the root_path of the instantiated FastAPI class is '/api/touch', then the openapi.json that Swagger relies on will be served at `http://IP_OR_DOMAIN/api/touch/openapi.json`. Unfortunately `app.openapi_url`'s value is `/openapi.json`, so if we followed the guide completely then Swagger would complain not being able to get API definition from `http://IP_OR_DOMAIN/openapi.json`. That's why we add root_path, so Swagger knows to get OpenAPI definition from `http://IP_OR_DOMAIN/api/touch/openapi.json`.
+    此函式依照以下指南進行設定, 將 Swagger 的 JS 與 CSS 資源自架並建立對應路由:
+    https://fastapi.tiangolo.com/how-to/custom-docs-ui-assets/#self-hosting-javascript-and-css-for-docs
 
     Returns
     -------
     HTMLResponse
-        The Swagger API Documentation.
+        Swagger API 文件頁面.
+
+    .. attention::
+    **為什麼要這樣設定 openapi_url, 而不是直接使用 `app.openapi_url`?**
+
+    假設我們在 Linux 上部署, FastAPI 實例的 root_path 是 '/api/touch', 那麼 Swagger 所依賴的 openapi.json 就會被提供在 `http://IP_OR_DOMAIN/api/touch/openapi.json`. 但 `app.openapi_url` 的預設值是 `/openapi.json`, 如果完全照官方指南設定, Swagger 就會報錯, 因為它會去抓 `http://IP_OR_DOMAIN/openapi.json` 的 API 定義. 因此我們必須手動加上 root_path, 讓 Swagger 正確取得 `http://IP_OR_DOMAIN/api/touch/openapi.json`.
+
     .. todo::
-    **If you're interested in refactoring:**
+        - 在 `` 中, 這段程式碼與 `src.main.swagger_ui_redirect` 已被整合並移至單一模組 `app.api.docs` 中. - 至於為什麼最上層模組名稱是 `app` 而不是 `src`, 請參考 `src` 的說明.
 
-    In ``, this and `src.main.swagger_ui_redirect` has been combined and moved into a single module in `app.api.docs`. See `src` for why the top level module is `app` instead of `src`.
-
-
-    """  # noqa: E501
+    
+    """ # noqa: E501
     return get_swagger_ui_html(
         openapi_url=app.root_path + cast("str", app.openapi_url),
         title=app.title + " - Swagger UI",
@@ -156,17 +156,21 @@ async def custom_swagger_ui_html() -> HTMLResponse:
 
 @app.get(cast("str", app.swagger_ui_oauth2_redirect_url), include_in_schema=False)
 async def swagger_ui_redirect() -> HTMLResponse:
-    """Honestly don't know what this does, but it was present in the official guide that I followed: https://fastapi.tiangolo.com/how-to/custom-docs-ui-assets/?h=hos#self-hosting-javascript-and-css-for-docs.
+    """老實說我不知道這段程式碼的用途.
+
+    但它出現在我所參考的官方指南中:
+    https://fastapi.tiangolo.com/how-to/custom-docs-ui-assets/#self-hosting-javascript-and-css-for-docs.
 
     Returns
     -------
     HTMLResponse
-        Unknown for now.
+        目前用途不明.
 
     .. todo::
-    If you come across this and you **do** know what this is for, please update the docstrings.
+        - 如果你看到這裡, 而且**知道**這段是做什麼的, 請幫忙更新這份 docstring.
+        - 重構建議請參考 `src.main.custom_swagger_ui_html`.
 
-    See `src.main.custom_swagger_ui_html` for refactoring tips.
+    *由 林家民 於 2025/7/17 撰寫, 原文為自己寫的英文, 由 ChatGPT 翻譯為繁體中文. *
     """  # noqa: E501
     return get_swagger_ui_oauth2_redirect_html()
 

@@ -1,4 +1,9 @@
-# TODO:ADD DOCSTRING
+"""補位學生登入.
+
+請參考 `src.routers` 模組來了解如何重構
+
+
+"""
 import logging
 from datetime import datetime, timedelta
 
@@ -30,6 +35,42 @@ router = APIRouter(
     },
 )
 async def authorize_student(auth_request: AuthRequest):
+    """確認學生是否可補位.
+
+    請參考 `src.routers` 模組來了解如何重構.
+
+    以下為本函式邏輯流程:
+
+    1. 檢查該學生是否存在於資料庫中.
+    2. 若用途為獎勵查詢:
+        - 則直接回傳, 因為前端之後會另外查詢獎勵資訊.(是否能改善?例如現在就查詢獎勵, 或在改寫成 service 之後, 讓 IdentityService 呼叫 AwardsService, 以便這個 endpoint 能回傳更細緻的錯誤訊息.)
+    3. 若用途為座位查詢:
+        1. 檢查是否有可補位的班級, 若無則立刻回傳例外; 若有則繼續.
+        2. 取得該學生目前的所有課程, 若這些課程中沒有包含目前有座位的班級, 則回傳例外; 否則繼續.
+        3. 檢查該學生是否已經選過座位, 若有則回傳例外; 否則繼續.(若通過此檢查, 則會直接跳至回傳 AuthResponse)
+    4. 若用途為評分員工:
+        1. 取得今日所有值班員工
+        2. 取得該學生已評分的員工
+        3. 從今日值班員工中移除已評分者, 並將其附加至回傳資料中
+    5. 回傳結果(若先前未提前回傳)
+
+    Parameters
+    ----------
+    auth_request : AuthRequest
+        請見 `src.models.auth_request`.
+
+    Returns
+    -------
+    AuthResponse
+        請見 `src.models.auth_response`.
+
+    Raises
+    ------
+    HTTPException
+        補位機會顯示的錯誤訊息
+
+    
+    """ # noqa: E501
     global settings
     try:
         student_details: dict[str, str] = await exec_sql(
@@ -46,13 +87,13 @@ async def authorize_student(auth_request: AuthRequest):
         logger.exception(
             f"[AUTH {auth_request.student_id}] DB query student_details failed, raising Error 500",
         )
-        raise HTTPException(500, detail="抱歉，系統發生錯誤，請洽導師! Error 001")
+        raise HTTPException(500, detail="抱歉, 系統發生錯誤, 請洽導師! Error 001")
 
     if student_details is None or student_details == {}:
         logger.error(
             f"[AUTH {auth_request.student_id}] No student found, raising Error 404",
         )
-        raise HTTPException(404, detail="抱歉，查無此人!")
+        raise HTTPException(404, detail="抱歉, 查無此人!")
 
     auth_response = AuthResponse(**student_details)
 
@@ -68,10 +109,10 @@ async def authorize_student(auth_request: AuthRequest):
             logger.exception(
                 f"[AUTH {auth_request.student_id}] Error calling get_class_with_seats(), raising Error 500",
             )
-            raise HTTPException(500, detail="抱歉，系統發生錯誤，請洽導師! Error 003")
+            raise HTTPException(500, detail="抱歉, 系統發生錯誤, 請洽導師! Error 003")
 
         if class_with_seat == {}:
-            raise HTTPException(404, "抱歉，目前沒有補位資料!")
+            raise HTTPException(404, "抱歉, 目前沒有補位資料!")
 
         try:
             courses_of_student: list[dict[str, str]] = await exec_sql(
@@ -88,13 +129,13 @@ async def authorize_student(auth_request: AuthRequest):
             logger.exception(
                 f"[AUTH {auth_request.student_id}] DB query student_match_course failed, raising Error 500",
             )
-            raise HTTPException(500, detail="抱歉，系統發生錯誤，請洽導師! Error 002")
+            raise HTTPException(500, detail="抱歉, 系統發生錯誤, 請洽導師! Error 002")
 
         if courses_of_student is None or courses_of_student == []:
             logger.error(
                 f"[AUTH {auth_request.student_id}] No courses for {auth_request.student_id} found, raising Error 404",
             )
-            raise HTTPException(404, detail="抱歉，您沒有任何可補位之課程，請洽導師!")
+            raise HTTPException(404, detail="抱歉, 您沒有任何可補位之課程, 請洽導師!")
 
         try:
             assert isinstance(courses_of_student, list)
@@ -108,21 +149,21 @@ async def authorize_student(auth_request: AuthRequest):
             )
         except AssertionError:
             logger.error(f"[AUTH {auth_request.student_id}] Data structure issue")
-            raise HTTPException(500, "抱歉，系統發生錯誤，請洽導師! Error 004")
+            raise HTTPException(500, "抱歉, 系統發生錯誤, 請洽導師! Error 004")
 
         except KeyError as e:
             logger.exception(f"[AUTH {auth_request.student_id}] Missing key: {e}")
-            raise HTTPException(500, "抱歉，系統發生錯誤，請洽導師! Error 005")
+            raise HTTPException(500, "抱歉, 系統發生錯誤, 請洽導師! Error 005")
 
         except Exception as e:
             logger.exception(f"[AUTH {auth_request.student_id}] Unknown error: {e}")
-            raise HTTPException(500, "抱歉，系統發生錯誤，請洽導師! Error 006")
+            raise HTTPException(500, "抱歉, 系統發生錯誤, 請洽導師! Error 006")
 
         if matches_course == False:
             logger.error(
                 f"[AUTH {auth_request.student_id}] Student s courses does NOT match course for seat",
             )
-            raise HTTPException(404, detail="抱歉，目前沒有您可選的補位資料，請洽導師!")
+            raise HTTPException(404, detail="抱歉, 目前沒有您可選的補位資料, 請洽導師!")
 
         try:
             check_already_selected: list = await exec_sql(
@@ -135,7 +176,7 @@ async def authorize_student(auth_request: AuthRequest):
             logger.exception(
                 f"[AUTH {auth_request.student_id}] DB query student_already_selected failed, raising Error 500",
             )
-            raise HTTPException(500, detail="系統發生錯誤，請洽導師! Error 007")
+            raise HTTPException(500, detail="系統發生錯誤, 請洽導師! Error 007")
         # OUTPUT:
         # [
         #     {
@@ -170,7 +211,7 @@ async def authorize_student(auth_request: AuthRequest):
             )
         except Exception as e:
             logger.exception(f"[AUTH {auth_request.student_id}] Unknown error: {e}")
-            raise HTTPException(500, "抱歉，系統發生錯誤，請洽導師! Error 008")
+            raise HTTPException(500, "抱歉, 系統發生錯誤, 請洽導師! Error 008")
 
         if emp_working_today == []:
             raise HTTPException(404, "目前沒有可評分的員工!")
@@ -198,7 +239,7 @@ async def authorize_student(auth_request: AuthRequest):
             )
         except Exception as e:
             logger.exception(f"[AUTH {auth_request.student_id}] Unknown error: {e}")
-            raise HTTPException(500, "抱歉，系統發生錯誤，請洽導師! Error 009")
+            raise HTTPException(500, "抱歉, 系統發生錯誤, 請洽導師! Error 009")
 
         rateable_employees = [
             RateableEmployee(**employee)

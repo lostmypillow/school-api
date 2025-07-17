@@ -1,4 +1,10 @@
-# TODO:ADD DOCSTRING
+"""原本給前端更新補位課程和今天課程 endpoint.
+
+.. deprecated:: 2025.7.1
+    已改為 WebSockets 溝通
+
+.. todo:: 安全把這個刪掉
+"""
 import logging
 
 from fastapi import APIRouter
