@@ -171,7 +171,7 @@ async def swagger_ui_redirect() -> HTMLResponse:
         - 重構建議請參考 `src.main.custom_swagger_ui_html`.
 
     *由 林家民 於 2025/7/17 撰寫, 原文為自己寫的英文, 由 ChatGPT 翻譯為繁體中文. *
-    """  # noqa: E501
+    """
     return get_swagger_ui_oauth2_redirect_html()
 
 

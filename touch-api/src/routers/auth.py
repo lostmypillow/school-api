@@ -69,7 +69,9 @@ async def authorize_student(auth_request: AuthRequest):
     HTTPException
         補位機會顯示的錯誤訊息
 
-    
+    .. todo:: - 解決此處顯示的 Ruff 錯誤
+        - 將此邏輯移至獨立的 service 檔案中
+    *由 林家民 於 2025/7/23 撰寫, 原文為自己寫的英文, 由 ChatGPT 翻譯為繁體中文。*
     """ # noqa: E501
     global settings
     try:

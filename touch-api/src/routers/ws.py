@@ -1,4 +1,4 @@
-# TODO:ADD DOCSTRING
+"""WebSocket 端點."""
 import logging
 
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
@@ -18,7 +18,11 @@ router = APIRouter(
 )
 
 
-async def send_updates():
+async def send_updates() -> None:
+    """將更新後的課程資料發送給所有在連線池中的用戶端連線.
+
+    
+    """
     if len(list(client_connections.items())) > 0:
         for client_name, con in list(client_connections.items()):
             try:
@@ -30,26 +34,19 @@ async def send_updates():
             except Exception as e:
                 logger.warning(
                     f"[WS:{client_name}] Failed to send update: {e}")
-                client_connections.pop(client_name, None)
+
 
 
 @router.websocket("/{client_name}")
-async def websocket_endpoint(websocket: WebSocket, client_name: str):
-    """
-    WebSocket connection endpoint for real-time control interface.
+async def websocket_endpoint(websocket: WebSocket, client_name: str) -> None:
+    """連線後定期將課程資料 (含可補位與即將開課) 發送至前端。中斷連線時會停止排程任務.
 
     Parameters
     ----------
     websocket : WebSocket
-        The WebSocket connection object.
+        WebSocket 連線Object。
     client_name : str
-        Unique identifier for the client.
-
-    Description
-    -----------
-    Accepts real-time control or sync messages from clients.
-    Maintains a persistent connection and updates all connected clients 
-    with class and seat data when `send_updates()` is called.
+        前端用戶的唯一識別碼, 我們在前端使用 `uuid()`: https://www.npmjs.com/package/uuid.
     """
     global client_connections
     await websocket.accept()
@@ -64,9 +61,6 @@ async def websocket_endpoint(websocket: WebSocket, client_name: str):
     try:
         while True:
             data = await websocket.receive_text()
-            # if debug_connections:
-            #     for c_name, con in list(debug_connections.items()):
-            #         await con.send_text(data)
 
             logger.info(pformat(data))
             if data == "update":

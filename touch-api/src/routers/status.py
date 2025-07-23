@@ -22,7 +22,17 @@ router = APIRouter(
 
 @router.get("/")
 async def get_class_with_seats():
+    # TODO
+    """_summary_.
 
+    Returns
+    -------
+    _type_
+        _description_
+    .. todo:: - 解決此處顯示的 Ruff 錯誤
+        - 將此邏輯移至獨立的 service 檔案中
+    *由 林家民 於 2025/7/23 撰寫, 原文為自己寫的英文, 由 ChatGPT 翻譯為繁體中文。*
+    """
     class_with_seats = await exec_sql("one", "single_get_remaining")
     if class_with_seats:
 

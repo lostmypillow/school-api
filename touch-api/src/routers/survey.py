@@ -1,4 +1,7 @@
-# TODO:ADD DOCSTRING
+"""提交員工評分.
+
+.. todo:: - 這裡的 `logger` 應改為 `` 的 `Log`
+"""
 import logging
 
 from fastapi import APIRouter, HTTPException
@@ -35,17 +38,21 @@ deps: dict = {
         },
     })
 async def rate_employee(survey_info: SurveyInfo):
-    """Rates employee..idk self explanatory
+    """將員工評分提交至資料庫.
 
     Parameters
     ----------
     survey_info : SurveyInfo
-        See SurveyInfo
+        請見 `src.models.survey_info`.
 
     Raises
     ------
     HTTPException
-        _description_
+        錯誤訊息將顯示於補位機上.
+
+    .. todo:: - 解決此處顯示的 Ruff 錯誤
+        - 將此邏輯移至獨立的 service 檔案中
+    *由 林家民 於 2025/7/23 撰寫, 原文為自己寫的英文, 由 ChatGPT 翻譯為繁體中文。*
     """
     global deps
     try:
@@ -64,4 +71,4 @@ async def rate_employee(survey_info: SurveyInfo):
 
     except Exception as e:
         logger.exception(f"[RATE ERROR] Failed to rate employee: {e}")
-        raise HTTPException(status_code=500, detail="抱歉，系統發生錯誤，請洽導師! Error 011")
+        raise HTTPException(status_code=500, detail="抱歉，系統發生錯誤，請洽導師!")

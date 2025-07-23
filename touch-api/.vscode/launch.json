@@ -16,7 +16,7 @@
       }
     },
     {
-      "name": "pdoc HTTP server",
+      "name": "wiki",
       "type": "node",
       "request": "launch",
       "runtimeExecutable": "uv",

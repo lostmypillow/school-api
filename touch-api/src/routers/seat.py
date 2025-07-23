@@ -39,7 +39,9 @@ async def register_seat(seat_info: SeatInfo):
     seat_info : SeatInfo
         包含學生 ID 與座位序號的資訊. 詳情請見 `src.models.seat_info`.
 
-    
+    .. todo:: - 解決此處顯示的 Ruff 錯誤
+        - 將此邏輯移至獨立的 service 檔案中
+    *由 林家民 於 2025/7/23 撰寫, 原文為自己寫的英文, 由 ChatGPT 翻譯為繁體中文。*
     """
     try:
         await exec_sql(
