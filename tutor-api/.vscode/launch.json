@@ -2,11 +2,11 @@
   "version": "0.0.1",
   "configurations": [
     {
-      "name": "API:DEV",
+      "name": "FastAPI",
       "type": "debugpy",
       "request": "launch",
       "module": "fastapi",
-      "cwd": "${workspaceFolder}/src/",
+      "cwd": "${workspaceFolder}/src",
       "args": [
         "dev"
       ],
@@ -14,20 +14,7 @@
       "env": {
         "ENVIRONMENT": "dev"
       }
-    },    
-    {
-      "name": "API:PROD",
-      "type": "debugpy",
-      "request": "launch",
-      "module": "fastapi",
-      "cwd": "${workspaceFolder}/src/", 
-      "args": [
-        "run"
-      ],
-      "justMyCode": false,
-      "env": {
-        "ENVIRONMENT": "prod"
-      }
-    }, 
+    },
+    
   ]
 }
