@@ -1,9 +1,14 @@
 # 補位機系統 (後端)
 
-## 基本資訊
-- 正式 (前端) 網址: [https://intsys.kaowei.tw/touch](https://intsys.kaowei.tw/)
-- 正式 (後端) Swagger: []()
-- 測試 (後端) Swagger: []()
+## 正式環境 (Production)
+- 後端 Swagger: 
+- 目前版本: 2025.7.2 (=0.7.2)
+
+## 測試環境 (Testing)
+- 後端 Swagger: 
+- 目前版本: 0.8.0 (rename-app branch)
+
+## 專案資源
 - 前端 Gitea repo: [](http://192.168.2.7:3000/Kw_Web/)
 - 以 [FastAPI](https://fastapi.tiangolo.com/) 製作
 
@@ -21,14 +26,17 @@
 ## 使用指南
 
 ### 偵錯(Ctrl +  Shift + D)
+與在Powershell/Terminal/終端機上跑 `fastapi dev` 一樣，只不過少打幾個字，去 [http://localhost:8000/docs](http://localhost:8000/docs) 就有 Swagger API Docs。
 
 ![alt text](readme_images/debug.png)
 
-#### **fastapi dev**
-與在Powershell/Terminal/終端機上跑 `fastapi dev app/main.py` 一樣，只不過少打幾個字，去 [http://localhost:8000/docs](http://localhost:8000/docs) 就有 Swagger API Docs。
 
-#### **wiki**
-跑之後，在 [http://localhost:8080](http://localhost:8080) 會有一個解釋 所有source code 的 wiki，**強烈建議你全部讀一遍!!!**
+### Wiki
+如果你有裝[建議安裝的擴充元件](#環境-皆必要)，打開 Tasks
+
+![tasks](images/tasks.png)
+
+跑`open pdoc3 wiki`之後，在 [http://localhost:8080](http://localhost:8080) 會有一個解釋 所有source code 的 wiki，**強烈建議你全部讀一遍!!!**
 
 ![wiki screenshot 1](readme_images/wiki_1.png)
 
@@ -42,7 +50,7 @@
 ![alt text](readme_images/problems_2.png)
 
 ### 待辦事項
-如果你有裝建議安裝的擴充元件，在左邊 Sidebar按這個打開 TODO Tree:
+如果你有裝[建議安裝的擴充元件](#環境-皆必要)，在左邊 Sidebar按這個打開 TODO Tree:
 
 ![todo icon](readme_images/todo_icon.png)
 
