@@ -85,7 +85,6 @@ docstring-code-line-length = 100
 
 [tool.ruff.lint]
 select = ["ALL"]
-ignore = ["D100", "D103", "D101", "TD003", "D104"]
 
 [tool.ruff.lint.pydocstyle]
 convention = "numpy"

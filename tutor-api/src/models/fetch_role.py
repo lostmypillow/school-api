@@ -1,4 +1,4 @@
-
+"""用來判斷卡號是學生或老師."""
 from pydantic import BaseModel, Field
 
 

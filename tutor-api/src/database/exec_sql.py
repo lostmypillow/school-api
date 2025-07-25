@@ -37,23 +37,25 @@ create_session = async_sessionmaker(
 
 
 async def exec_sql(mode: Literal["commit", "one", "all"], command_name: str, **kwargs) -> Any:
-    """Executes SQL command from file and returns result based on mode.
+    """從檔案執行 SQL 指令, 並根據執行模式回傳結果.
 
     Parameters
     ----------
     mode : 'commit' | 'one' | 'all'
-        Type of SQL operation to perform.
+    要執行的 SQL 操作類型.
 
     command_name : str
-        The name of the .sql file (without extension) located in /sql.
+    位於 /sql 資料夾中的 .sql 檔名 (不含副檔名).
 
     kwargs : dict
-        SQL parameter bindings.
+    SQL 的參數綁定.
 
     Returns
     -------
     Any
-        Varies based on mode. Could be None, dict, or list of dicts.
+    根據 mode 而定, 可能為 None、dict 或 dict 的 list.
+
+    
     """
     file_path = path.join(pathlib.Path(__file__).parent.resolve(), "sql", command_name + ".sql")
 

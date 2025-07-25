@@ -1,3 +1,4 @@
+"""API回覆."""
 from pydantic import BaseModel
 
 

@@ -1,5 +1,9 @@
-# dependencies.py
+"""可能與 `src.database.exec_sql` 重複.
 
+聽起來好像我完全不知道這個檔案是怎麼產生的.但事實上我之前確實用這個檔案來放 `exec_sql` 函式, 而且也實際這樣用過. 只是現在, 大多數邏輯都改為從 `src.database` 匯入那個函式了, 所以我也搞不太清楚目前這檔案的定位.
+
+
+""" # noqa: E501
 import logging
 from collections.abc import AsyncGenerator
 from pathlib import Path
