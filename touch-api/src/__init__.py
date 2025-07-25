@@ -24,7 +24,7 @@
     - **修復所有 linting 問題:**
 
         - 如果你在 VSCode 中完全依照我在 README 中所寫的設定工具, 在 `Problems` 標籤頁中會顯示所有的 ruff lint 錯誤.
-        - 點擊每個檔案確認 VSCode 是否都能正確偵測, 或是執行 VSCode 的任務 `Ruff: check + safe fix` 看是否還有未修復的錯誤.
+        - 點擊每個檔案確認 VSCode 是否都能正確偵測, 或是執行 `uvx ruff check --fix` 看是否還有未修復的錯誤.
 
 
 
