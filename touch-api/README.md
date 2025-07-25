@@ -6,7 +6,8 @@
 
 ## 測試環境 (Testing)
 - 後端 Swagger: 
-- 目前版本: 0.8.0 (rename-app branch)
+- 目前版本: 0.8.0 (DETACHED rename-app branch)
+> DETACHED 指說我不小心在 main branch做太多改變，以致 rename-app 雖然就是目標/最理想架構的參考 (請參照 `src/__init__.py`)，但不能 merge into main.
 
 ## 專案資源
 - 前端 Gitea repo: [](http://192.168.2.7:3000/Kw_Web/)
@@ -20,15 +21,15 @@
 5. VSCode 提示你[建議安裝的擴充元件](./.vscode/extensions.json), **一定要安裝**!
 
 6. Python 虛擬環境可直接打開 Powershell/Terminal/終端機，跑 `uv sync` 或是 `Ctrl/Cmd + Shift + P` 並選擇 `UV: Sync Dependencies`
+7. (rename-app branch 不用，main 要做) 從 `src/config.py.example` 複製一個 `src/config.py` 出來，填資料
 
-> 基於 PyCharm 的指示我找時間再補
 
 ## 使用指南
 
 ### 偵錯(Ctrl +  Shift + D)
 與在Powershell/Terminal/終端機上跑 `fastapi dev` 一樣，只不過少打幾個字，去 [http://localhost:8000/docs](http://localhost:8000/docs) 就有 Swagger API Docs。
 
-![alt text](readme_images/debug.png)
+![alt text](images/debug.png)
 
 
 ### Wiki
@@ -38,25 +39,25 @@
 
 跑`open pdoc3 wiki`之後，在 [http://localhost:8080](http://localhost:8080) 會有一個解釋 所有source code 的 wiki，**強烈建議你全部讀一遍!!!**
 
-![wiki screenshot 1](readme_images/wiki_1.png)
+![wiki screenshot 1](images/wiki_1.png)
 
-![wiki screenshot 2](readme_images/wiki_2.png)
+![wiki screenshot 2](images/wiki_2.png)
 
 ### Linting
 這就是由 [Ruff](https://docs.astral.sh/ruff/) 找出來的問題，盡你所能解決所有問題!
 
-![alt text](readme_images/problems_1.png)
+![alt text](images/problems_1.png)
 
-![alt text](readme_images/problems_2.png)
+![alt text](images/problems_2.png)
 
 ### 待辦事項
 如果你有裝[建議安裝的擴充元件](#環境-皆必要)，在左邊 Sidebar按這個打開 TODO Tree:
 
-![todo icon](readme_images/todo_icon.png)
+![todo icon](images/todo_icon.png)
 
 只要在code任何地方打 `# T_ODO add better README`(把中間底線去掉，我加底線是為了不讓TODO Tree highlight這邊)，在 TODO Tree 就會出現。
 
-![todo example](readme_images/todo_example.png)
+![todo example](images/todo_example.png)
 
 ## 貢獻
 - 林家民 (2025/10~)

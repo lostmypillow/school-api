@@ -1,44 +1,23 @@
-{
-  "version": "2.0.0",
-  "tasks": [
     {
-      "label": "Ruff: check + safe fix",
-      "type": "shell",
-      "command": "uvx",
-      "args": [
-        "ruff",
-        "check",
-        "--fix",
-      ],
-      "group": {
-        "kind": "build",
-        "isDefault": true
-      },
-      "presentation": {
-        "reveal": "always",
-        "panel": "shared"
-      },
-      "problemMatcher": ["$python"]
-    },
-	{
-      "label": "Generate docs with pdoc",
-      "type": "shell",
-      "command": "uv",
-      "args": [
-        "run",
-        "pdoc",
-        "--html",
-        "src",
-        "--force",
-        "-o",
-        "wiki"
-      ],
-      "group": "build",
-      "presentation": {
-        "reveal": "always",
-        "panel": "shared"
-      },
-      "problemMatcher": []
+      "version": "2.0.0",
+      "tasks": [
+         {
+          "label": "open pdoc3 wiki",
+          "type": "shell",
+          "command": "uv",
+          "args": [
+            "run",
+            "pdoc",
+            "--http",
+            ":",
+            "src"
+          ],
+          "isBackground": true, // This is important for servers!
+          "presentation": {
+            "reveal": "always",
+            "panel": "shared"
+          },
+          "problemMatcher": []
+        }
+      ]
     }
-  ]
-}
