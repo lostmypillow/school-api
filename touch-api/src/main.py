@@ -13,10 +13,11 @@
 
 .. todo::
     - 強制設定 CORS: 目前在加上 CORSMiddleware 時, allow_origins 被設為 `["*"]`, 這是**不安全**的, 應改為 `["FRONTEND_URL"]`. 詳情請見: https://fastapi.tiangolo.com/tutorial/cors/.
-    - 步驟 2 到 4: 在 `` 中, 這些步驟已被移到 `app.core.config` 模組中, 並從該模組匯入字典後傳入 FastAPI 作為 kwargs.請參考 `` 的 `app.core.config` 模組來了解如何重構.
+    - 步驟 2 到 4: 在 `` refactor branch 中, 這些步驟已被移到 `app.core.config` 模組中, 並從該模組匯入字典後傳入 FastAPI 作為 kwargs.請參考 `` refactor branch 的 `app.core.config` 模組來了解如何重構.
 
 
-""" # noqa: E501
+"""  # noqa: E501
+
 import logging
 import os
 import tomllib
@@ -56,12 +57,12 @@ async def lifespan(app: FastAPI):  # noqa: ANN201, ARG001
         FastAPI 類別, 請參見 https://fastapi.tiangolo.com/reference/fastapi/
 
     .. todo::
-        - 在 `` 中, 這整個函式 (包含 @asynccontextmanager 裝飾器)已被移至 `app.core.lifespan`. 
+        - 在 `` refactor branch 中, 這整個函式 (包含 @asynccontextmanager 裝飾器)已被移至 `app.core.lifespan`.
         - 至於為什麼是 "app" 而不是 "src", 請參見 `src` 的說明.
-        - 此外, 在 `` 中, 所有日誌記錄邏輯也都已重構並移至 `app.core.log`, 詳情請見該專案的 `app.core.log` 模組.
+        - 此外, 在 `` refactor branch 中, 所有日誌記錄邏輯也都已重構並移至 `app.core.log`, 詳情請見該專案的 `app.core.log` 模組.
 
     
-    """ # noqa: E501
+    """  # noqa: E501
     install(show_locals=True)
     rich_handler = RichHandler(rich_tracebacks=True)
     logging.basicConfig(
@@ -75,17 +76,13 @@ async def lifespan(app: FastAPI):  # noqa: ANN201, ARG001
         logger.handlers = [rich_handler]
         logger.setLevel(logging.INFO)
 
-
-
     yield
     if async_engine:
         await async_engine.dispose()
         logger.info("[SHUTDOWN] Disposed async SQLAlchemy Engine")
 
 
-backend_pyproject_path = (
-    pathlib_Path(__file__).resolve().parent.parent / "pyproject.toml"
-)
+backend_pyproject_path = pathlib_Path(__file__).resolve().parent.parent / "pyproject.toml"
 with backend_pyproject_path.open("rb") as f:
     backend_data = tomllib.load(f)
 
@@ -95,7 +92,8 @@ common_kwargs = {
     "lifespan": lifespan,
     "title": backend_data.get("project", {}).get("name", "Kw FastAPI Project"),
     "description": backend_data.get("project", {}).get(
-        "description", "description here",
+        "description",
+        "description here",
     ),
     "version": backend_data.get("project", {}).get("version", "0.0.0"),
 }
@@ -140,10 +138,10 @@ async def custom_swagger_ui_html() -> HTMLResponse:
     假設我們在 Linux 上部署, FastAPI 實例的 root_path 是 '/api/touch', 那麼 Swagger 所依賴的 openapi.json 就會被提供在 `http://IP_OR_DOMAIN/api/touch/openapi.json`. 但 `app.openapi_url` 的預設值是 `/openapi.json`, 如果完全照官方指南設定, Swagger 就會報錯, 因為它會去抓 `http://IP_OR_DOMAIN/openapi.json` 的 API 定義. 因此我們必須手動加上 root_path, 讓 Swagger 正確取得 `http://IP_OR_DOMAIN/api/touch/openapi.json`.
 
     .. todo::
-        - 在 `` 中, 這段程式碼與 `src.main.swagger_ui_redirect` 已被整合並移至單一模組 `app.api.docs` 中. - 至於為什麼最上層模組名稱是 `app` 而不是 `src`, 請參考 `src` 的說明.
+        - 在 `` refactor branch 中, 這段程式碼與 `src.main.swagger_ui_redirect` 已被整合並移至單一模組 `app.api.docs` 中. - 至於為什麼最上層模組名稱是 `app` 而不是 `src`, 請參考 `src` 的說明.
 
     
-    """ # noqa: E501
+    """  # noqa: E501
     return get_swagger_ui_html(
         openapi_url=app.root_path + cast("str", app.openapi_url),
         title=app.title + " - Swagger UI",

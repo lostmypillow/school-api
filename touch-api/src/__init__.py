@@ -18,7 +18,7 @@
     - **新增測試:**
 
         - 這是我寫過最多錯誤的爛程式碼, 急需重構為 service class 並補上完整的測試覆蓋率.
-        - 請參考 `` 中我實作的 service class.
+        - 請參考 `` refactor branch 中我實作的 service class.
         - 按照官方測試指南進行:https://fastapi.tiangolo.com/tutorial/testing/
 
     - **修復所有 linting 問題:**

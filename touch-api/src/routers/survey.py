@@ -1,7 +1,8 @@
 """提交員工評分.
 
-.. todo:: - 這裡的 `logger` 應改為 `` 的 `Log`
+.. todo:: - 這裡的 `logger` 應改為 `` refactor branch 的 `Log`
 """
+
 import logging
 
 from fastapi import APIRouter, HTTPException
@@ -18,13 +19,16 @@ router = APIRouter(
     tags=["Survey"],
 )
 deps: dict = {
-                : 2,
-                "": 4,
-                : 8,
-                : 9,
-                : 11,
-            }
-@router.post("/",
+    : 2,
+    "": 4,
+    : 8,
+    : 9,
+    : 11,
+}
+
+
+@router.post(
+    "/",
     summary="Submit a rating for an employee",
     response_model=SuccessMessage,
     responses={
@@ -36,7 +40,8 @@ deps: dict = {
             "description": "Internal server error",
             "model": ErrorResponse,
         },
-    })
+    },
+)
 async def rate_employee(survey_info: SurveyInfo):
     """將員工評分提交至資料庫.
 

@@ -3,7 +3,7 @@
 Includes DB settings and a DEBUG value that no longer does anything.
 
 .. todo::
-In ``, there is an `app.core.config` that DOES NOT do the same thing. In THAT project, DB info is instead retrieved via `/etc/fastapi/shared.env` and `os.getenv()`, and in THAT project (so you're not confused which config.py I'm talking about), `config.py` is used to retrieve `pyproject.toml` info for the `app = FastAPI()` instantiation.
+In `` refactor branch, there is an `app.core.config` that DOES NOT do the same thing. In THAT project, DB info is instead retrieved via `/etc/fastapi/shared.env` and `os.getenv()`, and in THAT project (so you're not confused which config.py I'm talking about), `config.py` is used to retrieve `pyproject.toml` info for the `app = FastAPI()` instantiation.
 
 **If you're interested in refactoring:**
 
