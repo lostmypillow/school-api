@@ -11,7 +11,7 @@
 2. 新增 `app.core.config` 模組。（我會在 `src.main` 中說明如何處理）
 3. 刪除此檔案與 config.py.example，並移除所有相關引用。
 
-*由 林家民 於 2025/7/22 撰寫, 原文為自己寫的英文, 由 ChatGPT 翻譯為繁體中文。*
+
 """ 
 from pydantic_settings import BaseSettings
 
