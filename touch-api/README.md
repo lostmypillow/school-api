@@ -2,12 +2,11 @@
 
 ## 正式環境 (Production)
 - 後端 Swagger: 
-- 目前版本: 2025.7.2 (=0.7.2)
+- 目前版本: 0.8.0
 
 ## 測試環境 (Testing)
 - 後端 Swagger: 
-- 目前版本: 0.8.0 (DETACHED rename-app branch)
-> DETACHED 指說我不小心在 main branch做太多改變，以致 rename-app 雖然就是目標/最理想架構的參考 (請參照 `src/__init__.py`)，但不能 merge into main.
+- 目前版本: 0.8.0
 
 ## 專案資源
 - 前端 Gitea repo: [](http://192.168.2.7:3000/Kw_Web/)
