@@ -35,8 +35,8 @@ from fastapi.responses import HTMLResponse
 from rich.logging import RichHandler
 from rich.traceback import install
 
-from .database.exec_sql import async_engine
-from .routers import (
+from src.database.exec_sql import sessionmanager
+from src.routers import (
     auth,
     seat,
     status,
@@ -75,11 +75,11 @@ async def lifespan(app: FastAPI):  # noqa: ANN201, ARG001
         logger = logging.getLogger(name)
         logger.handlers = [rich_handler]
         logger.setLevel(logging.INFO)
+    sessionmanager.init()
 
     yield
-    if async_engine:
-        await async_engine.dispose()
-        logger.info("[SHUTDOWN] Disposed async SQLAlchemy Engine")
+    await sessionmanager.close()
+    logger.info("[SHUTDOWN] Disposed async SQLAlchemy Engine")
 
 
 backend_pyproject_path = pathlib_Path(__file__).resolve().parent.parent / "pyproject.toml"
