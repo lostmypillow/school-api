@@ -1,0 +1,46 @@
+[project]
+name = "mssql2freeipa"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "ldap3>=2.9.1",
+    "pandas>=2.3.1",
+    "pytest>=8.4.1",
+    "pytest-cov>=6.2.1",
+    "python-dotenv>=1.1.1",
+    "requests>=2.32.4",
+    "typer[all]>=0.16.0",
+]
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+indent-width = 4
+extend-exclude = [".venv", ".vscode", "__pycache__"]
+
+[tool.ruff.format]
+indent-style = "space"
+line-ending = "lf"
+docstring-code-format = true
+docstring-code-line-length = 100
+
+[tool.ruff.lint]
+select = ["ALL"]
+ignore = ["D100", "D103", "D101", "D102", "S101"]
+
+[tool.ruff.lint.pydocstyle]
+convention = "numpy"
+
+[tool.ruff.lint.mccabe]
+max-complexity = 10
+
+[tool.ruff.lint.pylint]
+max-args = 10
+max-locals = 15
+max-returns = 10
+max-statements = 100
+max-branches = 12
+max-public-methods = 20
+max-nested-blocks = 5
+max-positional-args = 6
