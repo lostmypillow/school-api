@@ -5,4 +5,3 @@ import typer
 
 def _die(msg: str) -> Never:
     typer.echo(msg)
-    raise typer.Exit(code=1)

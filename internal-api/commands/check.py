@@ -10,4 +10,4 @@ def check(
     uid: str = typer.Argument(..., help="uid in FreeIPA/LDAP"),
 ) -> None:
     """Check if the row's uid exists in FreeIPA."""
-    typer.echo(f"Found → {ipa_client.show_user(uid)}")
+    typer.echo(f"{ipa_client.show_user(uid)}")
