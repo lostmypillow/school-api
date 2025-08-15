@@ -1,23 +1,11 @@
-from dataclasses import dataclass
 from pathlib import Path
 
 import pandas as pd
+import typer
 
 from config import DEPS_CSV_PATH, USERS_CSV_PATH
 from lib.decrypt_pwd import decrypt_pwd
-from lib.die import _die
-
-
-@dataclass
-class UserData:
-    uid: str
-    cn: str
-    givenname: str
-    sn: str
-    pwd: str | None
-    main_grp: str
-    other_grp: list | None
-    mail: str
+from lib.user_dataclass import UserData
 
 
 class CSVStore:
@@ -46,7 +34,7 @@ class CSVStore:
                     or (isinstance(x, str) and x.strip().lower() in null_sentinels)
                 )
                 else (x.strip() if isinstance(x, str) else x)
-            )
+            ),
         )
 
     def _load_users_df(self) -> pd.DataFrame:
@@ -71,19 +59,19 @@ class CSVStore:
         """
         name_length = len(full_name)
 
-        # For names with 2 characters 
-        if name_length == 2:
+        # For names with 2 characters
+        if name_length == 2:  # noqa: PLR2004
             last_name = full_name[0]
             first_name = full_name[1]
 
-        # For names with 3 characters 
-        elif name_length == 3:
+        # For names with 3 characters
+        elif name_length == 3:  # noqa: PLR2004
             # We assume single-character surnames are more common than double-character ones
             last_name = full_name[0]
             first_name = full_name[1:]
 
         # For names with 4 or more characters
-        elif name_length >= 4:
+        elif name_length >= 4:  # noqa: PLR2004
             # Double surnames are more likely here
             last_name = full_name[:2]
             first_name = full_name[2:]
@@ -95,33 +83,6 @@ class CSVStore:
 
         return (last_name, first_name)
 
-    def load_row(self, row_index: int) -> UserData:
-        df = self._load_users_df()
-        if row_index < 0 or row_index >= len(df):
-            _die(f"Row index {row_index} out of range (0..{len(df) - 1}).")
-        row = df.iloc[row_index]
-        dep_df = pd.read_csv(DEPS_CSV_PATH)
-
-        main_grp_id: int = 0
-        dep_row = dep_df.loc[dep_df["自動編號"] == int(row["main_grp"]), "group"]
-        main_grp_id = dep_row.iloc[0]
-        other_grp_ids = []
-        if row.get("other_grp") is not None and (row.get("other_grp") != row["main_grp"]):
-
-            for dep_id in str(row["other_grp"]).split(","):
-
-                other_grp_ids.append(dep_df.loc[dep_df["自動編號"] == int(dep_id), "group"].iloc[0]) 
-        print(row["other_grp"])
-
-        return UserData(
-            uid=str(row["uid"]) if row.get("uid") is not None else "",
-            cn=str(row["cn"]) if row.get("cn") is not None else "",
-            givenname=self._split_chinese_name(row["cn"])[1],
-            sn=self._split_chinese_name(row["cn"])[0],
-            pwd=decrypt_pwd(row["pwd"]) if row.get("pwd") is not None else str(row["uid"]),
-            main_grp=main_grp_id,
-            other_grp=other_grp_ids, 
-        )
 
     def load_all_users(self) -> list[UserData]:
         users_df = self._load_users_df()
@@ -129,51 +90,48 @@ class CSVStore:
         user_list = []
 
         for _, row in users_df.iterrows():
-            main_grp_id = None
+            main_grp_name = ""
             dep_row = deps_df.loc[deps_df["自動編號"] == row["main_grp"], "group"]
             if not dep_row.empty:
-                main_grp_id = dep_row.iloc[0]
-            other_grp_ids = []
+                main_grp_name = dep_row.iloc[0] # type: ignore  # noqa: PGH003
+            other_grp_names = []
             if pd.notna(row.get("other_grp")) and (row.get("other_grp") != row["main_grp"]):
                 dep_ids = str(row["other_grp"]).split(",")
                 for dep_id in dep_ids:
-                    dep_id = dep_id.strip()
+                    dep_id = dep_id.strip()  # noqa: PLW2901
                     if dep_id:
                         other_dep_row = deps_df.loc[deps_df["自動編號"] == int(dep_id), "group"]
                         if not other_dep_row.empty:
-                            other_grp_ids.append(other_dep_row.iloc[0])
+                            other_grp_names.append(other_dep_row.iloc[0])
 
             user_list.append(
                 UserData(
-                    uid="" + str(row["uid"]) if pd.notna(row.get("uid")) else "",
+                    uid="E" + str(row["uid"]) if pd.notna(row.get("uid")) else "",
+                    employeenumber=str(row["uid"]) if pd.notna(row.get("uid")) else "",
                     cn=str(row["cn"]) if pd.notna(row.get("cn")) else "",
-                    givenname=self._split_chinese_name(row["cn"])[1] if pd.notna(row.get("cn")) else "",
+                    givenname=self._split_chinese_name(row["cn"])[1]
+                    if pd.notna(row.get("cn"))
+                    else "",
                     sn=self._split_chinese_name(row["cn"])[0] if pd.notna(row.get("cn")) else "",
                     pwd=decrypt_pwd(row["pwd"]) if pd.notna(row.get("pwd")) else str(row["uid"]),
-                    main_grp=main_grp_id,
-                    other_grp=other_grp_ids,
+                    main_grp=main_grp_name,
+                    main_grp_id=row["main_grp"] if row["main_grp"] else "0",
+                    other_grp=other_grp_names,
+                    other_grp_ids=str(row["other_grp"]).split(",") if str(row["other_grp"]) else [],
                     mail=str(row["uid"]) + "@km.",
-                )
+                    departmentnumber=row["main_grp"] if row["main_grp"] else "0"
+                ),
             )
 
         return user_list
+    def load_all_deps(self) -> list[dict]:
+        """Load the deps CSV into a list of dictionaries.
 
-    def resolve_main_group(self, main_grp_value: str | None) -> str | None:
+        Returns
+        -------
+            list[dict]: A list of dictionaries, where each dictionary
+                        represents a row from the deps CSV.
         """
-        Map your 'main_grp' (自動編號) to a real group name using deps.csv.
+        deps_df = self._load_deps_df()
+        return deps_df.to_dict("records")
 
-        Returns the resolved group (string) or None if not found / not provided.
-        """
-        if not main_grp_value:
-            return None
-        dep_df = self._load_deps_df()
-        try:
-            auto_no = int(main_grp_value)
-        except (TypeError, ValueError):
-            # if it's already a name, just return it
-            return str(main_grp_value)
-
-        dep_row = dep_df.loc[dep_df["自動編號"] == auto_no, "group"]
-        if not dep_row.empty:
-            return str(dep_row.iloc[0])
-        return None

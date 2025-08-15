@@ -5,8 +5,7 @@ import requests
 import typer
 
 from config import IPA_CA, IPA_HOST, IPA_PASS, IPA_USER
-from lib.csv_store import UserData
-from lib.die import _die
+from lib.user_dataclass import UserData
 
 STATUS_OK = 200
 
@@ -25,40 +24,43 @@ class IPAClient:
         self.ca_path = Path(ca_path)
         self.json_url = f"{self.host}/ipa/session/json"
         self.login_url = f"{self.host}/ipa/session/login_password"
+        self.login_headers = {"Referer": f"{self.host}/ipa"}
+        self.call_headers = {"Referer": f"{self.host}/ipa", "Content-Type": "application/json"}
         self.session = requests.Session()
 
     def login(self) -> None:
         if not self.admin_pass:
-            _die("Set IPA_ADMIN_PASS in env (admin password).")
-        headers = {"Referer": f"{self.host}/ipa"}
+            typer.echo("Set IPA_ADMIN_PASS in env (admin password).")
+            raise typer.Exit()
+
         r = self.session.post(
             self.login_url,
             data={"user": self.admin_user, "password": self.admin_pass},
-            headers=headers,
+            headers=self.login_headers,
             verify=str(self.ca_path),
         )
         if r.status_code != STATUS_OK:
-            _die(f"Login failed: HTTP {r.status_code}")
+            typer.echo(f"Login failed: HTTP {r.status_code}")
+            raise typer.Exit()
 
     def call(self, method: str, params_list, params_):  # noqa: ANN001, ANN201
-        headers = {"Referer": f"{self.host}/ipa", "Content-Type": "application/json"}
         payload = {"method": method, "params": [params_list, params_]}
-        typer.echo(f"headers: {pformat(headers, indent=2)}")
         typer.echo(f"payload: {pformat(payload, indent=2)}")
 
         r = self.session.post(
             self.json_url,
             json=payload,
-            headers=headers,
+            headers=self.call_headers,
             verify=str(self.ca_path),
         )
         if r.status_code != STATUS_OK:
-            _die(f"IPA call {method} failed HTTP {r.status_code}: {r.text[:STATUS_OK]}")
+            typer.echo(f"IPA call {method} failed HTTP {r.status_code}: {r.text[:STATUS_OK]}")
+            raise typer.Exit()
         data = r.json()
         if data.get("error"):
             code = data["error"].get("code")
             msg = data["error"].get("message")
-            _die(f"IPA error {code}: {msg}")
+            typer.echo(f"IPA error {code}: {msg}")
         return data.get("result")
 
     # --- Real IPA operations ---
@@ -66,6 +68,21 @@ class IPAClient:
         self,
         user: UserData,
     ) -> None:
+        """Add a given user to FreeIPA.
+
+        For documentation on the commands used:
+        - Main API reference: https://freeipa.readthedocs.io/en/ipa-4-11/api/index.html
+        - "user_add": https://freeipa.readthedocs.io/en/ipa-4-11/api/user_add.html
+        - "passwd": https://freeipa.readthedocs.io/en/ipa-4-11/api/passwd.html
+        - "user_mod": https://freeipa.readthedocs.io/en/ipa-4-11/api/user_mod.html
+
+        Parameters
+        ----------
+        user : UserData
+            See `lib.user_dataclass`.
+        """
+        # Add initial data
+        # We do not set  userPassword  here because FreeIPA would ask for password reset on first login.
         self.call(
             "user_add",
             [user.uid],
@@ -74,22 +91,39 @@ class IPAClient:
                 "givenname": user.givenname,
                 "sn": user.sn,
                 "random": False,
+                "employeenumber": user.employeenumber,
+                "departmentnumber": user.departmentnumber,
+                "ou": user.main_grp,
+                "mail": user.mail,
             },
         )
-        self.call("user_mod", [user.uid], {"mail": user.mail})
 
+        # Set password
         self.call("passwd", [user.uid], {"password": user.pwd})
+
+        # Set password expiration to 2035
         self.call(
             "user_mod",
             [user.uid],
             {"setattr": ["krbPasswordExpiration=20380101000000Z"]},
         )
+        # If user has a main group, aka department
         if user.main_grp:
             self.call("group_add_member", [str(user.main_grp)], {"user": [user.uid]})
-        if user.other_grp:
+
+        # If user has other groups
+        if user.other_grp and user.other_grp_ids:
             for group in user.other_grp:
                 self.call("group_add_member", [str(group)], {"user": [user.uid]})
-        typer.echo(f"Created user {'' + user.uid}, set password, and updated group membership.")
+            for group_id in user.other_grp_ids:
+                attribute = f"departmentnumber={group_id}"
+                self.call(
+                    "user_mod",
+                    [user.uid],
+                    {"addattr": [attribute]},
+                )
+
+        typer.echo(f"Created user {'E' + user.uid}, set password, and updated group membership.")
 
     def delete_user(self, uid: str) -> None:
         self.login()
@@ -98,3 +132,28 @@ class IPAClient:
     def check_user(self, uid: str):  # noqa: ANN201
         result = self.call("user_show", [uid], {"all": False, "raw": False})
         return isinstance(result, dict)
+
+    def add_groups(self, groups_data: list[dict]) -> None:
+        """
+        Add a list of groups to FreeIPA.
+
+        Parameters
+        ----------
+        groups_data : list[dict]
+            A list of dictionaries, where each dictionary represents a group
+            with 'group' and 'description' keys.
+        """
+        for group_info in groups_data:
+            cn = group_info["group"]
+            description = group_info["description"]
+            # Use the 'group_add' command with cn, description, and nonposix
+            self.call(
+                "group_add",
+                [cn],
+                {
+                    "description": description,
+                    "nonposix": True,
+                },
+            )
+            typer.echo(f"Added group {cn} with desc of {description}")
+        typer.echo("All roups added successfully.")

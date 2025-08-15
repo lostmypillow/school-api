@@ -7,6 +7,7 @@ requires-python = ">=3.12"
 dependencies = [
     "ldap3>=2.9.1",
     "pandas>=2.3.1",
+    "pydantic-settings>=2.10.1",
     "pytest>=8.4.1",
     "pytest-cov>=6.2.1",
     "python-dotenv>=1.1.1",
@@ -27,7 +28,7 @@ docstring-code-line-length = 100
 
 [tool.ruff.lint]
 select = ["ALL"]
-ignore = ["D100", "D103", "D101", "D102", "S101"]
+ignore = ["D100", "D103", "D101", "D102", "S101", "E501", "RSE102"]
 
 [tool.ruff.lint.pydocstyle]
 convention = "numpy"

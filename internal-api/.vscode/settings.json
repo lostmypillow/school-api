@@ -10,9 +10,7 @@
     "editor.defaultFormatter": "charliermarsh.ruff"
   },
   // "ruff.nativeServer": "on",
-  "python.analysis.ignore": [
-        "*"
-    ],
+
     "python.testing.pytestArgs": [
       "tests"
     ],

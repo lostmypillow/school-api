@@ -81,33 +81,3 @@ def test_load_all_returns_list_of_userdata(store: CSVStore) -> None:
     assert len(users) > 0
 
 
-def test_resolve_main_group_maps_numeric_id_to_name(store: CSVStore) -> None:
-    df = pd.read_csv(store.deps_csv)
-    for _, row in df.iterrows():
-        assert store.resolve_main_group(str(row["自動編號"])) == row["group"]
-
-
-def test_resolve_main_group_pass_through_non_numeric(store: CSVStore) -> None:
-    assert store.resolve_main_group("AlreadyAName") == "AlreadyAName"
-
-
-def test_resolve_main_group_none_returns_none(store: CSVStore) -> None:
-    assert store.resolve_main_group(None) is None
-    assert store.resolve_main_group("") is None
-
-
-def test_deps_df_is_cached_and_read_once(monkeypatch, users_csv: Path, deps_csv: Path) -> None:  # noqa: ANN001
-    store = CSVStore(users_csv=users_csv, deps_csv=deps_csv)
-    orig_read_csv = pd.read_csv
-    calls = {"deps_reads": 0}
-
-    def spy_read_csv(path, *args, **args):  # noqa: ANN001, ANN002, ANN003, ANN202
-        if Path(path) == deps_csv:
-            calls["deps_reads"] += 1
-        return orig_read_csv(path, *args, **args)
-
-    monkeypatch.setattr(pd, "read_csv", spy_read_csv)
-
-    store.resolve_main_group("10")
-    store.resolve_main_group("20")
-    assert calls["deps_reads"] == 1

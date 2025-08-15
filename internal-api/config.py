@@ -2,11 +2,7 @@
 import os
 from pathlib import Path
 
-import pandas as pd
-import requests
-import typer
 from dotenv import load_dotenv
-from typing import Never
 
 load_dotenv()
 
