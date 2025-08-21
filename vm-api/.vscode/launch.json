@@ -6,9 +6,11 @@
       "type": "debugpy",
       "request": "launch",
       "module": "fastapi",
-      "cwd": "${workspaceFolder}/app/",
+      "cwd": "${workspaceFolder}",
       "args": [
-        "dev"
+        "dev",
+
+        "src/main.py"
       ],
       "justMyCode": false,
       "env": {

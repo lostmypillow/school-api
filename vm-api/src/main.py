@@ -14,7 +14,7 @@ import tomllib
 from rich.logging import RichHandler
 from rich.traceback import install
 import logging
-from .routers import vm
+from .routers import vm, vv
 import faulthandler
 
 faulthandler.enable()
@@ -98,4 +98,6 @@ async def swagger_ui_redirect():
 
 
 app.include_router(vm.router, prefix="/vm")
+app.include_router(vv.router, prefix="/vv")
 app.include_router(vm.router, prefix="") 
+
