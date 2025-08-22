@@ -14,6 +14,8 @@ class CustomService:
     password={self.vm_details["vm_password"]}
     title={self.vm_details["vm_name"]}
     """
+        config_contents += "\ndisable-effects=all"
         if self.vm_details["usb"]:
-            config_contents += "enable-usb-autoshare=1\nenable-usbredir=1"
+            config_contents += "\nenable-usb-autoshare=1\nenable-usbredir=1\nspice-usbredir-auto-redirect-filter=0x08,-1,-1,-1,1|-1,-1,-1,-1,0"
+        print(config_contents)
         return config_contents
