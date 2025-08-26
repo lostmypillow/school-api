@@ -268,9 +268,8 @@ def handle_device_zero(cardholder: Cardholder) -> Cardholder | None:
     """  # noqa: E501
     if cardholder.role == "teacher":
         return cardholder
-    if cardholder.role == "student":
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Not found for device 0")
-    return None
+    raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Not found for device 0")
+
 
 
 @app.get(
@@ -314,7 +313,8 @@ async def register_card_id(device_id: int, card_id: str) -> Cardholder | str | N
     try:
         cardholder = await determine_role(card_id=card_id)
         if device_id == 0:
-            handle_device_zero(cardholder=cardholder)
+            return handle_device_zero(cardholder=cardholder)
+
 
         if cardholder.role == "teacher":
             if cardholder.device_id == device_id:
