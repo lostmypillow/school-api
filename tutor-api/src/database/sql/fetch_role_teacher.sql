@@ -1,7 +1,8 @@
 SELECT
     姓名,
     學號,
-    大學
+    大學,
+    新大學
 FROM
     dbo.使用者
 WHERE
