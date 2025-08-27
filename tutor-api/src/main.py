@@ -234,7 +234,7 @@ async def update_teacher_info(cardholder: Cardholder) -> dict:
         "commit",
         "update_teacher_info",
         card_id=cardholder.card_id,
-        college=cardholder.school,
+        college=cardholder.new_school,
     )
     await sync_frontend()
 
