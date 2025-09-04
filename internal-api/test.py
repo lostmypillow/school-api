@@ -1,25 +1,14 @@
-from lib.decrypt_pwd import decrypt_pwd
+from lib.ipa_client import IPAClient
+from lib.csv_store import CSVStore
 
-from rich import print
-
-
-# def decrypt_pwd(encrypted: str) -> str:
-#     """
-#     Reverse of: "".join(f"{ord(c)}0{i + 1}" for i, c in enumerate(plain_password))
-#     """
-#     chars = []
-#     i = 0
-#     while i < len(encrypted):
-#         zero_pos = encrypted.index('0', i)
-#         codepoint = int(encrypted[i:zero_pos])
-#         chars.append(chr(codepoint))
-
-#         # Skip past '0' and the position number (which can be multi-digit)
-#         j = zero_pos + 1
-#         while j < len(encrypted) and encrypted[j].isdigit():
-#             j += 1
-#         i = j
-
-#     return "".join(chars)
-
-print(decrypt_pwd("97011220212003570456055606"))
+store = CSVStore()
+client = IPAClient()
+users = store.load_all_users()
+for user in users:
+    target = client.get_user_ou_number(user.uid)
+    deps = store.load_all_deps()
+    for g in deps:
+        if g.get("自動編號") == target:
+            print(f"Will set {user.uid} ou to {g.get('description')}", end="")
+            client.call("user_mod", [str(user.uid)], {"setattr": [f"ou={g.get('description')}"]})
+            print("Done")

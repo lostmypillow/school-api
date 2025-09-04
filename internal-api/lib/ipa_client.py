@@ -1,3 +1,4 @@
+import re
 from pathlib import Path
 from pprint import pformat
 
@@ -45,7 +46,7 @@ class IPAClient:
 
     def call(self, method: str, params_list, params_):  # noqa: ANN001, ANN201
         payload = {"method": method, "params": [params_list, params_]}
-        typer.echo(f"payload: {pformat(payload, indent=2)}")
+        # typer.echo(f"payload: {pformat(payload, indent=2)}")
 
         r = self.session.post(
             self.json_url,
@@ -157,3 +158,62 @@ class IPAClient:
             )
             typer.echo(f"Added group {cn} with desc of {description}")
         typer.echo("All roups added successfully.")
+   
+    def _get_user_entry(self, uid: str) -> dict | None:
+        """
+        Return the user entry dict (attributes as lists) or None if not found.
+        Tries user_show first (exact uid), then user_find filtered by uid.
+        """
+        self.login()
+
+        # Try exact lookup
+        entry = None
+        show = self.call("user_show", [str(uid)], {"all": True, "raw": False})
+        if isinstance(show, dict) and show.get("result"):
+            entry = show["result"]
+
+        # Fallback to search by uid (NO criteria dict; uid filter goes into options)
+        if not entry:
+            found = self.call(
+                "user_find",
+                [],
+                {"uid": str(uid), "all": True, "sizelimit": 2}
+            )
+            items = (found or {}).get("result") or []
+            entry = items[0] if items else None
+
+        return entry
+
+    def get_user_ou_number(self, uid: str) -> int | None:
+        entry = self._get_user_entry(uid)
+        if not entry:
+            typer.echo(f"User '{uid}' not found.")
+            return None
+
+        # Get OU value (attribute is usually a list, but take first)
+        ou_attr = entry.get("ou")
+        ou_val = None
+        if isinstance(ou_attr, list) and ou_attr:
+            ou_val = str(ou_attr[0])
+        elif isinstance(ou_attr, str):
+            ou_val = ou_attr
+
+        # Fallback: parse DN if no ou attribute present
+        if not ou_val:
+            dn = entry.get("dn")
+            if isinstance(dn, str):
+                for part in dn.split(","):
+                    p = part.strip()
+                    if p.lower().startswith("ou="):
+                        ou_val = p[3:]
+                        break
+
+        if not ou_val:
+            return None
+
+        # Extract number part
+        match = re.search(r"\d+", ou_val)
+        if match:
+            return int(match.group())
+
+        return None
