@@ -31,7 +31,6 @@ async def send_updates() -> None:
                     "action": "update class",
                     "message": await get_class_with_seats(),
                 })
-                logger.info("Sending update...")
             except Exception as e:
                 logger.warning(
                     f"[WS:{client_name}] Failed to send update: {e}")
