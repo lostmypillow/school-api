@@ -81,7 +81,7 @@ class DatabaseSessionManager:  # noqa: D101
             raise RuntimeError("DatabaseSessionManager is not initialized")
         session = self._sessionmaker()
         session_id = str(uuid.uuid4())
-        logger.info(f"[{self.manager_id}] Session {session_id} created.")
+
 
         try:
             yield session
@@ -90,9 +90,8 @@ class DatabaseSessionManager:  # noqa: D101
             await session.rollback()
             raise
         finally:
-            logger.info(f"[{self.manager_id}] Session {session_id} closing.")
             await session.close()
-            logger.info(f"[{self.manager_id}] Session {session_id} closed.")
+
 
     @contextlib.asynccontextmanager
     async def session_with_transaction(self) -> AsyncIterator[AsyncSession]:

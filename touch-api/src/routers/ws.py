@@ -4,6 +4,7 @@ import logging
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 
 logger = logging.getLogger("rich")
+logging.getLogger("apscheduler").setLevel(logging.WARNING)
 from pprint import pformat
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
