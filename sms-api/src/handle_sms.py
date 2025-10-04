@@ -85,6 +85,7 @@ async def handle_sms(data: SMSModel):
             response: Response = await client.get(url_list[vendor_id])
             soup = BeautifulSoup(response.text, "html.parser")
             tag = soup.find("msgid") if vendor_id != "3" else soup.find("msg")
+            logger.info(response.text)
             sms_id = tag.text if tag else "NOT_FOUND"
             logger.info(f"Got response from vendor. ID is {sms_id}")
         except Exception as e:
