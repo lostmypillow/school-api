@@ -44,7 +44,7 @@ async def handle_sms(data: SMSModel):
 
         # If none of the above, randomize 1 to 3
     if vendor_id is None:
-        vendor_id = str(random.randint(1, 2))
+        vendor_id = str(2)
         logger.info(f"{data.phone_number} has no preferred vendor or 'http' in message, choosing: {vendor_id}")
 
     # If it is vendor 1 and 2...
