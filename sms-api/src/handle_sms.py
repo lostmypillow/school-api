@@ -13,6 +13,7 @@ logger = logging.getLogger("rich")
 async def handle_sms(data: SMSModel):
     url_list = return_url_list(data=data)
     vendor_id = None
+    preferred_vendor = None
 
     try:
 
@@ -30,7 +31,7 @@ async def handle_sms(data: SMSModel):
             logger.warning(
                 f"preferred_vendor missing key '限定廠商編號': {preferred_vendor}"
             )
-            vendor_id = None
+            vendor_id = 3
         else:
             vendor_id = str(vendor_id)
         logger.info(f"Phone number {data.phone_number} will go through vendor No. {vendor_id}")
@@ -44,7 +45,7 @@ async def handle_sms(data: SMSModel):
 
         # If none of the above, randomize 1 to 3
     if vendor_id is None:
-        vendor_id = str(2)
+        vendor_id = str(3)
         logger.info(f"{data.phone_number} has no preferred vendor or 'http' in message, choosing: {vendor_id}")
 
     # If it is vendor 1 and 2...
@@ -71,7 +72,7 @@ async def handle_sms(data: SMSModel):
             url_list[vendor_id] += f"&sendtime={data.send_time}"
 
     if vendor_id not in url_list:
-        vendor_id = "2"
+        vendor_id = "3"
 
     logger.info(
         f"Vendor URL constructed: {url_list[vendor_id]} for {data.phone_number}"
