@@ -12,7 +12,7 @@ logger = logging.getLogger("rich")
 
 async def handle_sms(data: SMSModel):
     url_list = return_url_list(data=data)
-    vendor_id = None
+    vendor_id: str| None = None
     preferred_vendor = None
 
     try:
@@ -31,14 +31,14 @@ async def handle_sms(data: SMSModel):
             logger.warning(
                 f"preferred_vendor missing key '限定廠商編號': {preferred_vendor}"
             )
-            vendor_id = 3
+            vendor_id = "3"
         else:
             vendor_id = str(vendor_id)
         logger.info(f"Phone number {data.phone_number} will go through vendor No. {vendor_id}")
 
     # If message content has http, randomize vendor 1 and 2
     if vendor_id is None and data.message_content.find("http") != -1:
-        vendor_id = str(random.randint(1, 2))
+        vendor_id = str(3)
         logger.info(
             f"{data.phone_number} has http in message content, choosing vendor {vendor_id}"
         )
