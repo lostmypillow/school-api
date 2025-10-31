@@ -1,28 +1,20 @@
 import re
 from pathlib import Path
-from pprint import pformat
-
 import requests
-import typer
-
-from config import IPA_CA, IPA_HOST, IPA_PASS, IPA_USER
-from lib.user_dataclass import UserData
+from app.features.ldap.settings import settings
+from app.features.ldap.models.user_data import UserData
+import logging
+logger = logging.getLogger(__name__)
 
 STATUS_OK = 200
 
 
-class IPAClient:
-    def __init__(
-        self,
-        host: str = IPA_HOST,
-        admin_user: str = IPA_USER,
-        admin_pass: str = IPA_PASS,
-        ca_path: Path = IPA_CA,
-    ) -> None:
-        self.host = host.rstrip("/")
-        self.admin_user = admin_user
-        self.admin_pass = admin_pass
-        self.ca_path = Path(ca_path)
+class LdapRepository:
+    def __init__(self) -> None:
+        self.host = settings.IPA_HOST.rstrip("/")
+        self.admin_user = settings.IPA_USER
+        self.admin_pass = settings.IPA_PASS
+        self.ca_path = Path(settings.IPA_CA)
         self.json_url = f"{self.host}/ipa/session/json"
         self.login_url = f"{self.host}/ipa/session/login_password"
         self.login_headers = {"Referer": f"{self.host}/ipa"}
@@ -31,8 +23,8 @@ class IPAClient:
 
     def login(self) -> None:
         if not self.admin_pass:
-            typer.echo("Set IPA_ADMIN_PASS in env (admin password).")
-            raise typer.Exit()
+            logger.info("Set IPA_ADMIN_PASS in env (admin password).")
+            raise ValueError("IPA_ADMIN_PASS environment variable is required.")
 
         r = self.session.post(
             self.login_url,
@@ -41,12 +33,12 @@ class IPAClient:
             verify=str(self.ca_path),
         )
         if r.status_code != STATUS_OK:
-            typer.echo(f"Login failed: HTTP {r.status_code}")
-            raise typer.Exit()
+            logger.info(f"Login failed: HTTP {r.status_code}")
+            raise RuntimeError(f"Login failed: HTTP {r.status_code}")
 
     def call(self, method: str, params_list, params_):  # noqa: ANN001, ANN201
         payload = {"method": method, "params": [params_list, params_]}
-        # typer.echo(f"payload: {pformat(payload, indent=2)}")
+        # logger.info(f"payload: {pformat(payload, indent=2)}")
 
         r = self.session.post(
             self.json_url,
@@ -55,19 +47,19 @@ class IPAClient:
             verify=str(self.ca_path),
         )
         if r.status_code != STATUS_OK:
-            typer.echo(f"IPA call {method} failed HTTP {r.status_code}: {r.text[:STATUS_OK]}")
-            raise typer.Exit()
+            logger.info(f"IPA call {method} failed HTTP {r.status_code}: {r.text[:STATUS_OK]}")
+            raise RuntimeError(f"IPA call {method} failed HTTP {r.status_code}: {r.text[:STATUS_OK]}")
         data = r.json()
         if data.get("error"):
             code = data["error"].get("code")
             msg = data["error"].get("message")
-            typer.echo(f"IPA error {code}: {msg}")
+            logger.info(f"IPA error {code}: {msg}")
         return data.get("result")
 
     # --- Real IPA operations ---
     def add_user(
-        self,
-        user: UserData,
+            self,
+            user: UserData,
     ) -> None:
         """Add a given user to FreeIPA.
 
@@ -124,7 +116,7 @@ class IPAClient:
                     {"addattr": [attribute]},
                 )
 
-        typer.echo(f"Created user {'E' + user.uid}, set password, and updated group membership.")
+        logger.info(f"Created user {'E' + user.uid}, set password, and updated group membership.")
 
     def delete_user(self, uid: str) -> None:
         self.login()
@@ -156,9 +148,9 @@ class IPAClient:
                     "nonposix": True,
                 },
             )
-            typer.echo(f"Added group {cn} with desc of {description}")
-        typer.echo("All roups added successfully.")
-   
+            logger.info(f"Added group {cn} with desc of {description}")
+        logger.info("All roups added successfully.")
+
     def _get_user_entry(self, uid: str) -> dict | None:
         """
         Return the user entry dict (attributes as lists) or None if not found.
@@ -187,7 +179,7 @@ class IPAClient:
     def get_user_ou_number(self, uid: str) -> int | None:
         entry = self._get_user_entry(uid)
         if not entry:
-            typer.echo(f"User '{uid}' not found.")
+            logger.info(f"User '{uid}' not found.")
             return None
 
         # Get OU value (attribute is usually a list, but take first)
