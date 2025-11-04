@@ -3,6 +3,9 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.database.dependecies import get_session
 from app.features.ldap.services.ldap_service import LdapService
+from typing import Annotated
+
+from app.features.ldap.services.user_service import UserService
 
 router = APIRouter(prefix="/ldap", tags=["ldap / FreeIPA"])
 
@@ -60,5 +63,12 @@ async def get_ou_number(uid: str, session: AsyncSession = Depends(get_session)):
         if ou is None:
             raise HTTPException(status_code=404, detail="User not found or no OU number")
         return {"uid": uid, "ou_number": ou}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+@router.get("/users/source")
+async def get_users_from_source(session: Annotated[AsyncSession, Depends(get_session)]):
+    try:
+        service = UserService(session=session)
+        return await service.return_filtered_users()
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

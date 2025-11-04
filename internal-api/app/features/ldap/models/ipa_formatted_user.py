@@ -2,16 +2,16 @@ from dataclasses import dataclass
 
 
 @dataclass
-class UserData:
+class IpaFormattedUser:
     uid: str
     employeenumber: str
-    departmentnumber: str
+    departmentnumber: int
     cn: str
     givenname: str
     sn: str
     pwd: str | None
     main_grp: str
+    main_grp_id: int
     other_grp: list | None
-    main_grp_id: str
     other_grp_ids: list | None
     mail: str

@@ -2,7 +2,7 @@ import pandas as pd
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import List
 from app.features.ldap.settings import DEPS
-from app.features.ldap.models.user_data import UserData
+from app.features.ldap.models.ipa_formatted_user import IpaFormattedUser
 from app.database.exec_sql import exec_sql
 
 
@@ -26,15 +26,15 @@ class UserRepository:
         )
         return users or []
 
-    async def transform_dict_to_ldap(self) -> list[UserData]:
-        users: list[dict] = await self.load_users()
+    async def transform_dict_to_ldap(self) -> list[IpaFormattedUser]:
+        raw_users: list[dict] = await self.load_users()
         deps = DEPS
-        user_list: List[UserData] = []
+        user_list: List[IpaFormattedUser] = []
 
         # Pre-build a lookup dictionary for quick access
         dep_lookup = {str(d["自動編號"]): d["group"] for d in deps}
 
-        for row in users:
+        for row in raw_users:
 
             main_grp_name = dep_lookup.get(str(row["main_grp"]), "")
             other_grp_names = []
@@ -47,7 +47,7 @@ class UserRepository:
                         other_grp_names.append(dep_lookup[dep_id])
 
             user_list.append(
-                UserData(
+                IpaFormattedUser(
                     uid="E" + str(row["uid"]) if pd.notna(row.get("uid")) else "",
                     employeenumber=str(row["uid"]) if pd.notna(row.get("uid")) else "",
                     cn=str(row["cn"]) if pd.notna(row.get("cn")) else "",
@@ -69,48 +69,6 @@ class UserRepository:
 
 
 
-    @staticmethod
-    def _split_chinese_name(full_name: str) -> tuple:
-        """Split a Chinese name into a last name (surname) and first name based on length.
-
-        Args
-        -------
-            full_name (str): The full Chinese name (e.g., "张伟", "欧阳修").
-
-        Returns
-        -------
-            tuple: A tuple containing (last_name, first_name).
-        """
-        name_length = len(full_name)
-
-        # For names with 2 characters
-        if name_length == 2:  # noqa: PLR2004
-            last_name = full_name[0]
-            first_name = full_name[1]
-
-        # For names with 3 characters
-        elif name_length == 3:  # noqa: PLR2004
-            # We assume single-character surnames are more common than double-character ones
-            last_name = full_name[0]
-            first_name = full_name[1:]
-
-        # For names with 4 or more characters
-        elif name_length >= 4:  # noqa: PLR2004
-            # Double surnames are more likely here
-            last_name = full_name[:2]
-            first_name = full_name[2:]
-
-        # For names with 1 character, it's ambiguous
-        else:
-            last_name = full_name
-            first_name = ""
-
-        return last_name, first_name
-
-
-    # def _load_users_df(self) -> pd.DataFrame:
-    #     df = pd.read_csv(self.users_csv)
-    #     return self._clean_df(df)
 
     @staticmethod
     def _clean_df(df: pd.DataFrame) -> pd.DataFrame:

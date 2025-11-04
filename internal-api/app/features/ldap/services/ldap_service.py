@@ -28,6 +28,20 @@ class LdapService:
         logger.info(f"Added {len(added_users)} users.")
         return added_users
 
+    async def add_all_users(self) -> List[str]:
+        """Add all users from MSSQL to FreeIPA."""
+        users = await self.user_repo.transform_dict_to_ldap()
+        self.ldap_repo.login()
+        added_users = []
+
+        for user in users:
+            if not self.ldap_repo.check_user(uid=user.uid):
+                self.ldap_repo.add_user(user=user)
+                added_users.append(user.uid)
+
+        logger.info(f"Added {len(added_users)} users.")
+        return added_users
+
     def add_all_groups(self) -> List[str]:
         """Add all groups to FreeIPA."""
         deps = DEPS

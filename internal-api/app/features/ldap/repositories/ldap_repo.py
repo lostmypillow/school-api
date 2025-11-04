@@ -2,7 +2,7 @@ import re
 from pathlib import Path
 import requests
 from app.features.ldap.settings import settings
-from app.features.ldap.models.user_data import UserData
+from app.features.ldap.models.ipa_formatted_user import IpaFormattedUser
 import logging
 logger = logging.getLogger(__name__)
 
@@ -59,7 +59,7 @@ class LdapRepository:
     # --- Real IPA operations ---
     def add_user(
             self,
-            user: UserData,
+            user: IpaFormattedUser,
     ) -> None:
         """Add a given user to FreeIPA.
 
@@ -71,7 +71,7 @@ class LdapRepository:
 
         Parameters
         ----------
-        user : UserData
+        user : IpaFormattedUser
             See `lib.user_dataclass`.
         """
         # Add initial data

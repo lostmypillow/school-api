@@ -4,6 +4,8 @@ import os
 import pyodbc
 from sqlalchemy import URL
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
+from dotenv import load_dotenv
+load_dotenv()
 
 pyodbc.pooling = False
 

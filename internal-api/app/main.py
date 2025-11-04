@@ -4,6 +4,8 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 
 import logging
+
+from app.database.engine import async_engine
 from app.features.ldap.routers.ldap_router import router as ldap_router
 # Disable FastAPI CLI pretty logs & duplicate uvicorn logs
 logging.getLogger("uvicorn.error").propagate = False
@@ -23,6 +25,8 @@ logger = logging.getLogger(__name__)
 async def lifespan(app: FastAPI):
     logger.info("Application startup complete.")
     yield
+    if async_engine:
+        await async_engine.dispose()
     logger.info("Application shutdown complete.")
 
 app = FastAPI(
