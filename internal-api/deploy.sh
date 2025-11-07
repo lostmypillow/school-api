@@ -9,7 +9,7 @@ VERSION=$(python3 get_version.py)
 echo "[*] $SERVICE_NAME v$VERSION starting deployment..."
 echo ""
 
-e
+
 echo "[*] Creating virtual environment with uv..."
 uv sync
 echo "[✓] ok"
