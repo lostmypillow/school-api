@@ -23,17 +23,17 @@ async def sync_mssql_to_ldap( background_tasks: BackgroundTasks, session: AsyncS
             return "Sync queued"
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-#
-#
-@router.post("/groups/sync")
-async def sync_groups(session: AsyncSession = Depends(get_session)):
-    """Add all groups from MSSQL to FreeIPA."""
-    try:
-        service = LdapService(session)
-        added = service.add_all_groups()
-        return {"added_groups": added, "count": len(added)}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+# #
+# #
+# @router.post("/groups/sync")
+# async def sync_groups(session: AsyncSession = Depends(get_session)):
+#     """Add all groups from MSSQL to FreeIPA."""
+#     try:
+#         service = LdapService(session)
+#         added = service.add_all_groups()
+#         return {"added_groups": added, "count": len(added)}
+#     except Exception as e:
+#         raise HTTPException(status_code=500, detail=str(e))
 #
 #
 # @router.delete("/users/{uid}")
@@ -57,10 +57,10 @@ async def sync_groups(session: AsyncSession = Depends(get_session)):
 #     except Exception as e:
 #         raise HTTPException(status_code=500, detail=str(e))
 
-@router.get("/source")
-async def get_users_from_source( session: Annotated[AsyncSession, Depends(get_session)]):
-    try:
-        service = SourceService(session=session)
-        return await service.return_modified_users()
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+# @router.get("/source")
+# async def get_users_from_source( session: Annotated[AsyncSession, Depends(get_session)]):
+#     try:
+#         service = SourceService(session=session)
+#         return await service.return_modified_users()
+#     except Exception as e:
+#         raise HTTPException(status_code=500, detail=str(e))
