@@ -1,7 +1,7 @@
 [project]
-name = "internal-api-v2"
-version = "2.0.0"
-description = "Add your description here"
+name = "內部API v2"
+version = "2.0.0-beta"
+description = " Internal API with integrated features in one monolith instead of repo per feature"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
