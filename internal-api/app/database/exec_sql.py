@@ -10,6 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 logger = logging.getLogger(__name__)
 
 
+# noinspection PyProtectedMember
 async def exec_sql(
     mode: Literal["commit", "one", "all"],
     command_name: str,
@@ -22,6 +23,7 @@ async def exec_sql(
         logger.info(f"sql_not_found: SQL file does not exist at {file_path}")
         raise FileNotFoundError
 
+    # noinspection PyBroadException
     try:
         async with await anyio.open_file(file_path, encoding="utf-8") as file_buffer:
             sql_command = await file_buffer.read()

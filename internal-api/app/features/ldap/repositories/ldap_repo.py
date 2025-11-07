@@ -1,31 +1,47 @@
-import re
-from pathlib import Path
-import requests
-from app.features.ldap.settings import settings
-from app.features.ldap.models.ipa_formatted_user import IpaFormattedUser
 import logging
-logger = logging.getLogger(__name__)
+import random
+from pathlib import Path
 
+import requests
+
+from app.features.ldap.models.ipa_formatted_user import IpaFormattedUser
+from app.features.ldap.settings import settings
+
+logger = logging.getLogger(__name__)
 STATUS_OK = 200
 
 
 class LdapRepository:
+    """Handles direct FreeIPA API communication (supports DRY_RUN mode)."""
+
     def __init__(self) -> None:
         self.host = settings.IPA_HOST.rstrip("/")
         self.admin_user = settings.IPA_USER
-        self.admin_pass = settings.IPA_PASS
+        self.admin_pass = settings.IPA_ADMIN_PASS
         self.ca_path = Path(settings.IPA_CA)
         self.json_url = f"{self.host}/ipa/session/json"
         self.login_url = f"{self.host}/ipa/session/login_password"
         self.login_headers = {"Referer": f"{self.host}/ipa"}
-        self.call_headers = {"Referer": f"{self.host}/ipa", "Content-Type": "application/json"}
+        self.call_headers = {
+            "Referer": f"{self.host}/ipa",
+            "Content-Type": "application/json",
+        }
         self.session = requests.Session()
+        self.dry_run = settings.DRY_RUN
+        logger.debug(f"LdapRepository initialized. DRY_RUN={self.dry_run}, host={self.host}")
 
+    # --- Core FreeIPA communicat n ---
     def login(self) -> None:
+        """Authenticate unless DRY_RUN is enabled."""
+        if self.dry_run:
+            logger.debug("Skipping login (DRY_RUN mode).")
+            return
+
         if not self.admin_pass:
-            logger.info("Set IPA_ADMIN_PASS in env (admin password).")
+            logger.error("IPA_ADMIN_PASS environment variable is missing.")
             raise ValueError("IPA_ADMIN_PASS environment variable is required.")
 
+        logger.debug(f"Attempting FreeIPA login for user '{self.admin_user}'.")
         r = self.session.post(
             self.login_url,
             data={"user": self.admin_user, "password": self.admin_pass},
@@ -33,179 +49,233 @@ class LdapRepository:
             verify=str(self.ca_path),
         )
         if r.status_code != STATUS_OK:
-            logger.info(f"Login failed: HTTP {r.status_code}")
-            raise RuntimeError(f"Login failed: HTTP {r.status_code}")
+            logger.error(f"FreeIPA login failed (HTTP {r.status_code}).")
+            raise RuntimeError(f"FreeIPA login failed: HTTP {r.status_code}")
+        logger.debug("FreeIPA login successful.")
 
-    def call(self, method: str, params_list, params_):  # noqa: ANN001, ANN201
+    def call(self, method: str, params_list, params_):
+        """Perform a JSON-RPC call to the FreeIPA API (or simulate in DRY_RUN mode)."""
         payload = {"method": method, "params": [params_list, params_]}
-        # logger.info(f"payload: {pformat(payload, indent=2)}")
+        logger.debug(f"Preparing FreeIPA call: method={method}, payload={payload}")
 
-        r = self.session.post(
-            self.json_url,
-            json=payload,
-            headers=self.call_headers,
-            verify=str(self.ca_path),
-        )
-        if r.status_code != STATUS_OK:
-            logger.info(f"IPA call {method} failed HTTP {r.status_code}: {r.text[:STATUS_OK]}")
-            raise RuntimeError(f"IPA call {method} failed HTTP {r.status_code}: {r.text[:STATUS_OK]}")
-        data = r.json()
-        if data.get("error"):
-            code = data["error"].get("code")
-            msg = data["error"].get("message")
-            logger.info(f"IPA error {code}: {msg}")
-        return data.get("result")
-
-    # --- Real IPA operations ---
-    def add_user(
-            self,
-            user: IpaFormattedUser,
-    ) -> None:
-        """Add a given user to FreeIPA.
-
-        For documentation on the commands used:
-        - Main API reference: https://freeipa.readthedocs.io/en/ipa-4-11/api/index.html
-        - "user_add": https://freeipa.readthedocs.io/en/ipa-4-11/api/user_add.html
-        - "passwd": https://freeipa.readthedocs.io/en/ipa-4-11/api/passwd.html
-        - "user_mod": https://freeipa.readthedocs.io/en/ipa-4-11/api/user_mod.html
-
-        Parameters
-        ----------
-        user : IpaFormattedUser
-            See `lib.user_dataclass`.
-        """
-        # Add initial data
-        # We do not set  userPassword  here because FreeIPA would ask for password reset on first login.
-        self.call(
-            "user_add",
-            [user.uid],
-            {
-                "cn": user.cn,
-                "givenname": user.givenname,
-                "sn": user.sn,
-                "random": False,
-                "employeenumber": user.employeenumber,
-                "departmentnumber": user.departmentnumber,
-                "ou": user.main_grp,
-                "mail": user.mail,
-            },
-        )
-
-        # Set password
-        self.call("passwd", [user.uid], {"password": user.pwd})
-
-        # Set password expiration to 2035
-        self.call(
-            "user_mod",
-            [user.uid],
-            {"setattr": ["krbPasswordExpiration=20380101000000Z"]},
-        )
-        # If user has a main group, aka department
-        if user.main_grp:
-            self.call("group_add_member", [str(user.main_grp)], {"user": [user.uid]})
-
-        # If user has other groups
-        if user.other_grp and user.other_grp_ids:
-            for group in user.other_grp:
-                self.call("group_add_member", [str(group)], {"user": [user.uid]})
-            for group_id in user.other_grp_ids:
-                attribute = f"departmentnumber={group_id}"
-                self.call(
-                    "user_mod",
-                    [user.uid],
-                    {"addattr": [attribute]},
-                )
-
-        logger.info(f"Created user {'E' + user.uid}, set password, and updated group membership.")
-
-    def delete_user(self, uid: str) -> None:
-        self.login()
-        self.call("user_del", [uid], {"continue": True, "preserve": False})
-
-    def check_user(self, uid: str):  # noqa: ANN201
-        result = self.call("user_show", [uid], {"all": False, "raw": False})
-        return isinstance(result, dict)
-
-    def add_groups(self, groups_data: list[dict]) -> None:
-        """
-        Add a list of groups to FreeIPA.
-
-        Parameters
-        ----------
-        groups_data : list[dict]
-            A list of dictionaries, where each dictionary represents a group
-            with 'group' and 'description' keys.
-        """
-        for group_info in groups_data:
-            cn = group_info["group"]
-            description = group_info["description"]
-            # Use the 'group_add' command with cn, description, and nonposix
-            self.call(
+        # DRY_RUN handling
+        if self.dry_run:
+            logger.info(f"[DRY_RUN] Would call FreeIPA method: {method} with {payload}")
+            if method == "user_show":
+                result = {
+                    "result": {
+                        "result": {
+                            "uid": params_list[0],
+                            "memberof_group": ["ipausers", "d003"],
+                            "nsaccountlock": random.choice([True, False]),
+                        }
+                    }
+                }
+                logger.debug(f"[DRY_RUN] Returning simulated user_show result: {result}")
+                return result
+            elif method in [
+                "user_add",
+                "user_mod",
+                "user_del",
+                "passwd",
+                "group_add_member",
+                "group_remove_member",
                 "group_add",
-                [cn],
+            ]:
+                logger.debug(f"[DRY_RUN] Simulated success for {method}")
+                return {"result": {"result": {"success": True}}}
+            else:
+                logger.debug(f"[DRY_RUN] Default simulated result for {method}")
+                return {"result": {"result": {}}}
+
+        # Real call
+        try:
+            r = self.session.post(
+                self.json_url,
+                json=payload,
+                headers=self.call_headers,
+                verify=str(self.ca_path),
+            )
+            if r.status_code != STATUS_OK:
+                logger.error(f"IPA call '{method}' failed (HTTP {r.status_code}).")
+                raise RuntimeError(f"IPA call {method} failed HTTP {r.status_code}")
+            data = r.json()
+            if data.get("error"):
+                err_msg = data["error"].get("message", "Unknown IPA error")
+                logger.error(f"IPA call '{method}' returned error: {err_msg}")
+                return ""
+            logger.debug(f"IPA call '{method}' successful.")
+            return data.get("result")
+        except Exception as e:
+            logger.exception(f"Exception during IPA call '{method}': {e}")
+            raise
+
+    # --- Low-level FreeIPA operations ---
+    def check_user_exists(self, uid: str) -> tuple[bool, bool]:
+        """Return True if the user exists, False otherwise."""
+        logger.debug(f"Checking if user '{uid}' exists in FreeIPA.")
+        # if self.dry_run:
+        #     scenarios = [
+        #         (True, False),
+        #         (True, True),
+        #         (False, False),
+        #     ]
+        #     simulated = random.choice(scenarios)
+        #     exists, locked = simulated
+        #     if exists and locked:
+        #         logger.info(f"[DRY_RUN] Simulating: user {uid} exists but is DISABLED.")
+        #     elif exists:
+        #         logger.info(f"[DRY_RUN] Simulating: user {uid} exists and is ACTIVE.")
+        #     else:
+        #         logger.info(f"[DRY_RUN] Simulating: user {uid} does NOT exist.")
+        #     return simulated
+
+
+        try:
+            result = self.call("user_show", [uid], {"all": True})
+            if isinstance(result, str):
+                return False, False
+
+            user_data = result.get("result")
+            if not user_data:
+                logger.debug(f"User '{uid}' not found in FreeIPA.")
+                return False, False
+            locked = user_data.get("nsaccountlock", False)
+            logger.debug(f"User '{uid}' found. Locked={locked}")
+            return True, locked
+        except Exception as e:
+            if "not found" in str(e).lower() or "does not exist" in str(e).lower():
+                logger.debug(f"User '{uid}' not found (exception message matched).")
+                return False, False
+            logger.exception(f"Error checking existence for user '{uid}': {e}")
+            raise
+
+    def create_user(self, user: IpaFormattedUser) -> None:
+        """Create a new user (no checks)."""
+        logger.info(f"Creating user '{user.uid}'.")
+
+        try:
+            self.call(
+                "user_add",
+                [user.uid],
                 {
-                    "description": description,
-                    "nonposix": True,
+                    "cn": user.cn,
+                    "givenname": user.givenname,
+                    "sn": user.sn,
+                    "employeenumber": user.employeenumber,
+                    "departmentnumber": user.departmentnumber,
+                    "ou": user.main_grp,
+                    "mail": user.mail,
+                    "random": False,
                 },
             )
-            logger.info(f"Added group {cn} with desc of {description}")
-        logger.info("All roups added successfully.")
+            self.call("passwd", [user.uid], {"password": user.pwd})
+            logger.debug(f"User '{user.uid}' creation completed successfully.")
+        except Exception as e:
+            logger.exception(f"Failed to create user '{user.uid}': {e}")
+            raise
 
-    def _get_user_entry(self, uid: str) -> dict | None:
-        """
-        Return the user entry dict (attributes as lists) or None if not found.
-        Tries user_show first (exact uid), then user_find filtered by uid.
-        """
-        self.login()
+    def update_user(self, user: IpaFormattedUser) -> None:
+        """Modify existing user attributes."""
+        logger.info(f"Updating user '{user.uid}'.")
 
-        # Try exact lookup
-        entry = None
-        show = self.call("user_show", [str(uid)], {"all": True, "raw": False})
-        if isinstance(show, dict) and show.get("result"):
-            entry = show["result"]
-
-        # Fallback to search by uid (NO criteria dict; uid filter goes into options)
-        if not entry:
-            found = self.call(
-                "user_find",
-                [],
-                {"uid": str(uid), "all": True, "sizelimit": 2}
+        try:
+            self.call(
+                "user_mod",
+                [user.uid],
+                {
+                    "setattr": [
+                        f"cn={user.cn}",
+                        f"givenname={user.givenname}",
+                        f"sn={user.sn}",
+                        f"employeenumber={user.employeenumber}",
+                        f"departmentnumber={user.departmentnumber}",
+                        f"ou={user.main_grp}",
+                        f"mail={user.mail}",
+                    ]
+                },
             )
-            items = (found or {}).get("result") or []
-            entry = items[0] if items else None
+            self.call("passwd", [user.uid], {"password": user.pwd})
+            logger.debug(f"User '{user.uid}' updated successfully.")
+        except Exception as e:
+            logger.exception(f"Failed to update user '{user.uid}': {e}")
+            raise
 
-        return entry
+    def delete_user(self, uid: str) -> None:
+        """Delete a user."""
+        logger.info(f"Deleting user '{uid}'.")
 
-    def get_user_ou_number(self, uid: str) -> int | None:
-        entry = self._get_user_entry(uid)
-        if not entry:
-            logger.info(f"User '{uid}' not found.")
-            return None
+        try:
+            self.call("user_del", [uid], {"continue": True, "preserve": False})
+            logger.debug(f"User '{uid}' deleted successfully.")
+        except Exception as e:
+            logger.exception(f"Failed to delete user '{uid}': {e}")
+            raise
 
-        # Get OU value (attribute is usually a list, but take first)
-        ou_attr = entry.get("ou")
-        ou_val = None
-        if isinstance(ou_attr, list) and ou_attr:
-            ou_val = str(ou_attr[0])
-        elif isinstance(ou_attr, str):
-            ou_val = ou_attr
+    def get_user_groups(self, uid: str) -> set[str]:
+        """Return a set of group names the user belongs to."""
+        logger.debug(f"Fetching groups for user '{uid}'.")
 
-        # Fallback: parse DN if no ou attribute present
-        if not ou_val:
-            dn = entry.get("dn")
-            if isinstance(dn, str):
-                for part in dn.split(","):
-                    p = part.strip()
-                    if p.lower().startswith("ou="):
-                        ou_val = p[3:]
-                        break
+        try:
+            result = self.call("user_show", [uid], {"all": True})
+            groups = result["result"].get("memberof_group", [])
+            logger.debug(f"User '{uid}' belongs to groups: {groups}")
+            return set(groups)
+        except Exception as e:
+            logger.exception(f"Failed to get groups for user '{uid}': {e}")
+            raise
 
-        if not ou_val:
-            return None
+    def add_user_to_group(self, uid: str, group: str) -> None:
+        """Add user to a group."""
+        logger.info(f"Adding user '{uid}' to group '{group}'.")
 
-        # Extract number part
-        match = re.search(r"\d+", ou_val)
-        if match:
-            return int(match.group())
+        try:
+            self.call("group_add_member", [group], {"user": [uid]})
+            logger.debug(f"User '{uid}' added to group '{group}'.")
+        except Exception as e:
+            logger.exception(f"Failed to add user '{uid}' to group '{group}': {e}")
+            raise
 
-        return None
+    def remove_user_from_group(self, uid: str, group: str) -> None:
+        """Remove user from a group."""
+        logger.info(f"Removing user '{uid}' from group '{group}'.")
+
+        try:
+            self.call("group_remove_member", [group], {"user": [uid]})
+            logger.debug(f"User '{uid}' removed from group '{group}'.")
+        except Exception as e:
+            logger.exception(f"Failed to remove user '{uid}' from group '{group}': {e}")
+            raise
+
+    def add_group(self, group_name: str, description: str) -> None:
+        """Create a group."""
+        logger.info(f"Creating group '{group_name}'.")
+
+        try:
+            self.call("group_add", [group_name], {"description": description, "nonposix": True})
+            logger.debug(f"Group '{group_name}' created successfully.")
+        except Exception as e:
+            logger.exception(f"Failed to create group '{group_name}': {e}")
+            raise
+
+    def disable_user(self, uid: str) -> None:
+        """Disable a user account (lock it instead of deleting)."""
+        logger.info(f"Disabling user '{uid}'.")
+
+        try:
+            self.call("user_mod", [uid], {"nsaccountlock": True})
+            logger.info(f"User '{uid}' has been disabled in FreeIPA.")
+        except Exception as e:
+            logger.exception(f"Failed to disable user '{uid}': {e}")
+            raise
+
+    def enable_user(self, uid: str) -> None:
+        """Re-enable a previously disabled user account."""
+        logger.info(f"Re-enabling user '{uid}'.")
+
+        try:
+            self.call("user_mod", [uid], {"nsaccountlock": False})
+            logger.info(f"User '{uid}' has been re-enabled in FreeIPA.")
+        except Exception as e:
+            logger.exception(f"Failed to enable user '{uid}': {e}")
+            raise
