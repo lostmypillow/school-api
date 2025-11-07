@@ -1,5 +1,5 @@
 [project]
-name = "內部API v2"
+name = "新內部API"
 version = "2.0.0-beta"
 description = " Internal API with integrated features in one monolith instead of repo per feature"
 readme = "README.md"
