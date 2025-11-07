@@ -3,7 +3,7 @@
 # Exit on error
 set -e
 SERVICE_NAME="ldap"
-PORT="8008"
+PORT="8009"
 VERSION=$(python3 get_version.py)
 
 echo "[*] $SERVICE_NAME v$VERSION starting deployment..."
