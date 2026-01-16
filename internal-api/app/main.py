@@ -10,7 +10,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
 from pathlib import Path
 from typing import cast
-from app.database.dependecies import get_session
+from app.database.dependecies import get_session_ctx
 from app.database.engine import async_engine
 from app.features.ldap.routers.ldap_router import router as ldap_router
 from app.features.ldap.services.ldap_service import LdapService
@@ -36,7 +36,7 @@ scheduler = AsyncIOScheduler()
 
 async def scheduled_ldap_sync():
     """Job that runs every day at 7pm."""
-    async with get_session() as session:
+    async with get_session_ctx() as session:
         ldap_service = LdapService(session=session)
         await ldap_service.sync_all_users()
 
