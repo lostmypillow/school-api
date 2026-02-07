@@ -1,23 +1,19 @@
-from enum import Enum
-
+import os
 import httpx
 from fastapi import FastAPI
-from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
+from dotenv import load_dotenv
 
-
-
+load_dotenv()
 app = FastAPI()
 origins = [
-     "https://jsearch-latest.onrender.com",
-     "https://jsearch.lostmypillow.duckdns.org",
-     "https://lostmypillow.github.io",
-     "http://localhost:3000",
-     "https://jsearch.pages.dev"
+    "https://jsearch-latest.onrender.com",
+    "https://jsearch.lostmypillow.duckdns.org",
+    "https://lostmypillow.github.io",
+    "http://localhost:3000",
+    "https://jsearch.pages.dev"
 
-    
 ]
-
 
 app.add_middleware(
     CORSMiddleware,
@@ -29,16 +25,10 @@ app.add_middleware(
 )
 
 
-
 @app.get("/get-movies/")
 async def get_movies(query: str):
-    print("yest")
-    url = f"https://www.omdbapi.com/?apikey=e9cb394&s={query}"
-
+    url = f"https://www.omdbapi.com/?apikey={os.getenv('OMDB_API_KEY')}&s={query}"
     r = httpx.get(url)
-    print(r)
-    print(r.headers['content-type'])
-
     return {"results": r.json()}
 
 
@@ -46,7 +36,7 @@ async def get_movies(query: str):
 async def get_google(query: str, limit: int, related: bool):
     url = f'https://google-search74.p.rapidapi.com/?query={query}&limit={limit}&related_keywords={related}'
     headers = {
-        "X-RapidAPI-Key": "4cc2304fb3msh28544a85c39f266p17c92bjsnd635c2ee140a",
+        "X-RapidAPI-Key": os.getenv('RAPIDAPI_API_KEY'),
         "X-RapidAPI-Host": "google-search74.p.rapidapi.com",
     }
     r = httpx.get(url, headers=headers)
