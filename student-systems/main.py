@@ -12,7 +12,7 @@ origins = [
     "https://lostmypillow.github.io",
     "http://localhost:3000",
     "https://jsearch.pages.dev",
-    "https://jsearch0.chodanpillow.com/"
+    "https://jsearch0.chodanpillow.com"
 
 ]
 
