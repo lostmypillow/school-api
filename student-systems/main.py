@@ -24,6 +24,9 @@ app.add_middleware(
     expose_headers=["GET"]
 )
 
+@app.get("/health")
+async def check_health():
+    return "success"
 
 @app.get("/get-movies/")
 async def get_movies(query: str):
