@@ -6,6 +6,7 @@ import requests
 
 from app.features.ldap.models.ipa_formatted_user import IpaFormattedUser
 from app.features.ldap.settings import settings
+from time import sleep
 
 logger = logging.getLogger(__name__)
 STATUS_OK = 200
@@ -55,6 +56,7 @@ class LdapRepository:
 
     def call(self, method: str, params_list, params_):
         """Perform a JSON-RPC call to the FreeIPA API (or simulate in DRY_RUN mode)."""
+        sleep(1)
         payload = {"method": method, "params": [params_list, params_]}
         logger.debug(f"Preparing FreeIPA call: method={method}, payload={payload}")
 
