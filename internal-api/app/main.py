@@ -1,21 +1,15 @@
 # main.py
 
 import logging
-import os
-import tomllib
 from contextlib import asynccontextmanager
-from pathlib import Path
-from typing import cast
-
+import tomllib
+import os
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.openapi.docs import (
-    get_swagger_ui_html,
-    get_swagger_ui_oauth2_redirect_html,
-)
 from fastapi.responses import HTMLResponse
-
+from pathlib import Path
+from typing import cast
 from app.database.dependecies import get_session_ctx
 from app.database.engine import async_engine
 from app.features.card.router import router as card_router
