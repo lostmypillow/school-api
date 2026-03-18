@@ -1,15 +1,21 @@
 # main.py
 
 import logging
-from contextlib import asynccontextmanager
-import tomllib
 import os
+import tomllib
+from contextlib import asynccontextmanager
+from pathlib import Path
+from typing import cast
+
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.openapi.docs import (
+    get_swagger_ui_html,
+    get_swagger_ui_oauth2_redirect_html,
+)
 from fastapi.responses import HTMLResponse
-from pathlib import Path
-from typing import cast
+
 from app.database.dependecies import get_session_ctx
 from app.database.engine import async_engine
 from app.features.card.router import router as card_router
@@ -40,14 +46,19 @@ async def scheduled_ldap_sync():
 
 # noinspection PyUnusedLocal,PyShadowingNames
 @asynccontextmanager
-async def lifespan(app: FastAPI):
-    scheduler.add_job(scheduled_ldap_sync, "cron", hour=19, minute=0)
-    scheduler.start()
-    logger.info("Application startup complete.")
+async def lifespan(app: FastAPI):  # noqa: ANN201
+    logger.debug("FastAPI lifespan start")
+    if os.getenv("DEV") != "true":
+        logger.info("Production environment detected. Adding MSSQL -> LDAP scheduler")
+        scheduler.add_job(scheduled_ldap_sync, "cron", hour=19, minute=0)
+        scheduler.start()
+    logger.info("internal-api startup complete.")
     yield
     if async_engine:
+        logger.debug("async_engine is valid, awaiting disposal")
         await async_engine.dispose()
-    logger.info("Application shutdown complete.")
+        logger.debug("async engine disposed")
+    logger.info("internal-api shutdown complete.")
 
 
 backend_pyproject_path = Path(__file__).resolve().parent.parent / "pyproject.toml"
@@ -142,3 +153,4 @@ async def swagger_ui_redirect() -> HTMLResponse:
 
 app.include_router(ldap_router)
 app.include_router(card_router)
+app.include_router(submission_router)
