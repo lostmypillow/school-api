@@ -2,7 +2,7 @@ import logging
 from collections.abc import Sequence
 from datetime import date
 from typing import Annotated, Any
-
+from datetime import date, datetime
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field, model_validator
 from sqlalchemy import RowMapping, text
@@ -34,6 +34,7 @@ class TrialRecordBase(BaseModel):
     parent_name: str | None = None
     manager: str | None = None
     status: str | None = None
+    current_grade: str | None= None
 
     @model_validator(mode="after")
     def check_school_and_contact_requirements(self):  # noqa: ANN201
@@ -54,7 +55,23 @@ class TrialRecordCreate(TrialRecordBase):
 
 class TrialRecordResponse(TrialRecordBase):
     id: int
+    created_at: datetime
+    updated_at: datetime
 
+@router.get("/managers")
+async def get_managers( db: Annotated[AsyncSession, Depends(get_session)]):
+    query = text("""
+    select
+	姓名
+from
+	.dbo.使用者
+where
+	是業務 = 1
+	AND 狀態 = 1
+	AND LEN(學號) >= 6
+    """)
+    result = await db.execute(query)
+    return result.scalars().all()
 
 @router.post("/", response_model=TrialRecordResponse)
 async def create_trial(trial: TrialRecordCreate, db: Annotated[AsyncSession, Depends(get_session)]) -> dict:
@@ -62,19 +79,21 @@ async def create_trial(trial: TrialRecordCreate, db: Annotated[AsyncSession, Dep
         INSERT INTO trial_records
         (source, student_id, student_name, middle_school_name, middle_school_class,
          high_school_name, high_school_class, registered_class, trial_date,
-         telephone, mobile, notes, parent_name, manager, status)
-        OUTPUT Inserted.id
+         telephone, mobile, notes, parent_name, manager, status, current_grade,
+         created_at, updated_at)
+        OUTPUT Inserted.id, Inserted.created_at, Inserted.updated_at
         VALUES
         (:source, :student_id, :student_name, :middle_school_name, :middle_school_class,
          :high_school_name, :high_school_class, :registered_class, :trial_date,
-         :telephone, :mobile, :notes, :parent_name, :manager, :status)
+         :telephone, :mobile, :notes, :parent_name, :manager, :status, :current_grade,
+         GETDATE(), GETDATE())
     """)
 
     try:
         result = await db.execute(query, trial.model_dump())
-        new_id = result.scalar()
+        inserted_row = result.mappings().first()
         await db.commit()
-        return {**trial.model_dump(), "id": new_id}
+        return {**trial.model_dump(), **inserted_row}
     except IntegrityError as e:
         await db.rollback()
         error_message = f"Database integrity error: {e.orig}"
@@ -92,7 +111,7 @@ async def read_trials( db: Annotated[AsyncSession, Depends(get_session)], skip: 
     query = text("""
         SELECT id, source, student_id, student_name, middle_school_name, middle_school_class,
                high_school_name, high_school_class, registered_class, trial_date,
-               telephone, mobile, notes, parent_name, manager, status
+               telephone, mobile, notes, parent_name, manager, status, current_grade, created_at, updated_at
         FROM trial_records
         ORDER BY id
         OFFSET :skip ROWS
@@ -108,7 +127,7 @@ async def read_trial(trial_id: int, db: Annotated[AsyncSession, Depends(get_sess
     query = text("""
         SELECT id, source, student_id, student_name, middle_school_name, middle_school_class,
                high_school_name, high_school_class, registered_class, trial_date,
-               telephone, mobile, notes, parent_name, manager, status
+               telephone, mobile, notes, parent_name, manager, status. current_grade, created_at, updated_at
         FROM trial_records
         WHERE id = :id
     """)
@@ -148,7 +167,9 @@ async def update_trial(trial_id: int, trial: TrialRecordBase, db: Annotated[Asyn
             notes = :notes,
             parent_name = :parent_name,
             manager = :manager,
-            status = :status
+            status = :status,
+            current_grade = :current_grade, updated_at = GETDATE()
+        OUTPUT Inserted.id, Inserted.created_at, Inserted.updated_at
         WHERE id = :id
     """)
 
@@ -156,9 +177,10 @@ async def update_trial(trial_id: int, trial: TrialRecordBase, db: Annotated[Asyn
     params["id"] = trial_id
 
     try:
-        await db.execute(update_query, params)
+        result =await db.execute(update_query, params)
+        updated_row = result.mappings().first()
         await db.commit()
-        return {**trial.model_dump(), "id": trial_id}
+        return {**trial.model_dump(), **updated_row}
     except IntegrityError as e:
         await db.rollback()
         error_message = f"Database integrity error: {e.orig}"
