@@ -1,8 +1,8 @@
 import logging
 from collections.abc import Sequence
-from datetime import date
-from typing import Annotated, Any
 from datetime import date, datetime
+from typing import Annotated, Any
+
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field, model_validator
 from sqlalchemy import RowMapping, text
@@ -59,7 +59,7 @@ class TrialRecordResponse(TrialRecordBase):
     updated_at: datetime
 
 @router.get("/managers")
-async def get_managers( db: Annotated[AsyncSession, Depends(get_session)]) -> list[str]:
+async def get_managers( db: Annotated[AsyncSession, Depends(get_session)]) -> Sequence[Any]:
     query = text("""
     select
 	姓名
