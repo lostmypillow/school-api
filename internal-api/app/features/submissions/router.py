@@ -16,11 +16,11 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/trials", tags=["TrialRecords"])
 
-error_message = ""
+
 
 class TrialRecordBase(BaseModel):
     source: str | None = None
-    student_id: str | None = Field(None, pattern=r"^\d{6}$", description="Must be exactly 6 digits if provided")
+    student_id: str | None = Field(None, pattern=r"^\d{6}$", description="若有提供, 則必須剛好為 6 位數字。")
     student_name: str | None = None
     middle_school_name: str | None = None
     middle_school_class: str | None = None
@@ -39,11 +39,11 @@ class TrialRecordBase(BaseModel):
     @model_validator(mode="after")
     def check_school_and_contact_requirements(self):  # noqa: ANN201
         if not self.middle_school_name and not self.high_school_name:
-            no_school_error_message = "At least one school name (middle_school_name or high_school_name) must be provided."
+            no_school_error_message = "必須提供至少一個學校名稱(國中校名或高中校名)。"
             raise ValueError(no_school_error_message)
 
         if not self.telephone and not self.mobile:
-            no_phone_error_message = "At least one contact number (telephone or mobile) must be provided."
+            no_phone_error_message = "必須提供至少一個聯絡電話 (市話或手機)。"
             raise ValueError(no_phone_error_message)
 
         return self
@@ -59,7 +59,7 @@ class TrialRecordResponse(TrialRecordBase):
     updated_at: datetime
 
 @router.get("/managers")
-async def get_managers( db: Annotated[AsyncSession, Depends(get_session)]):
+async def get_managers( db: Annotated[AsyncSession, Depends(get_session)]) -> list[str]:
     query = text("""
     select
 	姓名
@@ -96,12 +96,12 @@ async def create_trial(trial: TrialRecordCreate, db: Annotated[AsyncSession, Dep
         return {**trial.model_dump(), **inserted_row}
     except IntegrityError as e:
         await db.rollback()
-        error_message = f"Database integrity error: {e.orig}"
+        error_message = f"資料庫完整性錯誤：{e.orig}"
         logger.exception(error_message)
         raise HTTPException(status_code=400, detail=error_message) from None
     except Exception as e:
         await db.rollback()
-        error_message ="An unexpected error occurred while creating the trial."
+        error_message ="建立試用時發生非預期的錯誤。"
         logger.exception(error_message)
         raise HTTPException(status_code=500, detail=error_message) from e
 
@@ -136,7 +136,7 @@ async def read_trial(trial_id: int, db: Annotated[AsyncSession, Depends(get_sess
     row = result.mappings().first()
 
     if not row:
-        error_message = "TrialRecord not found"
+        error_message = "找不到問課紀錄 (TrialRecord)"
         logger.exception(error_message, result)
         raise HTTPException(status_code=404, detail=error_message)
     return row
@@ -147,7 +147,7 @@ async def update_trial(trial_id: int, trial: TrialRecordBase, db: Annotated[Asyn
     check_query = text("SELECT id FROM trial_records WHERE id = :id")
     check_result = await db.execute(check_query, {"id": trial_id})
     if not check_result.scalar():
-        error_message = "TrialRecord not found"
+        error_message = "找不到問課紀錄 (TrialRecord)"
         logger.exception(error_message, check_result)
         raise HTTPException(status_code=404, detail=error_message)
 
@@ -204,7 +204,7 @@ async def delete_trial(trial_id: int, db: Annotated[AsyncSession, Depends(get_se
     await db.commit()
 
     if result.rowcount == 0:
-        error_message = "TrialRecord not found"
+        error_message = "找不到問課紀錄 (TrialRecord)"
         logger.exception(error_message)
         raise HTTPException(status_code=404, detail=error_message)
 
