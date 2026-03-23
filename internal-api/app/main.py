@@ -5,7 +5,7 @@ import os
 import tomllib
 from contextlib import asynccontextmanager
 from pathlib import Path
-from typing import cast
+from typing import cast, Coroutine
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from fastapi import FastAPI
@@ -34,10 +34,10 @@ logging.basicConfig(
     datefmt="%Y-%m-%d %H:%M:%S",
 )
 logger = logging.getLogger(__name__)
-scheduler = AsyncIOScheduler()
 
 
-async def scheduled_ldap_sync():
+
+async def scheduled_ldap_sync() -> None:
     """Job that runs every day at 7pm."""
     async with get_session_ctx() as session:
         ldap_service = LdapService(session=session)
@@ -47,11 +47,14 @@ async def scheduled_ldap_sync():
 # noinspection PyUnusedLocal,PyShadowingNames
 @asynccontextmanager
 async def lifespan(app: FastAPI):  # noqa: ANN201
-    logger.debug("FastAPI lifespan start")
+    logger.info("internal-api starting...")
     if os.getenv("DEV") != "true":
+        scheduler = AsyncIOScheduler()
         logger.info("Production environment detected. Adding MSSQL -> LDAP scheduler")
         scheduler.add_job(scheduled_ldap_sync, "cron", hour=19, minute=0)
         scheduler.start()
+    else:
+        logger.info("Development environment detected. Scheduler disabled")
     logger.info("internal-api startup complete.")
     yield
     if async_engine:
