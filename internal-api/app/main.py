@@ -5,7 +5,7 @@ import os
 import tomllib
 from contextlib import asynccontextmanager
 from pathlib import Path
-from typing import cast, Coroutine
+from typing import Coroutine, cast
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from fastapi import FastAPI
@@ -21,6 +21,7 @@ from app.database.engine import async_engine
 from app.features.card.router import router as card_router
 from app.features.ldap.routers.ldap_router import router as ldap_router
 from app.features.ldap.services.ldap_service import LdapService
+from app.features.trials.router import router as submission_router
 
 # Disable FastAPI CLI pretty logs & duplicate uvicorn logs
 logging.getLogger("uvicorn.error").propagate = False
