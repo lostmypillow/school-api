@@ -68,11 +68,11 @@ class TrialRecordResponse(TrialRecordBase):
     updated_at: datetime
 
 
-@router.get("/schools", response_model=list[SchoolRecord])
+@router.get("/schools")
 async def get_schools(
     db: Annotated[AsyncSession, Depends(get_session)],
     level: Literal["middle", "high"] = "middle",
-) -> Sequence[RowMapping]:
+):
     level_id = 2 if level == "middle" else 3
     query = text("""
    select 自動編號 as id, 名稱 as name, 縣市 as city from .dbo.學校
