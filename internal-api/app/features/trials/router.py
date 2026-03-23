@@ -17,10 +17,11 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/trials", tags=["TrialRecords"])
 
 
-
 class TrialRecordBase(BaseModel):
     source: str | None = None
-    student_id: str | None = Field(None, pattern=r"^\d{6}$", description="若有提供, 則必須剛好為 6 位數字。")
+    student_id: str | None = Field(
+        None, pattern=r"^\d{6}$", description="若有提供, 則必須剛好為 6 位數字。"
+    )
     student_name: str | None = None
     middle_school_name: str | None = None
     middle_school_class: str | None = None
@@ -34,7 +35,7 @@ class TrialRecordBase(BaseModel):
     parent_name: str | None = None
     manager: str | None = None
     status: str | None = None
-    current_grade: str | None= None
+    current_grade: str | None = None
 
     @model_validator(mode="after")
     def check_school_and_contact_requirements(self):  # noqa: ANN201
@@ -58,8 +59,9 @@ class TrialRecordResponse(TrialRecordBase):
     created_at: datetime
     updated_at: datetime
 
+
 @router.get("/managers")
-async def get_managers( db: Annotated[AsyncSession, Depends(get_session)]) -> Sequence[Any]:
+async def get_managers(db: Annotated[AsyncSession, Depends(get_session)]) -> Sequence[Any]:
     query = text("""
     select
 	姓名
@@ -73,8 +75,11 @@ where
     result = await db.execute(query)
     return result.scalars().all()
 
+
 @router.post("/", response_model=TrialRecordResponse)
-async def create_trial(trial: TrialRecordCreate, db: Annotated[AsyncSession, Depends(get_session)]) -> dict:
+async def create_trial(
+    trial: TrialRecordCreate, db: Annotated[AsyncSession, Depends(get_session)]
+) -> dict:
     query = text("""
         INSERT INTO trial_records
         (source, student_id, student_name, middle_school_name, middle_school_class,
@@ -101,13 +106,15 @@ async def create_trial(trial: TrialRecordCreate, db: Annotated[AsyncSession, Dep
         raise HTTPException(status_code=400, detail=error_message) from None
     except Exception as e:
         await db.rollback()
-        error_message ="建立試用時發生非預期的錯誤。"
+        error_message = f"建立試用時發生非預期的錯誤。{e}"
         logger.exception(error_message)
         raise HTTPException(status_code=500, detail=error_message) from e
 
 
 @router.get("/", response_model=list[TrialRecordResponse])
-async def read_trials( db: Annotated[AsyncSession, Depends(get_session)], skip: int = 0, limit: int = 50) -> Sequence[RowMapping]:
+async def read_trials(
+    db: Annotated[AsyncSession, Depends(get_session)], skip: int = 0, limit: int = 50
+) -> Sequence[RowMapping]:
     query = text("""
         SELECT id, source, student_id, student_name, middle_school_name, middle_school_class,
                high_school_name, high_school_class, registered_class, trial_date,
@@ -123,11 +130,13 @@ async def read_trials( db: Annotated[AsyncSession, Depends(get_session)], skip: 
 
 
 @router.get("/{trial_id}", response_model=TrialRecordResponse)
-async def read_trial(trial_id: int, db: Annotated[AsyncSession, Depends(get_session)]) -> RowMapping:
+async def read_trial(
+    trial_id: int, db: Annotated[AsyncSession, Depends(get_session)]
+) -> RowMapping:
     query = text("""
         SELECT id, source, student_id, student_name, middle_school_name, middle_school_class,
                high_school_name, high_school_class, registered_class, trial_date,
-               telephone, mobile, notes, parent_name, manager, status. current_grade, created_at, updated_at
+               telephone, mobile, notes, parent_name, manager, status, current_grade, created_at, updated_at
         FROM trial_records
         WHERE id = :id
     """)
@@ -137,13 +146,15 @@ async def read_trial(trial_id: int, db: Annotated[AsyncSession, Depends(get_sess
 
     if not row:
         error_message = "找不到問課紀錄 (TrialRecord)"
-        logger.exception(error_message, result)
+        logger.error("找不到問課紀錄 (TrialRecord): %s", result)
         raise HTTPException(status_code=404, detail=error_message)
     return row
 
 
 @router.put("/{trial_id}", response_model=TrialRecordResponse)
-async def update_trial(trial_id: int, trial: TrialRecordBase, db: Annotated[AsyncSession, Depends(get_session)]) -> dict[str, Any]:
+async def update_trial(
+    trial_id: int, trial: TrialRecordBase, db: Annotated[AsyncSession, Depends(get_session)]
+) -> dict[str, Any]:
     check_query = text("SELECT id FROM trial_records WHERE id = :id")
     check_result = await db.execute(check_query, {"id": trial_id})
     if not check_result.scalar():
@@ -177,7 +188,7 @@ async def update_trial(trial_id: int, trial: TrialRecordBase, db: Annotated[Asyn
     params["id"] = trial_id
 
     try:
-        result =await db.execute(update_query, params)
+        result = await db.execute(update_query, params)
         updated_row = result.mappings().first()
         await db.commit()
         return {**trial.model_dump(), **updated_row}
@@ -194,7 +205,9 @@ async def update_trial(trial_id: int, trial: TrialRecordBase, db: Annotated[Asyn
 
 
 @router.delete("/{trial_id}")
-async def delete_trial(trial_id: int, db: Annotated[AsyncSession, Depends(get_session)]) -> dict[str, str]:
+async def delete_trial(
+    trial_id: int, db: Annotated[AsyncSession, Depends(get_session)]
+) -> dict[str, str]:
     query = text("""
         DELETE FROM trial_records
         WHERE id = :id
