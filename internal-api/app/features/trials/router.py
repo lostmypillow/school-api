@@ -1,7 +1,7 @@
 import logging
 from collections.abc import Sequence
 from datetime import date, datetime
-from typing import Annotated, Any
+from typing import Annotated, Any, Literal
 
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field, model_validator
@@ -17,10 +17,18 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/trials", tags=["TrialRecords"])
 
 
+class SchoolRecord(BaseModel):
+    id: int
+    name: str
+    city: str
+
+
 class TrialRecordBase(BaseModel):
     source: str | None = None
     student_id: str | None = Field(
-        None, pattern=r"^\d{6}$", description="若有提供, 則必須剛好為 6 位數字。"
+        None,
+        pattern=r"^\d{6}$",
+        description="若有提供, 則必須剛好為 6 位數字。",
     )
     student_name: str | None = None
     middle_school_name: str | None = None
@@ -60,6 +68,20 @@ class TrialRecordResponse(TrialRecordBase):
     updated_at: datetime
 
 
+@router.get("/schools", response_model=list[SchoolRecord])
+async def get_schools(
+    db: Annotated[AsyncSession, Depends(get_session)],
+    level: Literal["middle", "high"] = "middle",
+) -> Sequence[RowMapping]:
+    level_id = 2 if level == "middle" else 3
+    query = text("""
+   select 自動編號 as id, 名稱 as name, 縣市 as city from .dbo.學校
+  where 類別 = :level_id
+    """)
+    result = await db.execute(query, {"level_id": level_id})
+    return result.mappings().all()
+
+
 @router.get("/managers")
 async def get_managers(db: Annotated[AsyncSession, Depends(get_session)]) -> Sequence[Any]:
     query = text("""
@@ -78,7 +100,8 @@ where
 
 @router.post("/", response_model=TrialRecordResponse)
 async def create_trial(
-    trial: TrialRecordCreate, db: Annotated[AsyncSession, Depends(get_session)]
+    trial: TrialRecordCreate,
+    db: Annotated[AsyncSession, Depends(get_session)],
 ) -> dict:
     query = text("""
         INSERT INTO trial_records
