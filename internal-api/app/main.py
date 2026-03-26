@@ -47,8 +47,8 @@ async def scheduled_ldap_sync():
 # noinspection PyUnusedLocal,PyShadowingNames
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # scheduler.add_job(scheduled_ldap_sync, "cron", hour=19, minute=0)
-    # scheduler.start()
+    scheduler.add_job(scheduled_ldap_sync, "cron", hour=19, minute=0)
+    scheduler.start()
     logger.info("Application startup complete.")
     yield
     if async_engine:
