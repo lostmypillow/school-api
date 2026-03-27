@@ -10,3 +10,8 @@ wheels/
 # Virtual environments
 .venv
 .env
+/.idea/vcs.xml
+/.idea/internal-api.iml
+/.idea/misc.xml
+/.idea/inspectionProfiles/profiles_settings.xml
+/.idea/inspectionProfiles/Project_Default.xml
