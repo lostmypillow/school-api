@@ -5,7 +5,7 @@ import os
 import tomllib
 from contextlib import asynccontextmanager
 from pathlib import Path
-from typing import cast
+from typing import Coroutine, cast
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from fastapi import FastAPI
@@ -21,6 +21,7 @@ from app.database.engine import async_engine
 from app.features.card.router import router as card_router
 from app.features.ldap.routers.ldap_router import router as ldap_router
 from app.features.ldap.services.ldap_service import LdapService
+from app.features.trials.router import router as submission_router
 
 # Disable FastAPI CLI pretty logs & duplicate uvicorn logs
 logging.getLogger("uvicorn.error").propagate = False
@@ -34,10 +35,10 @@ logging.basicConfig(
     datefmt="%Y-%m-%d %H:%M:%S",
 )
 logger = logging.getLogger(__name__)
-scheduler = AsyncIOScheduler()
 
 
-async def scheduled_ldap_sync():
+
+async def scheduled_ldap_sync() -> None:
     """Job that runs every day at 7pm."""
     async with get_session_ctx() as session:
         ldap_service = LdapService(session=session)
@@ -46,14 +47,22 @@ async def scheduled_ldap_sync():
 
 # noinspection PyUnusedLocal,PyShadowingNames
 @asynccontextmanager
-async def lifespan(app: FastAPI):
-    scheduler.add_job(scheduled_ldap_sync, "cron", hour=19, minute=0)
-    scheduler.start()
-    logger.info("Application startup complete.")
+async def lifespan(app: FastAPI):  # noqa: ANN201
+    logger.info("internal-api starting...")
+    if os.getenv("DEV") != "true":
+        scheduler = AsyncIOScheduler()
+        logger.info("Production environment detected. Adding MSSQL -> LDAP scheduler")
+        scheduler.add_job(scheduled_ldap_sync, "cron", hour=19, minute=0)
+        scheduler.start()
+    else:
+        logger.info("Development environment detected. Scheduler disabled")
+    logger.info("internal-api startup complete.")
     yield
     if async_engine:
+        logger.debug("async_engine is valid, awaiting disposal")
         await async_engine.dispose()
-    logger.info("Application shutdown complete.")
+        logger.debug("async engine disposed")
+    logger.info("internal-api shutdown complete.")
 
 
 backend_pyproject_path = Path(__file__).resolve().parent.parent / "pyproject.toml"
@@ -148,3 +157,4 @@ async def swagger_ui_redirect() -> HTMLResponse:
 
 app.include_router(ldap_router)
 app.include_router(card_router)
+app.include_router(submission_router)
