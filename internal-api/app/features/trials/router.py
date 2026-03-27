@@ -16,6 +16,18 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/trials", tags=["TrialRecords"])
 
+class LogRecordCreate(BaseModel):
+    employee_name: str    # 對應: 員工姓名
+    category: str         # 對應: 類別
+    log_content: str      # 對應: 記錄檔 (ntext)
+    computer_name: str    # 對應: 電腦名稱
+    employee_id: str       # 對應: 學號
+
+class LogRecordResponse(LogRecordCreate):
+    id: int
+    date: datetime
+    time: datetime
+
 
 class SchoolRecord(BaseModel):
     id: int
@@ -66,6 +78,41 @@ class TrialRecordResponse(TrialRecordBase):
     id: int
     created_at: datetime
     updated_at: datetime
+
+
+@router.post("/log", response_model=LogRecordResponse)
+async def create_log(
+        log_entry: LogRecordCreate,
+        db: Annotated[AsyncSession, Depends(get_session)],
+) -> dict:
+    query = text("""
+        INSERT INTO .dbo.修改記錄
+        ([員工姓名], [類別], [記錄檔], [日期], [時間], [電腦名稱], [學號])
+        OUTPUT Inserted.[自動編號] AS id, Inserted.[日期] AS date, Inserted.[時間] AS time
+        VALUES
+        (:employee_name, :category, :log_content, GETDATE(), GETDATE(), :computer_name, :employee_id)
+    """)
+
+    try:
+        # model_dump() matches the keys to the bound parameters in the SQL query
+        result = await db.execute(query, log_entry.model_dump())
+        inserted_row = result.mappings().first()
+        await db.commit()
+
+        # Combine the input data with the database-generated values (id, date, time)
+        return {**log_entry.model_dump(), **inserted_row}
+
+    except IntegrityError as e:
+        await db.rollback()
+        error_message = f"資料庫完整性錯誤：{e.orig}"
+        logger.exception(error_message)
+        raise HTTPException(status_code=400, detail=error_message) from None
+
+    except Exception as e:
+        await db.rollback()
+        error_message = f"建立日誌時發生非預期的錯誤。{e}"
+        logger.exception(error_message)
+        raise HTTPException(status_code=500, detail=error_message) from e
 
 
 @router.get("/schools")
