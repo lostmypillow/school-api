@@ -32,7 +32,7 @@ jobs:
       - name: Install Dependencies with uv
         run: |
           curl -LsSf https://astral.sh/uv/install.sh | sh
-          export PATH="$HOME/.cargo/bin:$PATH"
+          export PATH="/var/lib/act_runner/.local/bin:$PATH"
           uv sync
 
       - name: Deploy Systemd Service
