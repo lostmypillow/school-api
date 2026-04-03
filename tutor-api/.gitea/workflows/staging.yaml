@@ -1,0 +1,89 @@
+name: Staging Server Deployment
+
+on:
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  check-code:
+    runs-on: staging-server
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run Ruff Linter
+        uses: astral-sh/ruff-action@v3
+        with:
+            args: "check --output-format=github ."
+
+  deploy:
+    runs-on: staging-server
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Configuration
+        run: |
+          if [ ! -f "src/config.py" ]; then
+            cp src/config.py.example src/config.py
+            echo "Created config.py from example"
+          fi
+
+      - name: Install Dependencies with uv
+        run: |
+          curl -LsSf https://astral.sh/uv/install.sh | sh
+          export PATH="$HOME/.cargo/bin:$PATH"
+          uv sync
+
+      - name: Deploy Systemd Service
+        env:
+          DB_HOST: ${{ secrets.TEST_DB_HOST }}
+          DB_USERNAME: ${{ secrets.TEST_DB_USERNAME }}
+          DB_PASSWORD: ${{ secrets.TEST_DB_PASSWORD }}
+          DB_NAME: ${{ secrets.TEST_DB_NAME }}
+          run: |
+        run: |
+          VERSION=$(python3 get_version.py)
+          SERVICE_NAME="kwtutor"
+          PORT="8001"
+          SERVICE_FILE="/etc/systemd/system/$SERVICE_NAME.service"
+          
+          echo "[*]  v$VERSION starting deployment..."
+          chmod o+x "$(pwd)"
+          
+          sudo bash -c "cat > $SERVICE_FILE" <<EOL
+          [Unit]
+          Description=$SERVICE_NAME
+          After=network.target
+          
+          [Service]
+          User=$USER
+          WorkingDirectory=$(pwd)
+          ExecStart=$(pwd)/.venv/bin/fastapi run src/main.py --port $PORT 
+          Restart=always
+          Environment=PYTHONUNBUFFERED=1
+          Environment=TZ=Asia/Taipei
+          Environment="DB_HOST=$DB_HOST"
+          Environment="DB_USERNAME=$DB_USERNAME"
+          Environment="DB_PASSWORD=$DB_PASSWORD"
+          Environment="DB_NAME=$DB_NAME"
+          
+          [Install]
+          WantedBy=multi-user.target
+          EOL
+
+      - name: Restart Service
+        run: |
+          SERVICE_NAME="kwtutor"
+          sudo systemctl daemon-reload
+          sudo systemctl enable --now "$SERVICE_NAME"
+          sudo systemctl restart "$SERVICE_NAME"
+          
+          if systemctl is-active --quiet "$SERVICE_NAME"; then
+              echo "[✓] $SERVICE_NAME is running."
+              echo "Access at http://$(hostname -I | awk '{print $1}'):8001/api/tutor/docs"
+          else
+              echo "[x] $SERVICE_NAME failed to start."
+              sudo systemctl status "$SERVICE_NAME" --no-pager
+              exit 1
+          fi
