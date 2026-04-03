@@ -51,26 +51,24 @@ jobs:
           echo "[*]  v$VERSION starting deployment..."
           chmod o+x "$(pwd)"
           
-          sudo bash -c "cat > $SERVICE_FILE" <<EOL
-          [Unit]
+          printf "[Unit]
           Description=$SERVICE_NAME
           After=network.target
-          
+
           [Service]
-          User=$USER
+          User=act_runner
           WorkingDirectory=$(pwd)
           ExecStart=$(pwd)/.venv/bin/fastapi run src/main.py --port $PORT 
           Restart=always
           Environment=PYTHONUNBUFFERED=1
           Environment=TZ=Asia/Taipei
-          Environment="DB_HOST=$DB_HOST"
-          Environment="DB_USERNAME=$DB_USERNAME"
-          Environment="DB_PASSWORD=$DB_PASSWORD"
-          Environment="DB_NAME=$DB_NAME"
-          
+          Environment=\"DB_HOST=$DB_HOST\"
+          Environment=\"DB_USERNAME=$DB_USERNAME\"
+          Environment=\"DB_PASSWORD=$DB_PASSWORD\"
+          Environment=\"DB_NAME=$DB_NAME\"
+
           [Install]
-          WantedBy=multi-user.target
-          EOL
+          WantedBy=multi-user.target" | sudo /usr/bin/tee /etc/systemd/system/$SERVICE_NAME.service > /dev/null
 
       - name: Restart Service
         run: |
