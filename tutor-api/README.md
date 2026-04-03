@@ -6,9 +6,8 @@
 
 ## 測試環境 (Testing)
 - 後端 Swagger: 
-- 目前版本: 2025.7.1(=0.4.1, DETACHED refactor branch)
-> DETACHED 指說我不小心在 main branch做太多改變，以致 refactor 雖然就是目標/最理想架構的參考 (請參照 `src/__init__.py`)，但不能 merge into main.
-> 
+- 目前版本: 0.3.1
+ 
 ## 專案資源
 - 前端 Gitea repo: []()
 - 以 [FastAPI](https://fastapi.tiangolo.com/) 製作

@@ -17,7 +17,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_asyn
 
 from src.config import settings
 
-logger = logging.getLogger("rich")
+logger = logging.getLogger(__name__)
 pyodbc.pooling = False
 
 # ---------- Database URL and Engine Setup ----------

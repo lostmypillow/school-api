@@ -7,7 +7,7 @@ from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 from src.database.exec_sql import exec_sql
 from src.models.cardholder import Cardholder
 
-logger = logging.getLogger("rich")
+logger = logging.getLogger(__name__)
 router = APIRouter(
     prefix="/ws",
     tags=["Websocket / Control"],
@@ -30,7 +30,7 @@ async def sync_frontend() -> None:
         # Fetch and serialize announcements
         announce = orjson.dumps(await exec_sql("all", "get_announce")).decode()
 
-    except Exception:
+    except Exception as e:
         logger.exception("Error preparing frontend data")
         return
 

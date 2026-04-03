@@ -32,8 +32,6 @@ from fastapi.openapi.docs import (
     get_swagger_ui_oauth2_redirect_html,
 )
 from fastapi.responses import HTMLResponse
-from rich.logging import RichHandler
-from rich.traceback import install
 
 from src.database.exec_sql import async_engine, exec_sql
 
@@ -57,24 +55,12 @@ async def lifespan(app: FastAPI):  # noqa: ANN201, ARG001
 
     
     """  # noqa: E501
-    install(show_locals=True)
-    rich_handler = RichHandler(rich_tracebacks=True)
-    logging.basicConfig(
-        level=logging.INFO,
-        format="%(message)s",
-        datefmt="[%X]",
-        handlers=[rich_handler],
-    )
-    for name in ("uvicorn", "uvicorn.access", "uvicorn.error"):
-        logger = logging.getLogger(name)
-        logger.handlers = [rich_handler]
-        logger.setLevel(logging.INFO)
     yield
     if async_engine:
         await async_engine.dispose()
 
 
-logger = logging.getLogger("rich")
+logger = logging.getLogger(__name__)
 backend_pyproject_path = pathlib_Path(__file__).resolve().parent.parent / "pyproject.toml"
 with backend_pyproject_path.open("rb") as f:
     backend_data = tomllib.load(f)
