@@ -26,35 +26,33 @@ jobs:
         run: |
           if [ ! -f "src/config.py" ]; then
             cp src/config.py.example src/config.py
-            echo "Created config.py from example"
           fi
 
       - name: Install Dependencies with uv
         run: |
           curl -LsSf https://astral.sh/uv/install.sh | sh
-          export PATH="/var/lib/act_runner/.local/bin:$PATH"
-          uv sync
+          /var/lib/act_runner/.local/bin/uv sync
 
       - name: Deploy Systemd Service
+        # Mapping secrets to local env variables for the shell session
         env:
           DB_HOST: ${{ secrets.TEST_DB_HOST }}
           DB_USERNAME: ${{ secrets.TEST_DB_USERNAME }}
           DB_PASSWORD: ${{ secrets.TEST_DB_PASSWORD }}
           DB_NAME: ${{ secrets.TEST_DB_NAME }}
-          run: |
         run: |
           VERSION=$(python3 get_version.py)
           SERVICE_NAME="kwtutor"
           PORT="8001"
-          SERVICE_FILE="/etc/systemd/system/$SERVICE_NAME.service"
           
           echo "[*]  v$VERSION starting deployment..."
           chmod o+x "$(pwd)"
           
+          # We use the env variables set above to build the file content
           printf "[Unit]
           Description=$SERVICE_NAME
           After=network.target
-
+          
           [Service]
           User=act_runner
           WorkingDirectory=$(pwd)
@@ -66,22 +64,21 @@ jobs:
           Environment=\"DB_USERNAME=$DB_USERNAME\"
           Environment=\"DB_PASSWORD=$DB_PASSWORD\"
           Environment=\"DB_NAME=$DB_NAME\"
-
+          
           [Install]
           WantedBy=multi-user.target" | sudo /usr/bin/tee /etc/systemd/system/$SERVICE_NAME.service > /dev/null
 
       - name: Restart Service
         run: |
           SERVICE_NAME="kwtutor"
-          sudo systemctl daemon-reload
-          sudo systemctl enable --now "$SERVICE_NAME"
-          sudo systemctl restart "$SERVICE_NAME"
+          sudo /usr/bin/systemctl daemon-reload
+          sudo /usr/bin/systemctl enable --now "$SERVICE_NAME"
+          sudo /usr/bin/systemctl restart "$SERVICE_NAME"
           
-          if systemctl is-active --quiet "$SERVICE_NAME"; then
+          if /usr/bin/systemctl is-active --quiet "$SERVICE_NAME"; then
               echo "[✓] $SERVICE_NAME is running."
-              echo "Access at http://$(hostname -I | awk '{print $1}'):8001/api/tutor/docs"
           else
               echo "[x] $SERVICE_NAME failed to start."
-              sudo systemctl status "$SERVICE_NAME" --no-pager
+              sudo /usr/bin/systemctl status "$SERVICE_NAME" --no-pager
               exit 1
           fi
