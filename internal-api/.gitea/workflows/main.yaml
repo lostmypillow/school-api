@@ -18,13 +18,6 @@ jobs:
           # --delete ensures old files are removed
           rsync -avz --delete ./ /var/www/internal/
 
-      - name: Setup Configuration
-        run: |
-          cd /var/www/internal
-          if [ ! -f "src/config.py" ]; then
-            cp src/config.py.example src/config.py
-            echo "[✓] Created config.py from example in permanent directory"
-          fi
 
       - name: Install Dependencies with uv
         run: |
