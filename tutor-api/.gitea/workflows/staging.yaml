@@ -72,7 +72,7 @@ jobs:
         run: |
           SERVICE_NAME="kwtutor"
           sudo /usr/bin/systemctl daemon-reload
-          sudo /usr/bin/systemctl enable --now "$SERVICE_NAME"
+          sudo /usr/bin/systemctl enable "$SERVICE_NAME"
           sudo /usr/bin/systemctl restart "$SERVICE_NAME"
           
           if /usr/bin/systemctl is-active --quiet "$SERVICE_NAME"; then
