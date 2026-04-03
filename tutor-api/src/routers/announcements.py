@@ -9,7 +9,7 @@ from src.database.exec_sql import exec_sql
 from src.models.announcement import AddAnnouncement, Announcement, UpdateAnnouncement
 from src.models.api_response import APIResponse
 
-logger = logging.getLogger("rich")
+logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/announcements", tags=["Announcments"])
 
 def sanitize_html(raw_html: str) -> str:

@@ -1,12 +1,84 @@
-#name: Production Server Deployment
-#
-#on:
-#  push:
-#    branches: [ main ]
-#
-#jobs:
-#  deploy:
-#    if: github.event_name == 'push'
-#    runs-on: prod-server
-#    steps:
-#
+name: Production Server Deployment
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  deploy:
+    if: github.event_name == 'push'
+    runs-on: prod-server
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Sync to Permanent Directory
+        run: |
+          # Use rsync to move files to the stable deployment path
+          # --delete ensures old files are removed
+          rsync -avz --delete ./ /var/www/kwtutor/
+
+      - name: Setup Configuration
+        run: |
+          cd /var/www/kwtutor
+          if [ ! -f "src/config.py" ]; then
+            cp src/config.py.example src/config.py
+            echo "[✓] Created config.py from example in permanent directory"
+          fi
+
+      - name: Install Dependencies with uv
+        run: |
+          cd /var/www/kwtutor
+          curl -LsSf https://astral.sh/uv/install.sh | sh
+          # Add gunicorn and uvicorn explicitly if not in pyproject.toml
+          /var/lib/act_runner/.local/bin/uv add gunicorn uvicorn
+          /var/lib/act_runner/.local/bin/uv sync
+
+      - name: Deploy Systemd Service
+        env:
+          DB_HOST: ${{ secrets.TEST_DB_HOST }}
+          DB_USERNAME: ${{ secrets.TEST_DB_USERNAME }}
+          DB_PASSWORD: ${{ secrets.TEST_DB_PASSWORD }}
+          DB_NAME: ${{ secrets.TEST_DB_NAME }}
+        run: |
+          SERVICE_NAME="kwtutor"
+          PORT="8001"
+          # Gunicorn command: -w 2 (workers), -k (worker class), src.main:app (import path)
+          EXEC_COMMAND="/var/www/kwtutor/.venv/bin/gunicorn -w 2 -k uvicorn.workers.UvicornWorker src.main:app --bind 0.0.0.0:$PORT"
+
+          printf "[Unit]
+          Description=$SERVICE_NAME
+          After=network.target
+
+          [Service]
+          User=act_runner
+          Group=act_runner
+          WorkingDirectory=/var/www/kwtutor
+          ExecStart=$EXEC_COMMAND
+          Restart=always
+          Environment=PYTHONUNBUFFERED=1
+          Environment=TZ=Asia/Taipei
+          Environment=\"DB_HOST=$DB_HOST\"
+          Environment=\"DB_USERNAME=$DB_USERNAME\"
+          Environment=\"DB_PASSWORD=$DB_PASSWORD\"
+          Environment=\"DB_NAME=$DB_NAME\"
+
+          [Install]
+          WantedBy=multi-user.target" | sudo /usr/bin/tee /etc/systemd/system/$SERVICE_NAME.service > /dev/null
+
+      - name: Restart Service
+        run: |
+          SERVICE_NAME="kwtutor"
+          sudo /usr/bin/systemctl daemon-reload
+          sudo /usr/bin/systemctl enable "$SERVICE_NAME"
+          sudo /usr/bin/systemctl restart "$SERVICE_NAME"
+
+          if /usr/bin/systemctl is-active --quiet "$SERVICE_NAME"; then
+              echo "[✓] $SERVICE_NAME is running with Gunicorn."
+          else
+              echo "[x] $SERVICE_NAME failed to start."
+              sudo /usr/bin/systemctl status "$SERVICE_NAME" --no-pager
+              exit 1
+          fi
+
+
