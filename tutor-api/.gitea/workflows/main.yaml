@@ -36,10 +36,10 @@ jobs:
 
       - name: Deploy Systemd Service
         env:
-          DB_HOST: ${{ secrets.TEST_DB_HOST }}
-          DB_USERNAME: ${{ secrets.TEST_DB_USERNAME }}
-          DB_PASSWORD: ${{ secrets.TEST_DB_PASSWORD }}
-          DB_NAME: ${{ secrets.TEST_DB_NAME }}
+          DB_HOST: ${{ secrets.PROD_DB_HOST }}
+          DB_USERNAME: ${{ secrets.PROD_DB_USERNAME }}
+          DB_PASSWORD: ${{ secrets.PROD_DB_PASSWORD }}
+          DB_NAME: ${{ secrets.PROD_DB_NAME }}
         run: |
           SERVICE_NAME="kwtutor"
           PORT="8001"
