@@ -40,8 +40,8 @@ jobs:
         run: |
           SERVICE_NAME="internal"
           PORT="8009"
-          # Gunicorn command: -w 2 (workers), -k (worker class), src.main:app (import path)
-          EXEC_COMMAND="/var/www/internal/.venv/bin/gunicorn -w 2 -k uvicorn.workers.UvicornWorker src.main:app --bind 0.0.0.0:$PORT"
+          # Gunicorn command: -w 2 (workers), -k (worker class), app.main:app (import path)
+          EXEC_COMMAND="/var/www/internal/.venv/bin/gunicorn -w 2 -k uvicorn.workers.UvicornWorker app.main:app --bind 0.0.0.0:$PORT"
 
           printf "[Unit]
           Description=$SERVICE_NAME
