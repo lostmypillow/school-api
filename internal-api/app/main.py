@@ -6,7 +6,7 @@ import tomllib
 from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import Coroutine, cast
-
+import fcntl
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -48,15 +48,25 @@ async def scheduled_ldap_sync() -> None:
 # noinspection PyUnusedLocal,PyShadowingNames
 @asynccontextmanager
 async def lifespan(app: FastAPI):  # noqa: ANN201
-    logger.info("internal-api starting...")
+    # Only attempt lock if not in DEV mode
     if os.getenv("DEV") != "true":
-        scheduler = AsyncIOScheduler()
-        logger.info("Production environment detected. Adding MSSQL -> LDAP scheduler")
-        scheduler.add_job(scheduled_ldap_sync, "cron", hour=19, minute=0)
-        scheduler.start()
+        # Keep the file handle alive to maintain the lock
+        app.state.lock_file = open("scheduler.lock", "wb")
+        try:
+            # LOCK_EX: Exclusive lock, LOCK_NB: Non-blocking
+            fcntl.flock(app.state.lock_file, fcntl.LOCK_EX | fcntl.LOCK_NB)
+
+            # This block only runs in the worker that gets the lock
+            app.state.scheduler = AsyncIOScheduler()
+            app.state.scheduler.add_job(scheduled_ldap_sync, "cron", hour=19, minute=0)
+            app.state.scheduler.start()
+            logger.info("Scheduler started successfully in this worker.")
+
+        except BlockingIOError:
+            logger.info("Another worker is already running the scheduler.")
+            app.state.scheduler = None
     else:
-        logger.info("Development environment detected. Scheduler disabled")
-    logger.info("internal-api startup complete.")
+        logger.info("Development mode: scheduler skipped.")
     yield
     if async_engine:
         logger.debug("async_engine is valid, awaiting disposal")
