@@ -18,45 +18,46 @@ jobs:
 
   deploy:
     runs-on: staging-server
+    needs: check-code
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup Configuration
+      - name: Sync to Permanent Directory
         run: |
-          if [ ! -f "src/config.py" ]; then
-            cp src/config.py.example src/config.py
-          fi
+          # Use rsync to move files to the stable deployment path
+          # --delete ensures old files are removed
+          rsync -avz --delete ./ /var/www/kwtutor/
 
       - name: Install Dependencies with uv
         run: |
+          cd /var/www/kwtutor
           curl -LsSf https://astral.sh/uv/install.sh | sh
+          # Add gunicorn and uvicorn explicitly if not in pyproject.toml
+          /var/lib/act_runner/.local/bin/uv add gunicorn uvicorn
           /var/lib/act_runner/.local/bin/uv sync
 
       - name: Deploy Systemd Service
-        # Mapping secrets to local env variables for the shell session
         env:
           DB_HOST: ${{ secrets.TEST_DB_HOST }}
           DB_USERNAME: ${{ secrets.TEST_DB_USERNAME }}
           DB_PASSWORD: ${{ secrets.TEST_DB_PASSWORD }}
           DB_NAME: ${{ secrets.TEST_DB_NAME }}
         run: |
-          VERSION=$(python3 get_version.py)
           SERVICE_NAME="kwtutor"
           PORT="8001"
+          # Gunicorn command: -w 2 (workers), -k (worker class), src.main:app (import path)
+          EXEC_COMMAND="/var/www/kwtutor/.venv/bin/gunicorn -w 2 -k uvicorn.workers.UvicornWorker src.main:app --bind 0.0.0.0:$PORT"
           
-          echo "[*]  v$VERSION starting deployment..."
-          chmod o+x "$(pwd)"
-          
-          # We use the env variables set above to build the file content
           printf "[Unit]
           Description=$SERVICE_NAME
           After=network.target
           
           [Service]
           User=act_runner
-          WorkingDirectory=$(pwd)
-          ExecStart=$(pwd)/.venv/bin/fastapi run src/main.py --port $PORT 
+          Group=act_runner
+          WorkingDirectory=/var/www/kwtutor
+          ExecStart=$EXEC_COMMAND
           Restart=always
           Environment=PYTHONUNBUFFERED=1
           Environment=TZ=Asia/Taipei
@@ -76,7 +77,7 @@ jobs:
           sudo /usr/bin/systemctl restart "$SERVICE_NAME"
           
           if /usr/bin/systemctl is-active --quiet "$SERVICE_NAME"; then
-              echo "[✓] $SERVICE_NAME is running."
+              echo "[✓] $SERVICE_NAME is running with Gunicorn."
           else
               echo "[x] $SERVICE_NAME failed to start."
               sudo /usr/bin/systemctl status "$SERVICE_NAME" --no-pager
