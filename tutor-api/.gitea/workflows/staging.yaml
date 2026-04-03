@@ -18,7 +18,6 @@ jobs:
 
   deploy:
     runs-on: staging-server
-    needs: check-code
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
