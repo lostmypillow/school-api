@@ -22,7 +22,7 @@ from app.features.card.router import router as card_router
 from app.features.ldap.routers.ldap_router import router as ldap_router
 from app.features.ldap.services.ldap_service import LdapService
 from app.features.trials.router import router as submission_router
-
+from app.features.talk.router import router as talk_router
 # Disable FastAPI CLI pretty logs & duplicate uvicorn logs
 logging.getLogger("uvicorn.error").propagate = False
 logging.getLogger("uvicorn.access").propagate = False
@@ -168,3 +168,4 @@ async def swagger_ui_redirect() -> HTMLResponse:
 app.include_router(ldap_router)
 app.include_router(card_router)
 app.include_router(submission_router)
+app.include_router(talk_router)
