@@ -1,12 +1,11 @@
+import asyncio
 import logging
-import random
 from pathlib import Path
 
-import requests
+import requests_async as requests
 
 from app.features.ldap.models.ipa_formatted_user import IpaFormattedUser
 from app.features.ldap.settings import settings
-from time import sleep
 
 logger = logging.getLogger(__name__)
 STATUS_OK = 200
@@ -27,93 +26,67 @@ class LdapRepository:
             "Referer": f"{self.host}/ipa",
             "Content-Type": "application/json",
         }
-        self.session = requests.Session()
         self.dry_run = settings.DRY_RUN
-        logger.debug(f"LdapRepository initialized. DRY_RUN={self.dry_run}, host={self.host}")
 
-    # --- Core FreeIPA communicat n ---
-    def login(self) -> None:
+    async def login(self):
         """Authenticate unless DRY_RUN is enabled."""
         if self.dry_run:
             logger.debug("Skipping login (DRY_RUN mode).")
             return
 
         if not self.admin_pass:
-            logger.error("IPA_ADMIN_PASS environment variable is missing.")
-            raise ValueError("IPA_ADMIN_PASS environment variable is required.")
+            error_message = "IPA_ADMIN_PASS environment variable is missing."
+            logger.error(error_message)
+            raise ValueError(error_message)
 
         logger.debug(f"Attempting FreeIPA login for user '{self.admin_user}'.")
-        r = self.session.post(
-            self.login_url,
-            data={"user": self.admin_user, "password": self.admin_pass},
-            headers=self.login_headers,
-            verify=str(self.ca_path),
-        )
-        if r.status_code != STATUS_OK:
-            logger.error(f"FreeIPA login failed (HTTP {r.status_code}).")
-            raise RuntimeError(f"FreeIPA login failed: HTTP {r.status_code}")
-        logger.debug("FreeIPA login successful.")
-
-    def call(self, method: str, params_list, params_):
-        """Perform a JSON-RPC call to the FreeIPA API (or simulate in DRY_RUN mode)."""
-        sleep(1)
-        payload = {"method": method, "params": [params_list, params_]}
-        logger.debug(f"Preparing FreeIPA call: method={method}, payload={payload}")
-
-        # DRY_RUN handling
-        if self.dry_run:
-            logger.info(f"[DRY_RUN] Would call FreeIPA method: {method} with {payload}")
-            if method == "user_show":
-                result = {
-                    "result": {
-                        "result": {
-                            "uid": params_list[0],
-                            "memberof_group": ["ipausers", "d003"],
-                            "nsaccountlock": random.choice([True, False]),
-                        }
-                    }
-                }
-                logger.debug(f"[DRY_RUN] Returning simulated user_show result: {result}")
-                return result
-            elif method in [
-                "user_add",
-                "user_mod",
-                "user_del",
-                "passwd",
-                "group_add_member",
-                "group_remove_member",
-                "group_add",
-            ]:
-                logger.debug(f"[DRY_RUN] Simulated success for {method}")
-                return {"result": {"result": {"success": True}}}
-            else:
-                logger.debug(f"[DRY_RUN] Default simulated result for {method}")
-                return {"result": {"result": {}}}
-
-        # Real call
         try:
-            r = self.session.post(
-                self.json_url,
-                json=payload,
-                headers=self.call_headers,
+            async with requests.AsyncSession() as session:
+                r = await session.post(
+                self.login_url,
+                data={"user": self.admin_user, "password": self.admin_pass},
+                headers=self.login_headers,
                 verify=str(self.ca_path),
             )
-            if r.status_code != STATUS_OK:
-                logger.error(f"IPA call '{method}' failed (HTTP {r.status_code}).")
-                raise RuntimeError(f"IPA call {method} failed HTTP {r.status_code}")
-            data = r.json()
-            if data.get("error"):
-                err_msg = data["error"].get("message", "Unknown IPA error")
-                logger.error(f"IPA call '{method}' returned error: {err_msg}")
-                return ""
-            logger.debug(f"IPA call '{method}' successful.")
-            return data.get("result")
+                if r.status_code != STATUS_OK:
+                    logger.error(f"FreeIPA login failed (HTTP {r.status_code}).")
+                    raise RuntimeError(f"FreeIPA login failed: HTTP {r.status_code}")
+                logger.debug("FreeIPA login successful.")
+
+        except Exception as e:
+            logger.exception(e)
+
+
+    async def call(self, method: str, params_list, params_):
+        """Perform a JSON-RPC call to the FreeIPA API (or simulate in DRY_RUN mode)."""
+        await asyncio.sleep(1)
+        payload = {"method": method, "params": [params_list, params_]}
+        logger.debug(f"Preparing FreeIPA call: method={method}, payload={payload}")
+        # Real call
+        try:
+            async with requests.AsyncSession() as session:
+                r = await session.post(
+                    self.json_url,
+                    json=payload,
+                    headers=self.call_headers,
+                    verify=str(self.ca_path),
+                )
+                if r.status_code != STATUS_OK:
+                    logger.error(f"IPA call '{method}' failed (HTTP {r.status_code}).")
+                    raise RuntimeError(f"IPA call {method} failed HTTP {r.status_code}")
+                data = r.json()
+                if data.get("error"):
+                    err_msg = data["error"].get("message", "Unknown IPA error")
+                    logger.error(f"IPA call '{method}' returned error: {err_msg}")
+                    return ""
+                logger.debug(f"IPA call '{method}' successful.")
+                return data.get("result")
         except Exception as e:
             logger.exception(f"Exception during IPA call '{method}': {e}")
             raise
 
     # --- Low-level FreeIPA operations ---
-    def check_user_exists(self, uid: str) -> tuple[bool, bool]:
+    async def check_user_exists(self, uid: str) -> tuple[bool, bool]:
         """Return True if the user exists, False otherwise."""
         logger.debug(f"Checking if user '{uid}' exists in FreeIPA.")
         # if self.dry_run:
@@ -134,7 +107,7 @@ class LdapRepository:
 
 
         try:
-            result = self.call("user_show", [uid], {"all": True})
+            result = await self.call("user_show", [uid], {"all": True})
             if isinstance(result, str):
                 return False, False
 
@@ -152,12 +125,12 @@ class LdapRepository:
             logger.exception(f"Error checking existence for user '{uid}': {e}")
             raise
 
-    def create_user(self, user: IpaFormattedUser) -> None:
+    async def create_user(self, user: IpaFormattedUser) -> None:
         """Create a new user (no checks)."""
         logger.info(f"Creating user '{user.uid}'.")
 
         try:
-            self.call(
+            await self.call(
                 "user_add",
                 [user.uid],
                 {
@@ -171,18 +144,18 @@ class LdapRepository:
                     "random": False,
                 },
             )
-            self.call("passwd", [user.uid], {"password": user.pwd})
+            await self.call("passwd", [user.uid], {"password": user.pwd})
             logger.debug(f"User '{user.uid}' creation completed successfully.")
         except Exception as e:
             logger.exception(f"Failed to create user '{user.uid}': {e}")
             raise
 
-    def update_user(self, user: IpaFormattedUser) -> None:
+    async def update_user(self, user: IpaFormattedUser) -> None:
         """Modify existing user attributes."""
         logger.info(f"Updating user '{user.uid}'.")
 
         try:
-            self.call(
+            await self.call(
                 "user_mod",
                 [user.uid],
                 {
@@ -197,29 +170,29 @@ class LdapRepository:
                     ]
                 },
             )
-            self.call("passwd", [user.uid], {"password": user.pwd})
+            await self.call("passwd", [user.uid], {"password": user.pwd})
             logger.debug(f"User '{user.uid}' updated successfully.")
         except Exception as e:
             logger.exception(f"Failed to update user '{user.uid}': {e}")
             raise
 
-    def delete_user(self, uid: str) -> None:
+    async def delete_user(self, uid: str) -> None:
         """Delete a user."""
         logger.info(f"Deleting user '{uid}'.")
 
         try:
-            self.call("user_del", [uid], {"continue": True, "preserve": False})
+            await self.call("user_del", [uid], {"continue": True, "preserve": False})
             logger.debug(f"User '{uid}' deleted successfully.")
         except Exception as e:
             logger.exception(f"Failed to delete user '{uid}': {e}")
             raise
 
-    def get_user_groups(self, uid: str) -> set[str]:
+    async def get_user_groups(self, uid: str) -> set[str]:
         """Return a set of group names the user belongs to."""
         logger.debug(f"Fetching groups for user '{uid}'.")
 
         try:
-            result = self.call("user_show", [uid], {"all": True})
+            result = await self.call("user_show", [uid], {"all": True})
             groups = result["result"].get("memberof_group", [])
             logger.debug(f"User '{uid}' belongs to groups: {groups}")
             return set(groups)
@@ -227,56 +200,56 @@ class LdapRepository:
             logger.exception(f"Failed to get groups for user '{uid}': {e}")
             raise
 
-    def add_user_to_group(self, uid: str, group: str) -> None:
+    async def add_user_to_group(self, uid: str, group: str) -> None:
         """Add user to a group."""
         logger.info(f"Adding user '{uid}' to group '{group}'.")
 
         try:
-            self.call("group_add_member", [group], {"user": [uid]})
+            await self.call("group_add_member", [group], {"user": [uid]})
             logger.debug(f"User '{uid}' added to group '{group}'.")
         except Exception as e:
             logger.exception(f"Failed to add user '{uid}' to group '{group}': {e}")
             raise
 
-    def remove_user_from_group(self, uid: str, group: str) -> None:
+    async def remove_user_from_group(self, uid: str, group: str) -> None:
         """Remove user from a group."""
         logger.info(f"Removing user '{uid}' from group '{group}'.")
 
         try:
-            self.call("group_remove_member", [group], {"user": [uid]})
+            await self.call("group_remove_member", [group], {"user": [uid]})
             logger.debug(f"User '{uid}' removed from group '{group}'.")
         except Exception as e:
             logger.exception(f"Failed to remove user '{uid}' from group '{group}': {e}")
             raise
 
-    def add_group(self, group_name: str, description: str) -> None:
+    async def add_group(self, group_name: str, description: str) -> None:
         """Create a group."""
         logger.info(f"Creating group '{group_name}'.")
 
         try:
-            self.call("group_add", [group_name], {"description": description, "nonposix": True})
+            await self.call("group_add", [group_name], {"description": description, "nonposix": True})
             logger.debug(f"Group '{group_name}' created successfully.")
         except Exception as e:
             logger.exception(f"Failed to create group '{group_name}': {e}")
             raise
 
-    def disable_user(self, uid: str) -> None:
+    async def disable_user(self, uid: str) -> None:
         """Disable a user account (lock it instead of deleting)."""
         logger.info(f"Disabling user '{uid}'.")
 
         try:
-            self.call("user_mod", [uid], {"nsaccountlock": True})
+            await self.call("user_mod", [uid], {"nsaccountlock": True})
             logger.info(f"User '{uid}' has been disabled in FreeIPA.")
         except Exception as e:
             logger.exception(f"Failed to disable user '{uid}': {e}")
             raise
 
-    def enable_user(self, uid: str) -> None:
+    async def enable_user(self, uid: str) -> None:
         """Re-enable a previously disabled user account."""
         logger.info(f"Re-enabling user '{uid}'.")
 
         try:
-            self.call("user_mod", [uid], {"nsaccountlock": False})
+            await self.call("user_mod", [uid], {"nsaccountlock": False})
             logger.info(f"User '{uid}' has been re-enabled in FreeIPA.")
         except Exception as e:
             logger.exception(f"Failed to enable user '{uid}': {e}")

@@ -16,11 +16,12 @@ logger = logging.getLogger(__name__)
 class LdapService:
     """High-level logic for user and group operations in FreeIPA."""
 
-    def __init__(self, session: AsyncSession) -> None:
+    def __init__(self, ldap_repo: LdapRepository, session: AsyncSession) -> None:
         self.session = session
-        self.ldap_repo = LdapRepository()
-        self.ldap_repo.login()
+        self.ldap_repo = ldap_repo
         self.source_service = SourceService(session=session)
+
+
 
     # -------------------------
     # High-level business actions
@@ -49,7 +50,7 @@ class LdapService:
         for user_to_add in users.users_to_add:
             logger.info(f"Processing addition/update for user '{user_to_add.uid}'.")
             try:
-                self.add_or_update_user(user_to_add)
+                await self.add_or_update_user(user_to_add)
                 added_or_updated.append(user_to_add.uid)
                 actual_added_or_updated += 1
             except Exception as e:
@@ -59,8 +60,8 @@ class LdapService:
             try:
                 exists, locked = self.ldap_repo.check_user_exists(user_to_disable.uid)
                 if exists:
-                    logger.info(f"Disabling user '{user_to_disable.uid}'.")
-                    self.ldap_repo.disable_user(user_to_disable.uid)
+                    logger.info("Disabling user %s", user_to_disable.uid)
+                    await self.ldap_repo.disable_user(user_to_disable.uid)
                     actual_disabled += 1
                 else:
                     logger.info(
@@ -78,7 +79,7 @@ class LdapService:
 
         return added_or_updated
 
-    def add_or_update_user(self, user: IpaFormattedUser) -> None:
+    async def add_or_update_user(self, user: IpaFormattedUser):
         """
         Add a new user or overwrite existing user attributes in FreeIPA.
         Also synchronizes groups, preserving protected groups.
@@ -90,18 +91,18 @@ class LdapService:
             if exists:
                 if locked:
                     logger.info(f"User '{user.uid}' exists but is locked — re-enabling.")
-                    self.ldap_repo.enable_user(user.uid)
+                    await self.ldap_repo.enable_user(user.uid)
                 logger.info(f"Updating existing user '{user.uid}'.")
-                self.ldap_repo.update_user(user)
+                await self.ldap_repo.update_user(user)
             else:
                 logger.info(f"Creating new user '{user.uid}'.")
-                self.ldap_repo.create_user(user)
+                await self.ldap_repo.create_user(user)
 
-            self._set_password_expiration(user.uid)
+            await self._set_password_expiration(user.uid)
 
             if user.other_grp:
                 protected_groups = ["full_time", "ipausers", "openproject"]
-                self._sync_groups_with_protection(
+                await self._sync_groups_with_protection(
                     user.uid,
                     [str(g) for g in user.other_grp],
                     protected_groups,
@@ -109,28 +110,28 @@ class LdapService:
 
             if user.main_grp:
                 logger.debug(f"Re-adding main group '{user.main_grp}' for user '{user.uid}'.")
-                self.ldap_repo.add_user_to_group(user.uid, str(user.main_grp))
+                await self.ldap_repo.add_user_to_group(user.uid, str(user.main_grp))
 
             logger.info(f"Completed sync for user '{user.uid}'.")
         except Exception as e:
             logger.exception(f"Error while adding/updating user '{user.uid}': {e}")
 
-    def delete_user(self, uid: str) -> None:
+    async def delete_user(self, uid: str) -> None:
         """Delete one user from FreeIPA."""
         logger.info(f"Deleting user '{uid}'.")
         try:
-            self.ldap_repo.delete_user(uid=uid)
+            await self.ldap_repo.delete_user(uid=uid)
             logger.info(f"Successfully deleted user '{uid}'.")
         except Exception as e:
             logger.exception(f"Failed to delete user '{uid}': {e}")
 
-    def add_all_groups(self) -> List[str]:
+    async def add_all_groups(self) -> List[str]:
         """Add all departments/groups defined in settings to FreeIPA."""
         logger.info("Adding all configured groups to FreeIPA.")
         created_groups = []
         for dep in DEPS:
             try:
-                self.ldap_repo.add_group(dep["group"], dep["description"])
+                await self.ldap_repo.add_group(dep["group"], dep["description"])
                 created_groups.append(dep["group"])
                 logger.debug(f"Added group '{dep['group']}'.")
             except Exception as e:
@@ -138,11 +139,11 @@ class LdapService:
         logger.info(f"Created groups: {created_groups}")
         return created_groups
 
-    def check_user_exists(self, uid: str) -> tuple[bool, bool]:
+    async def check_user_exists(self, uid: str) -> tuple[bool, bool]:
         """Check if user exists in FreeIPA."""
         logger.debug(f"Checking if user '{uid}' exists.")
         try:
-            return self.ldap_repo.check_user_exists(uid)
+            return await self.ldap_repo.check_user_exists(uid)
         except Exception as e:
             logger.exception(f"Error checking existence of user '{uid}': {e}")
             return False, False
@@ -151,7 +152,7 @@ class LdapService:
     # Internal helpers
     # -------------------------
 
-    def _sync_groups_with_protection(
+    async def _sync_groups_with_protection(
         self,
         uid: str,
         target_groups: List[str],
@@ -160,7 +161,7 @@ class LdapService:
         """Add/remove user from groups except protected ones."""
         logger.debug(f"Syncing group memberships for user '{uid}'.")
         try:
-            current_groups = self.ldap_repo.get_user_groups(uid)
+            current_groups = set(await self.ldap_repo.get_user_groups(uid))
             target_groups = set(target_groups)
             protected_groups = set(protected_groups)
 
@@ -169,14 +170,14 @@ class LdapService:
 
             for g in to_add:
                 try:
-                    self.ldap_repo.add_user_to_group(uid, g)
+                    await self.ldap_repo.add_user_to_group(uid, g)
                     logger.info(f"Added '{uid}' to group '{g}'.")
                 except Exception as e:
                     logger.warning(f"Failed to add '{uid}' to group '{g}': {e}")
 
             for g in to_remove:
                 try:
-                    self.ldap_repo.remove_user_from_group(uid, g)
+                    await self.ldap_repo.remove_user_from_group(uid, g)
                     logger.info(f"Removed '{uid}' from group '{g}'.")
                 except Exception as e:
                     logger.warning(f"Failed to remove '{uid}' from group '{g}': {e}")
@@ -184,11 +185,11 @@ class LdapService:
         except Exception as e:
             logger.exception(f"Group sync failed for user '{uid}': {e}")
 
-    def _set_password_expiration(self, uid: str) -> None:
+    async def _set_password_expiration(self, uid: str) -> None:
         """Standardize password expiration date."""
         logger.debug(f"Setting password expiration for user '{uid}'.")
         try:
-            self.ldap_repo.call(
+            await self.ldap_repo.call(
                 "user_mod",
                 [uid],
                 {"setattr": ["krbPasswordExpiration=20380101000000Z"]},
