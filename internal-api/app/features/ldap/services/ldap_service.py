@@ -16,13 +16,13 @@ logger = logging.getLogger(__name__)
 class LdapService:
     """High-level logic for user and group operations in FreeIPA."""
 
-    def __init__(self, ldap_repo: LdapRepository, session: AsyncSession) -> None:
+    def __init__(self, session: AsyncSession) -> None:
         self.session = session
-        self.ldap_repo = ldap_repo
+        self.ldap_repo = LdapRepository()
         self.source_service = SourceService(session=session)
 
-
-
+    async def login_repo(self) -> None:
+        await self.ldap_repo.login()
     # -------------------------
     # High-level business actions
     # -------------------------
@@ -30,6 +30,7 @@ class LdapService:
     async def sync_all_users(self) -> List[str]:
         """
         Sync all users from MSSQL → FreeIPA.
+
         Creates or updates as needed, then syncs group memberships.
         """
         logger.info("Starting full user synchronization process.")
