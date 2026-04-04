@@ -47,7 +47,8 @@ async def scheduled_ldap_sync() -> None:
     async with get_session_ctx() as session:
         ldap_repo = LdapRepository()
         await ldap_repo.login()
-        ldap_service = LdapService(ldap_repo=ldap_repo, session=session)
+        ldap_service = LdapService(session=session)
+        await ldap_service.login_repo()
         await ldap_service.sync_all_users()
 
 
