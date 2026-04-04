@@ -58,7 +58,7 @@ class LdapService:
 
         for user_to_disable in users.users_to_disable:
             try:
-                exists, locked = self.ldap_repo.check_user_exists(user_to_disable.uid)
+                exists, locked = await self.ldap_repo.check_user_exists(user_to_disable.uid)
                 if exists:
                     logger.info("Disabling user %s", user_to_disable.uid)
                     await self.ldap_repo.disable_user(user_to_disable.uid)
@@ -86,7 +86,7 @@ class LdapService:
         """
         logger.debug(f"Starting add/update for user '{user.uid}'.")
         try:
-            exists, locked = self.ldap_repo.check_user_exists(user.uid)
+            exists, locked = await self.ldap_repo.check_user_exists(user.uid)
 
             if exists:
                 if locked:
