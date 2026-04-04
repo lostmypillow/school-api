@@ -19,9 +19,9 @@ async def sync_mssql_to_ldap( background_tasks: BackgroundTasks, session: AsyncS
             return await source_service.return_modified_users()
         else:
             ldap_repo = LdapRepository()
-            await ldap_repo.login()
+            # await ldap_repo.login()
             ldap_service = LdapService(session=session)
-            await ldap_service.login_repo()
+            # await ldap_service.login_repo()
             background_tasks.add_task(ldap_service.sync_all_users)
             return "Sync queued"
     except Exception as e:

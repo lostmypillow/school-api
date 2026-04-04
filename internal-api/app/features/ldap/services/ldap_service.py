@@ -22,7 +22,8 @@ class LdapService:
         self.source_service = SourceService(session=session)
 
     async def login_repo(self) -> None:
-        await self.ldap_repo.login()
+        pass
+        # await self.ldap_repo.login()
     # -------------------------
     # High-level business actions
     # -------------------------
@@ -36,7 +37,6 @@ class LdapService:
         logger.info("Starting full user synchronization process.")
 
         users = await self.source_service.return_modified_users()
-        logger.info(users)
         logger.debug(
             f"Fetched modified users from source: "
             f"{len(users.users_to_add)} to add/update, "

@@ -1,8 +1,11 @@
 # main.py
 
-import fcntl
+import platform
+if platform.system() == "Linux":
+    import fcntl
 import logging
 import os
+
 import tomllib
 from contextlib import asynccontextmanager
 from pathlib import Path
@@ -46,7 +49,7 @@ async def scheduled_ldap_sync() -> None:
     """Job that runs every day at 7pm."""
     async with get_session_ctx() as session:
         ldap_repo = LdapRepository()
-        await ldap_repo.login()
+        # await ldap_repo.login()
         ldap_service = LdapService(session=session)
         await ldap_service.login_repo()
         await ldap_service.sync_all_users()
@@ -56,7 +59,7 @@ async def scheduled_ldap_sync() -> None:
 @asynccontextmanager
 async def lifespan(app: FastAPI):  # noqa: ANN201
     # Only attempt lock if not in DEV mode
-    if os.getenv("DEV") != "true":
+    if os.getenv("DEV") != "true" and platform.system() == "Linux":
         # Keep the file handle alive to maintain the lock
         app.state.lock_file = await aiofiles.open("scheduler.lock", "wb")
         try:
