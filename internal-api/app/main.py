@@ -1,12 +1,14 @@
 # main.py
 
+import fcntl
 import logging
 import os
 import tomllib
 from contextlib import asynccontextmanager
 from pathlib import Path
-from typing import Coroutine, cast
-import fcntl
+from typing import cast
+
+import aiofiles
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -19,10 +21,12 @@ from fastapi.responses import HTMLResponse
 from app.database.dependecies import get_session_ctx
 from app.database.engine import async_engine
 from app.features.card.router import router as card_router
+from app.features.ldap.repositories.ldap_repo import LdapRepository
 from app.features.ldap.routers.ldap_router import router as ldap_router
 from app.features.ldap.services.ldap_service import LdapService
-from app.features.trials.router import router as submission_router
 from app.features.talk.router import router as talk_router
+from app.features.trials.router import router as submission_router
+
 # Disable FastAPI CLI pretty logs & duplicate uvicorn logs
 logging.getLogger("uvicorn.error").propagate = False
 logging.getLogger("uvicorn.access").propagate = False
@@ -41,7 +45,9 @@ logger = logging.getLogger(__name__)
 async def scheduled_ldap_sync() -> None:
     """Job that runs every day at 7pm."""
     async with get_session_ctx() as session:
-        ldap_service = LdapService(session=session)
+        ldap_repo = LdapRepository()
+        await ldap_repo.login()
+        ldap_service = LdapService(ldap_repo=ldap_repo, session=session)
         await ldap_service.sync_all_users()
 
 
@@ -51,7 +57,7 @@ async def lifespan(app: FastAPI):  # noqa: ANN201
     # Only attempt lock if not in DEV mode
     if os.getenv("DEV") != "true":
         # Keep the file handle alive to maintain the lock
-        app.state.lock_file = open("scheduler.lock", "wb")
+        app.state.lock_file = await aiofiles.open("scheduler.lock", "wb")
         try:
             # LOCK_EX: Exclusive lock, LOCK_NB: Non-blocking
             fcntl.flock(app.state.lock_file, fcntl.LOCK_EX | fcntl.LOCK_NB)

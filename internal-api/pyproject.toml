@@ -5,6 +5,7 @@ description = " Internal API with integrated features in one monolith instead of
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
+    "aiofiles>=25.1.0",
     "aioodbc>=0.5.0",
     "apscheduler>=3.11.1",
     "argparse>=1.4.0",
@@ -24,6 +25,7 @@ dependencies = [
     "pytest-cov>=6.2.1",
     "python-dotenv>=1.1.1",
     "requests>=2.32.4",
+    "requests-async>=0.2.4",
     "ruff>=0.15.6",
     "sqlalchemy>=2.0.44",
     "unidecode>=1.4.0",

@@ -1,10 +1,10 @@
 # app/features/ldap/routers/ldap_router.py
-from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
-from app.database.dependecies import get_session
-from app.features.ldap.services.ldap_service import LdapService
-from typing import Annotated
 
+from app.database.dependecies import get_session
+from app.features.ldap.repositories.ldap_repo import LdapRepository
+from app.features.ldap.services.ldap_service import LdapService
 from app.features.ldap.services.source_service import SourceService
 
 router = APIRouter(prefix="/ldap", tags=["ldap / FreeIPA"])
@@ -18,7 +18,9 @@ async def sync_mssql_to_ldap( background_tasks: BackgroundTasks, session: AsyncS
             source_service = SourceService(session=session)
             return await source_service.return_modified_users()
         else:
-            ldap_service = LdapService(session=session)
+            ldap_repo = LdapRepository()
+            await ldap_repo.login()
+            ldap_service = LdapService(ldap_repo=ldap_repo,session=session)
             background_tasks.add_task(ldap_service.sync_all_users)
             return "Sync queued"
     except Exception as e:
