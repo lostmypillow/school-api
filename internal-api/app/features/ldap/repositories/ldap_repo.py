@@ -41,12 +41,11 @@ class LdapRepository:
 
         logger.debug(f"Attempting FreeIPA login for user '{self.admin_user}'.")
         try:
-            async with requests.AsyncSession() as session:
+            async with requests.AsyncSession(verify=str(self.ca_path)) as session:
                 r = await session.post(
                 self.login_url,
                 data={"user": self.admin_user, "password": self.admin_pass},
                 headers=self.login_headers,
-                verify=str(self.ca_path),
             )
                 if r.status_code != STATUS_OK:
                     logger.error(f"FreeIPA login failed (HTTP {r.status_code}).")
@@ -64,12 +63,11 @@ class LdapRepository:
         logger.debug(f"Preparing FreeIPA call: method={method}, payload={payload}")
         # Real call
         try:
-            async with requests.AsyncSession() as session:
+            async with requests.AsyncSession(verify=str(self.ca_path)) as session:
                 r = await session.post(
                     self.json_url,
                     json=payload,
                     headers=self.call_headers,
-                    verify=str(self.ca_path),
                 )
                 if r.status_code != STATUS_OK:
                     logger.error(f"IPA call '{method}' failed (HTTP {r.status_code}).")
