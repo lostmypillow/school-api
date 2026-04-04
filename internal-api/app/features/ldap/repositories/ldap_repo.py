@@ -3,6 +3,7 @@ import logging
 from pathlib import Path
 
 import requests_async as requests
+from requests_async import AsyncSession
 
 from app.features.ldap.models.ipa_formatted_user import IpaFormattedUser
 from app.features.ldap.settings import settings
@@ -28,7 +29,9 @@ class LdapRepository:
         }
         self.dry_run = settings.DRY_RUN
 
-    async def login(self):
+
+
+    async def login(self, session: AsyncSession):
         """Authenticate unless DRY_RUN is enabled."""
         if self.dry_run:
             logger.debug("Skipping login (DRY_RUN mode).")
@@ -41,16 +44,15 @@ class LdapRepository:
 
         logger.debug(f"Attempting FreeIPA login for user '{self.admin_user}'.")
         try:
-            async with requests.AsyncSession(verify=str(self.ca_path)) as session:
-                r = await session.post(
+            r = await session.post(
                 self.login_url,
                 data={"user": self.admin_user, "password": self.admin_pass},
                 headers=self.login_headers,
             )
-                if r.status_code != STATUS_OK:
-                    logger.error(f"FreeIPA login failed (HTTP {r.status_code}).")
-                    raise RuntimeError(f"FreeIPA login failed: HTTP {r.status_code}")
-                logger.debug("FreeIPA login successful.")
+            if r.status_code != STATUS_OK:
+                logger.error(f"FreeIPA login failed (HTTP {r.status_code}).")
+                raise RuntimeError(f"FreeIPA login failed: HTTP {r.status_code}")
+            logger.debug("FreeIPA login successful.")
 
         except Exception as e:
             logger.exception(e)
@@ -64,6 +66,7 @@ class LdapRepository:
         # Real call
         try:
             async with requests.AsyncSession(verify=str(self.ca_path)) as session:
+                await self.login(session=session)
                 r = await session.post(
                     self.json_url,
                     json=payload,
