@@ -185,14 +185,29 @@ async def create_trial(
 async def read_trials(
     db: Annotated[AsyncSession, Depends(get_session)], skip: int = 0, limit: int = 50
 ) -> Sequence[RowMapping]:
+    #    SELECT id, source, student_id, student_name, middle_school_name, middle_school_class,
+    #                high_school_name, high_school_class, registered_class, trial_date,
+    #                telephone, mobile, notes, parent_name, manager, status, current_grade, created_at, updated_at
+    #         FROM trial_records
+    #         ORDER BY id
+    #         OFFSET :skip ROWS
+    #         FETCH NEXT :limit ROWS ONLY
     query = text("""
-        SELECT id, source, student_id, student_name, middle_school_name, middle_school_class,
-               high_school_name, high_school_class, registered_class, trial_date,
-               telephone, mobile, notes, parent_name, manager, status, current_grade, created_at, updated_at
-        FROM trial_records
-        ORDER BY id
-        OFFSET :skip ROWS
-        FETCH NEXT :limit ROWS ONLY
+        WITH PagedResults AS (
+    SELECT id, source, student_id, student_name, middle_school_name, middle_school_class,
+           high_school_name, high_school_class, registered_class, trial_date,
+           telephone, mobile, notes, parent_name, manager, status, current_grade, 
+           created_at, updated_at,
+           ROW_NUMBER() OVER (ORDER BY id) AS row_num
+    FROM trial_records
+)
+SELECT id, source, student_id, student_name, middle_school_name, middle_school_class,
+       high_school_name, high_school_class, registered_class, trial_date,
+       telephone, mobile, notes, parent_name, manager, status, current_grade, 
+       created_at, updated_at
+FROM PagedResults
+WHERE row_num > :skip AND row_num <= (:skip + :limit)
+ORDER BY row_num;
     """)
 
     result = await db.execute(query, {"skip": skip, "limit": limit})
