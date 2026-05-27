@@ -181,10 +181,10 @@ async def create_trial(
         raise HTTPException(status_code=500, detail=error_message) from e
 
 
-@router.get("/", response_model=list[TrialRecordResponse])
+@router.get("/")
 async def read_trials(
     db: Annotated[AsyncSession, Depends(get_session)], skip: int = 0, limit: int = 50
-) -> Sequence[RowMapping]:
+):
     #    SELECT id, source, student_id, student_name, middle_school_name, middle_school_class,
     #                high_school_name, high_school_class, registered_class, trial_date,
     #                telephone, mobile, notes, parent_name, manager, status, current_grade, created_at, updated_at
@@ -198,20 +198,27 @@ async def read_trials(
            high_school_name, high_school_class, registered_class, trial_date,
            telephone, mobile, notes, parent_name, manager, status, current_grade, 
            created_at, updated_at,
-           ROW_NUMBER() OVER (ORDER BY id) AS row_num
+           ROW_NUMBER() OVER (ORDER BY created_at DESC) AS row_num,
+           COUNT(*) OVER() AS total_count
     FROM trial_records
 )
 SELECT id, source, student_id, student_name, middle_school_name, middle_school_class,
        high_school_name, high_school_class, registered_class, trial_date,
        telephone, mobile, notes, parent_name, manager, status, current_grade, 
-       created_at, updated_at
+       created_at, updated_at, total_count
 FROM PagedResults
 WHERE row_num > :skip AND row_num <= (:skip + :limit)
 ORDER BY created_at DESC;
     """)
 
     result = await db.execute(query, {"skip": skip, "limit": limit})
-    return result.mappings().all()
+    rows = result.mappings().all()
+    total = rows[0]["total_count"] if rows else 0
+
+    return {
+        "data": rows,
+        "total": total,
+    }
 
 
 @router.get("/{trial_id}", response_model=TrialRecordResponse)
