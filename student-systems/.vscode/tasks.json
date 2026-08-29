@@ -6,7 +6,7 @@
 			"label": "docker-build",
 			"platform": "python",
 			"dockerBuild": {
-				"tag": "jschooldjango:latest",
+				"tag": "searchapi:latest",
 				"dockerfile": "${workspaceFolder}/Dockerfile",
 				"context": "${workspaceFolder}",
 				"pull": true
@@ -20,12 +20,13 @@
 			],
 			"python": {
 				"args": [
-					"runserver",
-					"0.0.0.0:8000",
-					"--nothreading",
-					"--noreload"
+					"app.main:app",
+					"--host",
+					"0.0.0.0",
+					"--port",
+					"8000"
 				],
-				"file": "manage.py"
+				"module": "uvicorn"
 			}
 		}
 	]
