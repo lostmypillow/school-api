@@ -2,7 +2,7 @@ import time
 
 from bs4 import BeautifulSoup
 
-from src.ntut.dependencies import scrape
+from app.ntut.dependencies import scrape
 
 
 async def extract_courses(client, year, sem, code):
@@ -20,6 +20,7 @@ async def extract_courses(client, year, sem, code):
     ):
         cells = BeautifulSoup(str(f), "lxml").find_all("td")
         try:
+            a_tag = cells[18].find("a")
             course_list.append(
                 {
                     "code": cells[0].text.strip() if cells[0].text.strip() else None,
@@ -46,8 +47,8 @@ async def extract_courses(client, year, sem, code):
                     if cells[16].text.strip()
                     else None,
                     "lang": cells[17].text.strip() if cells[17].text.strip() else None,
-                    "link": cells[18].find("a")["href"]
-                    if cells[18].find("a")
+                    "link": str(a_tag["href"])
+                    if a_tag and "href" in a_tag.attrs
                     else None,
                     "notes": cells[19].text.strip() if cells[19].text.strip() else None,
                     "with_class": cells[20].text.strip()

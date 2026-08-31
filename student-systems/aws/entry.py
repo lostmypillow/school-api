@@ -3,7 +3,7 @@ import os  # noqa: EXE001
 
 import aws_cdk as cdk
 
-from deploy.stack import SearchStack
+from aws.stack import SearchStack
 
 app = cdk.App()
 SearchStack(

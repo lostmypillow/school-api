@@ -5,8 +5,8 @@ import httpx
 from fastapi import APIRouter, Depends
 from httpx import AsyncClient
 
-from src.dependencies import get_http_client
-from src.ntut.extract import (
+from app.dependencies import get_http_client
+from app.ntut.extract import (
     extract_courses,
     extract_departments,
     extract_semesters,
@@ -28,8 +28,6 @@ async def get_semesters(client: Annotated[AsyncClient, Depends(get_http_client)]
     return await extract_semesters(client=client)
 
 
-
-
 @router.get("/departments")
 async def get_departments(
     year, sem, client: Annotated[AsyncClient, Depends(get_http_client)]
@@ -37,14 +35,11 @@ async def get_departments(
     return await extract_departments(client=client, year=year, sem=sem)
 
 
-
 @router.get("/years")
 async def get_years(
     year, sem, code, client: Annotated[AsyncClient, Depends(get_http_client)]
 ):
     return await extract_years(client=client, year=year, sem=sem, code=code)
-
-
 
 
 @router.get("/courses")

@@ -1,7 +1,7 @@
 import re
 import time
 
-from src.ntut.dependencies import scrape
+from app.ntut.dependencies import scrape
 
 
 async def extract_semesters(client):

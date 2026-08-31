@@ -1,31 +1,47 @@
 [project]
 name = "search-api"
-version = "0.1.0"
-description = "Add your description here"
+version = "2.0.0"
+description = "API to search NTUT courses and movies"
 readme = "README.md"
-requires-python = ">=3.14"
+requires-python = ">=3.13"
 dependencies = [
     "beautifulsoup4>=4.15.0",
-     "fastapi[standard]>=0.141.1",
+    "fastapi[standard]>=0.141.1",
     "httpx>=0.28.1",
-    "lxml>=6.1.1",
-    "mangum>=0.21.0",
-    "aws-cdk-lib>=2.261.0,<3.0.0",
-    "constructs>=10.5.0,<11.0.0",
-    "aws-cdk-aws-lambda-python-alpha>=2.265.0a0",
-    "gunicorn>=26.2.0",
+    "lxml>=6.1.2",
+    "pydantic>=2.13.4",
+    "python-dotenv>=1.2.3",
+    "gunicorn>=26.2.0; sys_platform != 'win32'",
 ]
 
-[tool.pyrefly]
-search-path = ["."]
+[project.optional-dependencies]
+aws = [
+    "aws-cdk-aws-lambda-python-alpha>=2.265.0a0",
+    "aws-cdk-lib>=2.267.0,<3.0.0",
+    "constructs>=10.5.0,<11.0.0",
+    "mangum>=0.22.0",
+]
 
 [dependency-groups]
 dev = [
     "pyrefly>=1.2.0",
+    "pytest-asyncio>=1.4.0",
     "pytest>=9.1.1",
     "ruff>=0.16.3",
-   
+    "aws-cdk-aws-lambda-python-alpha>=2.265.0a0",
+    "aws-cdk-lib>=2.267.0,<3.0.0",
+    "constructs>=10.5.0,<11.0.0",
+    "mangum>=0.22.0",
 ]
-[tool.fastapi]
-entrypoint = "src.app:app"
 
+[tool.pyrefly]
+search-path = ["app", "test"]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+
+[tool.ruff.lint]
+ignore = ["N999"]
+
+[tool.fastapi]
+entrypoint = "app.main:app"

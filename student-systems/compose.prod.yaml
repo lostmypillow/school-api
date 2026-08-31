@@ -1,0 +1,17 @@
+services:
+  searchapi-prod:
+    image: searchapi-prod
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    environment:
+      - OMDB_API_KEY
+    ports:
+      - "8080:8080"
+    networks:
+      - proxy-net
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 128M
