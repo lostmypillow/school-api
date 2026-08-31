@@ -21,13 +21,13 @@ jobs:
         run: uv sync --no-default-groups --group dev
 
       - name: Run Linter (Ruff)
-        uses: uv run ruff check
+        run: uv run ruff check
 
       - name: Run Type checker (pyrefly)
-        uses: uv run pyrefly check
+        run: uv run pyrefly check
 
       - name: Run tests (pytest)
-        uses: uv run pytest
+        run: uv run pytest
 
   deploy-production:
     name: Deploy Production Stack
