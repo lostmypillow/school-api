@@ -27,6 +27,8 @@ jobs:
         run: uv run pyrefly check
 
       - name: Run tests (pytest)
+        env:
+          OMDB_API_KEY: ${{ secrets.OMDB_API_KEY }}
         run: uv run pytest
 
   deploy-production:
@@ -38,6 +40,8 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Build & Deploy Self-Hosted Production Containers
+        env:
+          OMDB_API_KEY: ${{ secrets.OMDB_API_KEY }}
         run: |
           echo "Deploying updated Docker containers to Production environment..."
           docker compose -f compose.dev.yaml down
