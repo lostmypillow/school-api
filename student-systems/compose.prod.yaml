@@ -15,3 +15,6 @@ services:
         limits:
           cpus: '0.5'
           memory: 128M
+networks:
+  proxy-net:
+    external: true
