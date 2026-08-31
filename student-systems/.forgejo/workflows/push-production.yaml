@@ -1,0 +1,49 @@
+name: CI & Production Deploy (Main)
+
+on:
+  push:
+    branches: [ main, master ]
+
+jobs:
+  test:
+    name: Run Unit & Integration Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup uv
+        uses: https://github.com/astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+        with:
+          version: "0.12.7"
+
+      - name: Install Dependencies
+        run: uv sync --no-default-groups --group dev
+
+      - name: Run Linter (Ruff)
+        run: uv run ruff check
+
+      - name: Run Type checker (pyrefly)
+        run: uv run pyrefly check
+
+      - name: Run tests (pytest)
+        env:
+          OMDB_API_KEY: ${{ secrets.OMDB_API_KEY }}
+        run: uv run pytest
+
+  deploy-production:
+    name: Deploy Production Stack
+    needs: test
+    runs-on: host
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Build & Deploy Self-Hosted Production Containers
+        env:
+          OMDB_API_KEY: ${{ secrets.OMDB_API_KEY }}
+        run: |
+          echo "Deploying updated Docker containers to Production environment..."
+          docker compose -f compose.dev.yaml down
+          docker compose -f compose.prod.yaml down
+          docker compose -f compose.prod.yaml up -d --build
