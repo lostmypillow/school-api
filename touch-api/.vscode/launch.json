@@ -1,0 +1,20 @@
+    {
+      "version": "0.0.1",
+      "configurations": [
+        {
+          "name": "FastAPI",
+          "type": "debugpy",
+          "request": "launch",
+          "module": "fastapi",
+          "cwd": "${workspaceFolder}/src",
+          "args": [
+            "dev"
+          ],
+          "justMyCode": false,
+          "env": {
+            "ENVIRONMENT": "dev"
+          }
+        },
+        
+      ]
+    }
