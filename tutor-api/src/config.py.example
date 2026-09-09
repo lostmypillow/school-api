@@ -1,0 +1,25 @@
+"""Pydantic 設定.
+
+包含資料庫設定與一個已無作用的 DEBUG 變數。
+
+.. todo::
+    在 `` 的 refactor branch 中，有一個名為 `app.core.config` 的模組，但它的功能並不相同。在該專案中，資料庫資訊是透過 `/etc/fastapi/shared.env` 與 `os.getenv()` 取得的，而在那個專案中（為了避免混淆我所說的 config.py），`config.py` 是用來取得 `pyproject.toml` 的資訊，並用於建立 `app = FastAPI()` 實例。
+
+    **如果你有意重構：**
+
+    1. 將所有 `settings.SOME_KEY` 變數改為 `os.getenv('SOME_KEY')`。
+    2. 新增 `app.core.config` 模組。（我會在 `src.main` 中說明如何處理）
+    3. 刪除此檔案與 config.py.example，並移除所有相關引用。
+
+
+""" 
+from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+class Settings(BaseSettings):
+    DB_HOST: str = "192.168.x.x"
+    DB_USERNAME: str = ""
+    DB_PASSWORD: str = ""
+    DB_NAME: str = ""
+    model_config = SettingsConfigDict(env_file=None)
+settings = Settings()
