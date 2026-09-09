@@ -6,7 +6,7 @@ import httpx
 from dotenv import load_dotenv
 from fastapi import APIRouter, Depends
 
-from app.dependencies import get_http_client
+from app.dependencies import get_scrape_client
 from app.omdb.schemas import OMDBResponse
 
 logger = logging.getLogger(__name__)
@@ -16,7 +16,7 @@ router = APIRouter(prefix="/movies", tags=["Movies"])
 
 @router.get("/search/")
 async def search_movies(
-    query: str, client: Annotated[httpx.AsyncClient, Depends(get_http_client)]
+    query: str, client: Annotated[httpx.AsyncClient, Depends(get_scrape_client)]
 ) -> OMDBResponse:
     logger.info(f"Query recieved for term {query}")
     url = f"https://www.omdbapi.com/?apikey={os.getenv('OMDB_API_KEY')}&s={query}"

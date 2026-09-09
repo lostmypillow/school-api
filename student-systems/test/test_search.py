@@ -7,14 +7,14 @@ from httpx import ASGITransport, AsyncClient
 from app.omdb.schemas import Movie
 
 logger = logging.getLogger(__name__)
-from app.dependencies import get_http_client
+from app.dependencies import get_scrape_client
 from app.main import app
 
 
 @pytest.fixture(autouse=True)
 def setup_env_deps():
     real_client = AsyncClient(verify=False)
-    app.dependency_overrides[get_http_client] = lambda: real_client
+    app.dependency_overrides[get_scrape_client] = lambda: real_client
 
     yield
 

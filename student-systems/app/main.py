@@ -1,15 +1,20 @@
 import logging
 
-from fastapi import FastAPI, status
+from fastapi import FastAPI, HTTPException, Request, status
 from fastapi.middleware.cors import CORSMiddleware
+from redis_fastapi import FastAPIRedis
 
+from app.dependencies import lifespan
 from app.ntut import router as ntut_router
 from app.omdb import router as omdb_router
 
-logger = logging.getLogger()
+logger = logging.getLogger("uvicorn.error")
 logger.setLevel(logging.INFO)
 
-app = FastAPI()
+
+app = FastAPI(version="2.1.0-SNAPSHOT", lifespan=lifespan)
+
+FastAPIRedis(app).lifespan()
 
 origins = ["http://localhost:5173", "https://search.lostmypillow.com"]
 
@@ -23,7 +28,8 @@ app.add_middleware(
 
 
 @app.get("/health", status_code=status.HTTP_200_OK)
-async def health_check():
+async def health_check(req: Request):
+    logger.info(req.app.state.db_engine)
     return {"status": "healthy"}
 
 
