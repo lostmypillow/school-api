@@ -50,12 +50,15 @@ async def fetch_html(
     ttl_seconds: int = 86400,
 ) -> str:
     """Fetches raw HTML from Redis cache, or falls back to HTTP request on miss."""
-    cache_key = f"cache:html:{hashlib.md5(combined_url.encode()).hexdigest()}"
+    url_hash = hashlib.sha256(combined_url.encode("utf-8")).hexdigest()
+    cache_key = f"cache:html:{url_hash}"
 
     # 1. Try reading from Redis cache
-    cached_bytes = await redis.get(cache_key)
-    if cached_bytes is not None and isinstance(cached_bytes, bytes):
-        return cached_bytes.decode("utf-8")
+    cached_val = await redis.get(cache_key)
+    if cached_val is not None:
+        if isinstance(cached_val, bytes):
+            return cached_val.decode("utf-8")
+        return cached_val
 
     # 2. Fetch from network on cache miss
     response = await client.get(combined_url)
