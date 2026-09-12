@@ -26,7 +26,7 @@ async def bootstrap_sqlite(ctx: dict) -> None:
 
     try:
         async with db.get_session() as session:
-            CHUNK_SIZE = 10
+            CHUNK_SIZE = 50
             semester_list = []
             current_year = date.today().year - 1911
             current_semester = 1 if date.today().month - 6 >= 0 else 2

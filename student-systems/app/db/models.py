@@ -4,8 +4,8 @@ from sqlalchemy import (
     DateTime,
     ForeignKey,
     Integer,
-    String,
-    Text,
+    Unicode,
+    UnicodeText,
     UniqueConstraint,
 )
 from sqlalchemy.orm import declarative_base, relationship
@@ -16,10 +16,10 @@ Base = declarative_base()
 class Semester(Base):
     __tablename__ = "semesters"
 
-    id = Column(String(36), primary_key=True)  # Slug: e.g., "112_1"
-    year = Column(String(10), nullable=False)
-    sem = Column(String(10), nullable=False)
-    link = Column(String(2048), nullable=False)
+    id = Column(Unicode(36), primary_key=True)  # Slug: e.g., "112_1"
+    year = Column(Unicode(10), nullable=False)
+    sem = Column(Unicode(10), nullable=False)
+    link = Column(Unicode(2048), nullable=False)
     created_at = Column(
         DateTime(timezone=True),
         default=lambda: datetime.now(UTC),
@@ -40,16 +40,15 @@ class Semester(Base):
 class Department(Base):
     __tablename__ = "departments"
 
-    id = Column(String(64), primary_key=True)  # Slug: e.g., "112_1_01"
+    id = Column(Unicode(64), primary_key=True)  # Slug: e.g., "112_1_01"
     semester_id = Column(
-        String(36), ForeignKey("semesters.id", ondelete="CASCADE"), nullable=False
+        Unicode(36), ForeignKey("semesters.id", ondelete="CASCADE"), nullable=False
     )
-    year = Column(String(10), nullable=False)
-    sem = Column(String(10), nullable=False)
-    code = Column(String(20), nullable=False)
-    name = Column(String(255), nullable=False)
-    link = Column(String(2048), nullable=False)
-    html_content = Column(Text, nullable=True)
+    year = Column(Unicode(10), nullable=False)
+    sem = Column(Unicode(10), nullable=False)
+    code = Column(Unicode(20), nullable=False)
+    name = Column(Unicode(255), nullable=False)
+    link = Column(Unicode(2048), nullable=False)
     created_at = Column(
         DateTime(timezone=True),
         default=lambda: datetime.now(UTC),
@@ -75,16 +74,15 @@ class DepartmentYear(Base):
 
     __tablename__ = "department_years"
 
-    id = Column(String(64), primary_key=True)  # Slug: e.g., "112_1_01_301"
+    id = Column(Unicode(64), primary_key=True)  # Slug: e.g., "112_1_01_301"
     department_id = Column(
-        String(64), ForeignKey("departments.id", ondelete="CASCADE"), nullable=False
+        Unicode(64), ForeignKey("departments.id", ondelete="CASCADE"), nullable=False
     )
-    year = Column(String(10), nullable=False)
-    sem = Column(String(10), nullable=False)
-    code = Column(String(20), nullable=False)
-    name = Column(String(255), nullable=False)
-    link = Column(String(2048), nullable=False)
-    html_content = Column(Text, nullable=True)
+    year = Column(Unicode(10), nullable=False)
+    sem = Column(Unicode(10), nullable=False)
+    code = Column(Unicode(20), nullable=False)
+    name = Column(Unicode(255), nullable=False)
+    link = Column(Unicode(2048), nullable=False)
     created_at = Column(
         DateTime(timezone=True),
         default=lambda: datetime.now(UTC),
@@ -110,39 +108,39 @@ class DepartmentYear(Base):
 class Course(Base):
     __tablename__ = "courses"
 
-    id = Column(String(64), primary_key=True)  # Slug: e.g., "112_1_301_CS101"
+    id = Column(Unicode(64), primary_key=True)  # Slug: e.g., "112_1_301_CS101"
     department_year_id = Column(
-        String(64),
+        Unicode(64),
         ForeignKey("department_years.id", ondelete="CASCADE"),
         nullable=False,
     )
-    year = Column(String(10), nullable=False)
-    sem = Column(String(10), nullable=False)
-    code = Column(String(50), nullable=True)
-    name = Column(String(255), nullable=False)
-    link = Column(String(2048), nullable=True)
+    year = Column(Unicode(10), nullable=False)
+    sem = Column(Unicode(10), nullable=False)
+    code = Column(Unicode(50), nullable=True)
+    name = Column(Unicode(255), nullable=False)
+    link = Column(Unicode(2048), nullable=True)
     credits = Column(Integer, nullable=True)  # Set to nullable=True for flexibility
-    course_type = Column(String(20), nullable=True)
-    instructor = Column(String(255), nullable=True)
+    course_type = Column(Unicode(20), nullable=True)
+    instructor = Column(Unicode(255), nullable=True)
 
     # Schedule & Location
-    sun = Column(String(50), nullable=True)
-    mon = Column(String(50), nullable=True)
-    tue = Column(String(50), nullable=True)
-    wed = Column(String(50), nullable=True)
-    thu = Column(String(50), nullable=True)
-    fri = Column(String(50), nullable=True)
-    sat = Column(String(50), nullable=True)
-    classroom = Column(String(255), nullable=True)
+    sun = Column(Unicode(50), nullable=True)
+    mon = Column(Unicode(50), nullable=True)
+    tue = Column(Unicode(50), nullable=True)
+    wed = Column(Unicode(50), nullable=True)
+    thu = Column(Unicode(50), nullable=True)
+    fri = Column(Unicode(50), nullable=True)
+    sat = Column(Unicode(50), nullable=True)
+    classroom = Column(Unicode(255), nullable=True)
 
     # Metrics & Metadata
     students_enrolled = Column(Integer, nullable=True)
     students_dropped = Column(Integer, nullable=True)
-    language = Column(String(50), nullable=True)
-    notes = Column(Text, nullable=True)
-    with_class = Column(String(255), nullable=True)
-    experiment = Column(String(255), nullable=True)
-    cross_discipline = Column(String(255), nullable=True)
+    language = Column(Unicode(50), nullable=True)
+    notes = Column(UnicodeText, nullable=True)
+    with_class = Column(Unicode(255), nullable=True)
+    experiment = Column(Unicode(255), nullable=True)
+    cross_discipline = Column(Unicode(255), nullable=True)
 
     created_at = Column(
         DateTime(timezone=True),

@@ -37,7 +37,7 @@ dev = [
 
 [tool.pyrefly]
 preset = "default"
-search-path = ["app", "test"]
+search-path = ["app"]
 
 [tool.pytest.ini_options]
 pythonpath = ["."]
