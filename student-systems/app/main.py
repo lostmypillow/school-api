@@ -16,7 +16,6 @@ logger.setLevel(logging.INFO)
 
 app = FastAPI(version="2.1.0-SNAPSHOT", lifespan=lifespan)
 
-FastAPIRedis(app).lifespan().caching()
 
 origins = ["http://localhost:5173", "https://search.lostmypillow.com"]
 
@@ -37,3 +36,4 @@ async def health_check(req: Request):
 
 app.include_router(ntut_router)
 app.include_router(sync_router)
+FastAPIRedis(app).lifespan().caching()
