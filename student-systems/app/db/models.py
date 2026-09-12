@@ -1,5 +1,4 @@
 from datetime import UTC, datetime
-
 from sqlalchemy import (
     Column,
     DateTime,
@@ -17,10 +16,10 @@ Base = declarative_base()
 class Semester(Base):
     __tablename__ = "semesters"
 
-    id = Column(String, primary_key=True)  # Slug: e.g., "112_1" (year_sem)
-    year = Column(String, nullable=False)
-    sem = Column(String, nullable=False)
-    link = Column(String, nullable=False)
+    id = Column(String(36), primary_key=True)  # Slug: e.g., "112_1"
+    year = Column(String(10), nullable=False)
+    sem = Column(String(10), nullable=False)
+    link = Column(String(2048), nullable=False)
     created_at = Column(
         DateTime(timezone=True),
         default=lambda: datetime.now(UTC),
@@ -33,9 +32,7 @@ class Semester(Base):
         nullable=False,
     )
 
-    __table_args__ = (
-        UniqueConstraint("year", "sem", name="uq_semesters_year_sem"),
-    )
+    __table_args__ = (UniqueConstraint("year", "sem", name="uq_semesters_year_sem"),)
 
     departments = relationship("Department", back_populates="semester_rel")
 
@@ -43,15 +40,15 @@ class Semester(Base):
 class Department(Base):
     __tablename__ = "departments"
 
-    id = Column(String, primary_key=True)  # Slug: e.g., "112_1_01" (year_sem_code)
+    id = Column(String(64), primary_key=True)  # Slug: e.g., "112_1_01"
     semester_id = Column(
-        String, ForeignKey("semesters.id", ondelete="CASCADE"), nullable=False
+        String(36), ForeignKey("semesters.id", ondelete="CASCADE"), nullable=False
     )
-    year = Column(String, nullable=False)
-    sem = Column(String, nullable=False)
-    code = Column(String, nullable=False)  # e.g., "01", "10", "30"
-    name = Column(String, nullable=False)
-    link = Column(String, nullable=False)
+    year = Column(String(10), nullable=False)
+    sem = Column(String(10), nullable=False)
+    code = Column(String(20), nullable=False)
+    name = Column(String(255), nullable=False)
+    link = Column(String(2048), nullable=False)
     html_content = Column(Text, nullable=True)
     created_at = Column(
         DateTime(timezone=True),
@@ -78,17 +75,15 @@ class DepartmentYear(Base):
 
     __tablename__ = "department_years"
 
-    id = Column(
-        String, primary_key=True
-    )  # Slug: e.g., "112_1_01_301" (year_sem_deptcode_code)
+    id = Column(String(64), primary_key=True)  # Slug: e.g., "112_1_01_301"
     department_id = Column(
-        String, ForeignKey("departments.id", ondelete="CASCADE"), nullable=False
+        String(64), ForeignKey("departments.id", ondelete="CASCADE"), nullable=False
     )
-    year = Column(String, nullable=False)
-    sem = Column(String, nullable=False)
-    code = Column(String, nullable=False)
-    name = Column(String, nullable=False)
-    link = Column(String, nullable=False)
+    year = Column(String(10), nullable=False)
+    sem = Column(String(10), nullable=False)
+    code = Column(String(20), nullable=False)
+    name = Column(String(255), nullable=False)
+    link = Column(String(2048), nullable=False)
     html_content = Column(Text, nullable=True)
     created_at = Column(
         DateTime(timezone=True),
@@ -103,7 +98,9 @@ class DepartmentYear(Base):
     )
 
     __table_args__ = (
-        UniqueConstraint("year", "sem", "code", name="uq_department_years_year_sem_code"),
+        UniqueConstraint(
+            "year", "sem", "code", name="uq_department_years_year_sem_code"
+        ),
     )
 
     department_rel = relationship("Department", back_populates="classes")
@@ -113,32 +110,40 @@ class DepartmentYear(Base):
 class Course(Base):
     __tablename__ = "courses"
 
-    id = Column(
-        String, primary_key=True
-    )  # Slug: e.g., "112_1_301_CS101" (year_sem_depyearcode_code)
+    id = Column(String(64), primary_key=True)  # Slug: e.g., "112_1_301_CS101"
     department_year_id = Column(
-        String, ForeignKey("department_years.id", ondelete="CASCADE"), nullable=False
+        String(64),
+        ForeignKey("department_years.id", ondelete="CASCADE"),
+        nullable=False,
     )
-    year = Column(String, nullable=False)
-    sem = Column(String, nullable=False)
-    code = Column(String, nullable=False)
-    department_year_code = Column(String, nullable=False)
-    name = Column(String, nullable=False)
-    link = Column(String, nullable=False)
-    credits = Column(Integer, nullable=False)
-    course_type = Column(String, nullable=False)
-    instructor = Column(String, nullable=True)
-    days_of_week = Column(String, nullable=False)
-    times_of_day = Column(String, nullable=False)
-    classroom = Column(String, nullable=False)
-    students_enrolled = Column(Integer, nullable=False)
-    students_dropped = Column(Integer, nullable=False)
-    language = Column(String, nullable=False)
-    notes = Column(String, nullable=True)
-    with_class = Column(String, nullable=True)
-    experiment = Column(String, nullable=True)
-    cross_discipline = Column(String, nullable=True)
-    html_content = Column(Text, nullable=True)
+    year = Column(String(10), nullable=False)
+    sem = Column(String(10), nullable=False)
+    code = Column(String(50), nullable=True)
+    name = Column(String(255), nullable=False)
+    link = Column(String(2048), nullable=True)
+    credits = Column(Integer, nullable=True)  # Set to nullable=True for flexibility
+    course_type = Column(String(20), nullable=True)
+    instructor = Column(String(255), nullable=True)
+
+    # Schedule & Location
+    sun = Column(String(50), nullable=True)
+    mon = Column(String(50), nullable=True)
+    tue = Column(String(50), nullable=True)
+    wed = Column(String(50), nullable=True)
+    thu = Column(String(50), nullable=True)
+    fri = Column(String(50), nullable=True)
+    sat = Column(String(50), nullable=True)
+    classroom = Column(String(255), nullable=True)
+
+    # Metrics & Metadata
+    students_enrolled = Column(Integer, nullable=True)
+    students_dropped = Column(Integer, nullable=True)
+    language = Column(String(50), nullable=True)
+    notes = Column(Text, nullable=True)
+    with_class = Column(String(255), nullable=True)
+    experiment = Column(String(255), nullable=True)
+    cross_discipline = Column(String(255), nullable=True)
+
     created_at = Column(
         DateTime(timezone=True),
         default=lambda: datetime.now(UTC),
@@ -152,7 +157,7 @@ class Course(Base):
     )
 
     __table_args__ = (
-        UniqueConstraint("year", "sem", "code", name="uq_courses_year_sem_code"),
+        UniqueConstraint("id", name="uq_courses_year_sem_code"),
     )
 
     department_year_rel = relationship("DepartmentYear", back_populates="courses")

@@ -1,61 +1,18 @@
 services:
-  postgres:
-    image: postgres:16-alpine
-    environment:
-      POSTGRES_DB: school_db
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgrespassword
-    ports:
-      - "5432:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
-      interval: 5s
-      timeout: 3s
-      retries: 5
-  searchapi:
-    image: searchapi
+  student-system-api:
     build:
       context: .
       dockerfile: Dockerfile
     ports:
-        - "8080:8080"
-    environment:
-        - DB_URL=postgresql+asyncpg://postgres:postgrespassword@postgres:5432/school_db
-        - REDIS_URL=redis://redis:6379/0
-        - PYTHONUNBUFFERED=1
-    depends_on:
-      redis:
-        condition: service_healthy
-      postgres:
-          condition: service_healthy
-
-  redis:
-    image: redis:7-alpine
-    restart: always
-    ports:
-      - "6379:6379"
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 5s
-      timeout: 3s
-      retries: 5
+      - "8080:8080"
+    env_file:
+      - .env
 
 
-  # 3. ARQ Background Worker Container
-  worker:
+  student-system-worker:
     build: .
-    # Overrides Dockerfile CMD to run ARQ instead of Gunicorn
-    command: ["-m", "arq", "app.worker.WorkerSettings"]
+    command: ["python", "-m", "arq", "app.workers.settings.WorkerSettings" ]
     restart: always
-    environment:
-      - DB_URL=postgresql+asyncpg://postgres:postgrespassword@postgres:5432/school_db
-      - REDIS_URL=redis://redis:6379/0
-      - PYTHONUNBUFFERED=1
-    depends_on:
-      redis:
-        condition: service_healthy
+    env_file:
+      - .env
 
-volumes:
-  postgres_data:
