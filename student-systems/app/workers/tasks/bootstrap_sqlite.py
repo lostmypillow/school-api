@@ -26,7 +26,7 @@ async def bootstrap_sqlite(ctx: dict) -> None:
 
     try:
         async with db.get_session() as session:
-            CHUNK_SIZE = 50
+            CHUNK_SIZE = 10
             semester_list = []
             current_year = date.today().year - 1911
             current_semester = 1 if date.today().month - 6 >= 0 else 2
@@ -213,7 +213,7 @@ async def bootstrap_sqlite(ctx: dict) -> None:
                                 a_tag = cells[18].find("a")
                                 course_list.append(
                                     {
-                                        "id": f"{parent_dep_year.year}_{parent_dep_year.sem}_{parent_dep_year.code}_{cells[0].text.strip() if cells[0].text.strip() else str(uuid.uuid4().hex[:8])}",
+                                        "id": f"{parent_dep_year.year}_{parent_dep_year.sem}_{parent_dep_year.code}_{cells[0].text.strip() if cells[0].text.strip() else cells[1].text.strip()}",
                                         "department_year_id": parent_dep_year.id,
                                         "year":parent_dep_year.year,
                                         "sem": parent_dep_year.sem,

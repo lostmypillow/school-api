@@ -9,6 +9,8 @@ from app.workers.tasks.bootstrap_sqlite import bootstrap_sqlite
 from sqlalchemy import text
 from dotenv import load_dotenv
 from app.workers.tasks.bootstrap_mssql import bootstrap_mssql
+from app.workers.http_client import get_scrape_client
+
 load_dotenv()
 DATA_DIR = Path(__file__).resolve().parent.parent.parent / "data"
 
@@ -31,6 +33,7 @@ async def startup(ctx: dict):
     print((f"sqlite+aiosqlite:///{DATA_DIR / 'ntut_boostrap.db'}"))
     ctx['db'] = DB(f"sqlite+aiosqlite:///{DATA_DIR / 'ntut_boostrap.db'}")
     ctx['mssql_db'] = DB(os.getenv('DB_URL', ''))
+    ctx['client']= get_scrape_client()
     print("ARQ Worker initialized database engine.")
 
 
