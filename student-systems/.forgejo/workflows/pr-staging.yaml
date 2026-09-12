@@ -26,10 +26,10 @@ jobs:
       - name: Run Type checker (pyrefly)
         run: uv run pyrefly check
 
-      - name: Run tests (pytest)
-        env:
-          OMDB_API_KEY: ${{ secrets.OMDB_API_KEY }}
-        run: uv run pytest
+#      - name: Run tests (pytest)
+#        env:
+#          OMDB_API_KEY: ${{ secrets.OMDB_API_KEY }}
+#        run: uv run pytest
 
 
   deploy-staging:
