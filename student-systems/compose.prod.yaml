@@ -1,5 +1,6 @@
 services:
   student-system-mssql:
+    container_name: student-system-mssql
     image: mcr.microsoft.com/mssql/server:2025-latest
     platform: linux/amd64
     environment:
@@ -21,6 +22,7 @@ services:
 
 
   student-system-redis:
+    container_name: student-system-redis
     image: redis:7-alpine
     restart: always
     ports:
@@ -36,6 +38,7 @@ services:
       - proxy-net
   
   student-system-api-prod:
+    container_name: student-system-api-prod
     build:
       context: .
       dockerfile: Dockerfile
@@ -51,6 +54,7 @@ services:
 
 
   student-system-worker-prod:
+    container_name: student-system-worker-prod
     build: .
     command: ["python", "-m", "arq", "app.workers.settings.WorkerSettings" ]
     restart: always
