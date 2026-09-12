@@ -13,7 +13,7 @@ router = APIRouter(prefix="/courses", tags=["Courses"])
 @router.get("/semesters", dependencies=[Depends(cache(ttl=60))])
 async def get_semesters(request: Request):
     try:
-        result: list[Semester] | [] = []
+        result: list[Semester] = []
         async with request.app.state.db.get_session() as session:
             result = (await session.scalars(select(Semester))).all()
         return result
@@ -25,7 +25,7 @@ async def get_semesters(request: Request):
 @router.get("/departments", dependencies=[Depends(cache(ttl=60))])
 async def get_departments(request: Request, semester_id: str):
     try:
-        result: list[Department] | [] = []
+        result: list[Department] = []
         async with request.app.state.db.get_session() as session:
             result = (await session.scalars(select(Department).where(Department.semester_id == semester_id))).all()
         return result
@@ -37,7 +37,7 @@ async def get_departments(request: Request, semester_id: str):
 @router.get("/department_years", dependencies=[Depends(cache(ttl=60))])
 async def get_years(request: Request, department_id):
     try:
-        result: list[DepartmentYear] | [] = []
+        result: list[DepartmentYear] = []
         async with request.app.state.db.get_session() as session:
             result = (await session.scalars(select(DepartmentYear).where(DepartmentYear.department_id == department_id))).all()
 
@@ -51,7 +51,7 @@ async def get_years(request: Request, department_id):
 @router.get("/courses", dependencies=[Depends(cache(ttl=60))])
 async def get_course(request: Request, department_year_id: str):
     try:
-        result: list[Course]| [] =[]
+        result: list[Course] =[]
         async with request.app.state.db.get_session() as session:
             result = (await session.scalars(select(Course).where(Course.department_year_id == department_year_id))).all()
         return result
