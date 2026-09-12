@@ -66,3 +66,6 @@ services:
 networks:
   proxy-net:
     external: true
+
+volumes:
+  mssql_data:
