@@ -16,9 +16,8 @@ DB_URL = os.getenv("DB_URL", "")
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-
-    app.state.db = DB(f"sqlite+aiosqlite:///{DATA_DIR / 'ntut_boostrap.db'}")
     print(f"sqlite+aiosqlite:///{DATA_DIR / 'ntut_boostrap.db'}")
+    app.state.db = DB(f"sqlite+aiosqlite:///{DATA_DIR / 'ntut_boostrap.db'}")
 
     async with app.state.db.engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
