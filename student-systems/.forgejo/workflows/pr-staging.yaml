@@ -27,22 +27,17 @@ jobs:
       - name: Run Type checker (pyrefly)
         run: uv run pyrefly check
 
-#      - name: Run tests (pytest)
-#        env:
-#          OMDB_API_KEY: ${{ secrets.OMDB_API_KEY }}
-#        run: uv run pytest
 
-
-  deploy-staging:
-    name: Deploy Staging Stack
+  deploy-dev:
+    name: Deploy dev Stack
     needs: test
     runs-on: host
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Build & Deploy Self-Hosted Dev Containers
+      - name: Build & Deploy dev Containers
         run: |
-          echo "Deploying updated Docker containers to Dev environment..."
+          echo "Deploying updated Docker containers to dev environment..."
           docker compose -f compose.dev.yaml down student-system-api-dev student-system-worker-dev
           docker compose -f compose.dev.yaml up -d --build

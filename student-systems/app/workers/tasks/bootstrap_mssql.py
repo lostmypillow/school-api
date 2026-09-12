@@ -5,7 +5,6 @@ from app.db.models import Base
 from tqdm.asyncio import tqdm
 
 
-
 async def bootstrap_mssql(ctx: dict):
     sqlite_engine: AsyncEngine = ctx["db"].engine
     mssql_engine: AsyncEngine = ctx["mssql_db"].engine

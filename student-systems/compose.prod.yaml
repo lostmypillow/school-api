@@ -45,7 +45,7 @@ services:
     ports:
       - "8080:8080"
     env_file:
-      - .env
+      - .env.prod
     networks:
       - proxy-net
     depends_on:
@@ -59,7 +59,7 @@ services:
     command: ["python", "-m", "arq", "app.workers.settings.WorkerSettings" ]
     restart: always
     env_file:
-      - .env
+      - .env.prod
     networks:
       - proxy-net
     depends_on:

@@ -1134,8 +1134,8 @@ wheels = [
 ]
 
 [[package]]
-name = "search-api"
-version = "2.1.0"
+name = "school-api"
+version = "3.0.0"
 source = { virtual = "." }
 dependencies = [
     { name = "aioodbc" },

@@ -14,7 +14,7 @@ logger = logging.getLogger("uvicorn.error")
 logger.setLevel(logging.INFO)
 
 
-app = FastAPI(version="2.1.0-SNAPSHOT", lifespan=lifespan)
+app = FastAPI(title="School API", version="3.0.0", lifespan=lifespan)
 
 
 origins = ["http://localhost:5173", "https://search.lostmypillow.com"]

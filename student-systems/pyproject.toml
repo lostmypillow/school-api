@@ -1,6 +1,6 @@
 [project]
-name = "search-api"
-version = "2.1.0"
+name = "school-api"
+version = "3.0.0"
 description = "API to search NTUT courses and movies"
 readme = "README.md"
 requires-python = ">=3.13"
