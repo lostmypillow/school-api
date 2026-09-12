@@ -290,8 +290,9 @@ async def bootstrap_sqlite(ctx: dict) -> None:
                             finally:
                                 soup.decompose()
 
-                if course_list:
-                    await save_ntut_operations(session, {"course_list": course_list})
+                    if course_list:
+                        await save_ntut_operations(session, {"course_list": course_list})
+                        session.expunge_all()
             print("Successfully saved courses data into database")
 
             end_time = time.time()
