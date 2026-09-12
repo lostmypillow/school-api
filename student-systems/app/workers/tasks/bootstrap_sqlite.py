@@ -1,3 +1,4 @@
+import asyncio
 import re
 import time
 from datetime import date
@@ -177,108 +178,120 @@ async def bootstrap_sqlite(ctx: dict) -> None:
 
 
             dep_years_to_scrape = all_dep_year_records
-            course_list = []
+            CHUNK_SIZE = 50
+
 
             if dep_years_to_scrape:
                 print(
                     f"Scraping courses for {len(dep_years_to_scrape)} department years (Skipped {len(all_dep_year_records) - len(dep_years_to_scrape)} existing)..."
                 )
-                raw_course_result = await tqdm_asyncio.gather(
-                    *(
-                        scrape(ctx=ctx,url=str(dep_year.link), tag="tr")
-                        for dep_year in dep_years_to_scrape
-                    )
-                )
-
-
-                for sublist, parent_dep_year in zip(
-                    raw_course_result, dep_years_to_scrape
+                total_chunks = math.ceil(len(dep_years_to_scrape) / CHUNK_SIZE)
+                for dep_year_chunk in tqdm(
+                        batched(dep_years_to_scrape, CHUNK_SIZE),
+                        total=total_chunks,
+                        desc="Scraping & Saving Courses",
+                        mininterval=5.0,
+                        ascii=True
                 ):
-                    for course in sublist:
-                        cells = BeautifulSoup(str(course), "lxml").find_all("td")
-                        if len(cells) == 0:
-                            continue
-                        try:
-                            a_tag = cells[18].find("a")
-                            course_list.append(
-                                {
-                                    "id": f"{parent_dep_year.year}_{parent_dep_year.sem}_{parent_dep_year.code}_{cells[0].text.strip() if cells[0].text.strip() else 'nocode'}",
-                                    "department_year_id": parent_dep_year.id,
-                                    "year":parent_dep_year.year,
-                                    "sem": parent_dep_year.sem,
-                                    "code": cells[0].text.strip().zfill(6)
-                                    if cells[0].text.strip()
-                                    else None,
-                                    "name": cells[1].text.strip()
-                                    if cells[1].text.strip()
-                                    else None,
-                                    "credits": (cells[2].text.strip())
-                                    if cells[2].text.strip()
-                                    else None,
-                                    "course_type": cells[5].text.strip()
-                                    if cells[5].text.strip()
-                                    else None,
-                                    "instructor": cells[6].text.strip()
-                                    if cells[6].text.strip()
-                                    else None,
-                                    "sun": cells[7].text.strip()
-                                    if cells[7].text.strip()
-                                    else None,
-                                    "mon": cells[8].text.strip()
-                                    if cells[8].text.strip()
-                                    else None,
-                                    "tue": cells[9].text.strip()
-                                    if cells[9].text.strip()
-                                    else None,
-                                    "wed": cells[10].text.strip()
-                                    if cells[10].text.strip()
-                                    else None,
-                                    "thu": cells[11].text.strip()
-                                    if cells[11].text.strip()
-                                    else None,
-                                    "fri": cells[12].text.strip()
-                                    if cells[12].text.strip()
-                                    else None,
-                                    "sat": cells[13].text.strip()
-                                    if cells[13].text.strip()
-                                    else None,
-                                    "classroom": cells[14].text.strip()
-                                    if cells[14].text.strip()
-                                    else None,
-                                    "students_enrolled": int(cells[15].text.strip())
-                                    if cells[15].text.strip()
-                                    else None,
-                                    "students_dropped": int(cells[16].text.strip())
-                                    if cells[16].text.strip()
-                                    else None,
-                                    "language": cells[17].text.strip()
-                                    if cells[17].text.strip()
-                                    else None,
-                                    "link": str(a_tag["href"])
-                                    if a_tag and "href" in a_tag.attrs
-                                    else None,
-                                    "notes": cells[19].text.strip()
-                                    if cells[19].text.strip()
-                                    else None,
-                                    "with_class": cells[20].text.strip()
-                                    if cells[20].text.strip()
-                                    else None,
-                                    "experiment": cells[21].text.strip()
-                                    if cells[21].text.strip()
-                                    else None,
-                                    "cross_discipline": cells[22].text.strip()
-                                    if cells[22].text.strip()
-                                    else None,
-                                }
-                            )
-                        except IndexError:
-                            continue
-            if course_list:
-                batch_size = 50
-                total_batches = math.ceil(len(course_list) / batch_size)
-                for batch in tqdm(batched(course_list, 50), total=total_batches, desc="Saving course data to DB"):
-                    batch_list = list(batch)
-                    await save_ntut_operations(session, {"course_list": batch_list})
+                    course_list = []
+                    
+                    raw_course_result = await asyncio.gather(
+                        *(
+                            scrape(ctx=ctx,url=str(dep_year.link), tag="tr")
+                            for dep_year in dep_year_chunk
+                        )
+                    )
+
+
+                    for sublist, parent_dep_year in zip(
+                        raw_course_result, dep_year_chunk
+                    ):
+                        for course in sublist:
+                            soup = BeautifulSoup(str(course), "lxml")
+                            cells = soup.find_all("td")
+                            if len(cells) == 0:
+                                soup.decompose()
+                                continue
+                            try:
+                                a_tag = cells[18].find("a")
+                                course_list.append(
+                                    {
+                                        "id": f"{parent_dep_year.year}_{parent_dep_year.sem}_{parent_dep_year.code}_{cells[0].text.strip() if cells[0].text.strip() else 'nocode'}",
+                                        "department_year_id": parent_dep_year.id,
+                                        "year":parent_dep_year.year,
+                                        "sem": parent_dep_year.sem,
+                                        "code": cells[0].text.strip().zfill(6)
+                                        if cells[0].text.strip()
+                                        else None,
+                                        "name": cells[1].text.strip()
+                                        if cells[1].text.strip()
+                                        else None,
+                                        "credits": (cells[2].text.strip())
+                                        if cells[2].text.strip()
+                                        else None,
+                                        "course_type": cells[5].text.strip()
+                                        if cells[5].text.strip()
+                                        else None,
+                                        "instructor": cells[6].text.strip()
+                                        if cells[6].text.strip()
+                                        else None,
+                                        "sun": cells[7].text.strip()
+                                        if cells[7].text.strip()
+                                        else None,
+                                        "mon": cells[8].text.strip()
+                                        if cells[8].text.strip()
+                                        else None,
+                                        "tue": cells[9].text.strip()
+                                        if cells[9].text.strip()
+                                        else None,
+                                        "wed": cells[10].text.strip()
+                                        if cells[10].text.strip()
+                                        else None,
+                                        "thu": cells[11].text.strip()
+                                        if cells[11].text.strip()
+                                        else None,
+                                        "fri": cells[12].text.strip()
+                                        if cells[12].text.strip()
+                                        else None,
+                                        "sat": cells[13].text.strip()
+                                        if cells[13].text.strip()
+                                        else None,
+                                        "classroom": cells[14].text.strip()
+                                        if cells[14].text.strip()
+                                        else None,
+                                        "students_enrolled": int(cells[15].text.strip())
+                                        if cells[15].text.strip()
+                                        else None,
+                                        "students_dropped": int(cells[16].text.strip())
+                                        if cells[16].text.strip()
+                                        else None,
+                                        "language": cells[17].text.strip()
+                                        if cells[17].text.strip()
+                                        else None,
+                                        "link": str(a_tag["href"])
+                                        if a_tag and "href" in a_tag.attrs
+                                        else None,
+                                        "notes": cells[19].text.strip()
+                                        if cells[19].text.strip()
+                                        else None,
+                                        "with_class": cells[20].text.strip()
+                                        if cells[20].text.strip()
+                                        else None,
+                                        "experiment": cells[21].text.strip()
+                                        if cells[21].text.strip()
+                                        else None,
+                                        "cross_discipline": cells[22].text.strip()
+                                        if cells[22].text.strip()
+                                        else None,
+                                    }
+                                )
+                            except IndexError:
+                                continue
+                            finally:
+                                soup.decompose()
+
+                if course_list:
+                    await save_ntut_operations(session, {"course_list": course_list})
             print("Successfully saved courses data into database")
 
             end_time = time.time()
