@@ -1,6 +1,7 @@
 import asyncio
 import hashlib
 import logging
+import traceback
 import uuid
 import httpx
 from arq.connections import ArqRedis
@@ -93,10 +94,25 @@ async def scrape(ctx: dict, url: str, tag: str):
 
         except httpx.HTTPError as exc:
             error_id = str(uuid.uuid4())
-            print(f"[ERROR ID {error_id}] => {exc}")
+
+            req_info = (
+                f"{exc.request.method} {exc.request.url}"
+                if exc.request
+                else "No request"
+            )
+            resp_info = ""
+            if isinstance(exc, httpx.HTTPStatusError) and exc.response is not None:
+                resp_info = f" | Status: {exc.response.status_code} | Body: {exc.response.text[:300]}"
+            print(
+                f"[ERROR ID {error_id}] [{type(exc).__name__}] {req_info}{resp_info} => {exc}"
+            )
+            print(traceback.format_exc())
+
             return BeautifulSoup("<error></error>", bs4_mode).find_all("error")
 
         except Exception as e:
             error_id = str(uuid.uuid4())
-            print(f"[ERROR ID {error_id}] => {e}")
+            print(f"[ERROR ID {error_id}] [{type(e).__name__}] => {e}")
+            print(traceback.format_exc())
+
             return BeautifulSoup("<error></error>", bs4_mode).find_all("error")
