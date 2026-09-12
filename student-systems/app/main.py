@@ -1,15 +1,21 @@
 import logging
 
-from fastapi import FastAPI, status
+from fastapi import FastAPI, Request, status
 from fastapi.middleware.cors import CORSMiddleware
+from redis_fastapi import FastAPIRedis
 
+from app.lifespan import lifespan
 from app.ntut import router as ntut_router
-from app.omdb import router as omdb_router
+from app.sync import router as sync_router
+from dotenv import load_dotenv
 
-logger = logging.getLogger()
+load_dotenv()
+logger = logging.getLogger("uvicorn.error")
 logger.setLevel(logging.INFO)
 
-app = FastAPI()
+
+app = FastAPI(title="School API", version="3.0.0", lifespan=lifespan)
+
 
 origins = ["http://localhost:5173", "https://search.lostmypillow.com"]
 
@@ -23,9 +29,11 @@ app.add_middleware(
 
 
 @app.get("/health", status_code=status.HTTP_200_OK)
-async def health_check():
+async def health_check(req: Request):
+    logger.info(req.app.state.db_engine)
     return {"status": "healthy"}
 
 
 app.include_router(ntut_router)
-app.include_router(omdb_router)
+app.include_router(sync_router)
+FastAPIRedis(app).lifespan().caching()

@@ -1,10 +1,54 @@
 services:
-  searchapi:
-    image: searchapi
+  student-system-mssql:
+    container_name: student-system-mssql
+    image: mcr.microsoft.com/mssql/server:2025-latest
+    platform: linux/amd64
+    environment:
+      - ACCEPT_EULA=Y
+      - MSSQL_SA_PASSWORD=YourPassword123!
+      - MSSQL_PID=Developer
+    ports:
+      - "1433:1433"
+    volumes:
+      - mssql_data:/var/opt/mssql
+    healthcheck:
+      test: /opt/mssql-tools18/bin/sqlcmd -S 127.0.0.1 -U sa -P 'YourPassword123!' -Q 'SELECT 1' -C
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+
+  student-system-redis:
+    container_name: student-system-redis
+    image: redis:7-alpine
+    restart: always
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    depends_on:
+      - student-system-mssql
+
+  student-system-api:
     build:
       context: .
-      dockerfile: ./Dockerfile
-    env_file:
-      - .env
+      dockerfile: Dockerfile
     ports:
       - "8080:8080"
+    env_file:
+      - .env
+
+
+  student-system-worker:
+    build: .
+    command: ["python", "-m", "arq", "app.workers.settings.WorkerSettings" ]
+    restart: always
+    env_file:
+      - .env
+
+volumes:
+  mssql_data:
