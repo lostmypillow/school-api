@@ -22,7 +22,7 @@ class CustomAsyncClient(httpx.AsyncClient):
 _client: CustomAsyncClient | None = None
 
 
-def get_scrape_client(max_concurrency: int = 40) -> CustomAsyncClient:
+def get_scrape_client(max_concurrency: int = 10) -> CustomAsyncClient:
     """Returns the existing global client or creates a new one."""
     global _client
     if _client is None or _client.is_closed:
@@ -30,7 +30,7 @@ def get_scrape_client(max_concurrency: int = 40) -> CustomAsyncClient:
             max_connections=max_concurrency, max_keepalive_connections=10
         )
         _client = CustomAsyncClient(
-            verify=False, limits=limits, timeout=10.0, max_concurrency=max_concurrency
+            verify=False, limits=limits, timeout=30.0, max_concurrency=max_concurrency
         )
     return _client
 
