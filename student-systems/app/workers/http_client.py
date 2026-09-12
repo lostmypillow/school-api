@@ -44,6 +44,7 @@ async def close_scrape_client():
 
 
 async def fetch_html(
+    ctx,
     redis: ArqRedis,
     combined_url: str,
     ttl_seconds: int = 86400,
@@ -58,9 +59,9 @@ async def fetch_html(
         if isinstance(cached_val, bytes):
             return cached_val.decode("utf-8")
         return cached_val
-
+    client: CustomAsyncClient = ctx["client"]  #
     # 2. Fetch from network on cache miss
-    response = await _client.get(combined_url)
+    response = await client.get(combined_url)
     response.raise_for_status()
     html_text = response.text
 
@@ -75,23 +76,22 @@ async def scrape(ctx: dict, url: str, tag: str):
     Designed for use as an arq task accepting `ctx` containing `redis`.
     """
     redis: ArqRedis = ctx["redis"]
+    client: CustomAsyncClient = ctx["client"]  #
 
-
-    async with _client.semaphore:
+    async with client.semaphore:
         combined_url = "https://aps.ntut.edu.tw/course/tw/" + url
         bs4_mode = "html.parser" if tag == "sem" else "lxml"
 
         if tag == "sem":
+
             def bs4_function(t):
-                return (
-                            t.name == "a" and t.get("href", "").startswith("Subj")
-                        )
+                return t.name == "a" and t.get("href", "").startswith("Subj")
         else:
             bs4_function = tag
 
         try:
             # Fetch from Redis cache or network
-            html_text = await fetch_html(redis, combined_url)
+            html_text = await fetch_html(ctx, redis, combined_url)
             return BeautifulSoup(html_text, bs4_mode).find_all(bs4_function)
 
         except httpx.HTTPError as exc:

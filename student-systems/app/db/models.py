@@ -156,8 +156,6 @@ class Course(Base):
         nullable=False,
     )
 
-    __table_args__ = (
-        UniqueConstraint("id", name="uq_courses_year_sem_code"),
-    )
+    __table_args__ = (UniqueConstraint("id", name="uq_courses_year_sem_code"),)
 
     department_year_rel = relationship("DepartmentYear", back_populates="courses")

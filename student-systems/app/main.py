@@ -6,8 +6,9 @@ from redis_fastapi import FastAPIRedis
 
 from app.lifespan import lifespan
 from app.ntut import router as ntut_router
-from app.sync import  router as sync_router
+from app.sync import router as sync_router
 from dotenv import load_dotenv
+
 load_dotenv()
 logger = logging.getLogger("uvicorn.error")
 logger.setLevel(logging.INFO)

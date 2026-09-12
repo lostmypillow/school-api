@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.models import Department, DepartmentYear, Semester
 
+
 async def save_ntut_operations(db: AsyncSession, payload: dict) -> None:
     """Pure DB function: Upserts payload into SQLite or PostgreSQL seamlessly."""
     now = datetime.now(UTC)
@@ -21,24 +22,31 @@ async def save_ntut_operations(db: AsyncSession, payload: dict) -> None:
 
     elif payload.get("dep_list"):
         for d in payload["dep_list"]:
-            department = Department(**d,  created_at=d.get("created_at") or now,
-                updated_at=d.get("updated_at") or now,)
+            department = Department(
+                **d,
+                created_at=d.get("created_at") or now,
+                updated_at=d.get("updated_at") or now,
+            )
             await db.merge(department)
 
     elif payload.get("dep_year_list"):
         for c in payload["dep_year_list"]:
-            dep_year = DepartmentYear(**c, created_at=c.get("created_at") or now,
-                updated_at=c.get("updated_at") or now)
+            dep_year = DepartmentYear(
+                **c,
+                created_at=c.get("created_at") or now,
+                updated_at=c.get("updated_at") or now,
+            )
             await db.merge(dep_year)
-
 
     elif payload.get("course_list"):
         for c in payload["course_list"]:
-            course = Course(**c, created_at=c.get("created_at") or now,
-                updated_at=c.get("updated_at") or now)
+            course = Course(
+                **c,
+                created_at=c.get("created_at") or now,
+                updated_at=c.get("updated_at") or now,
+            )
             await db.merge(course)
     await db.commit()
-       
 
 
 async def get_existing_semester_ids(db: AsyncSession) -> set[str]:

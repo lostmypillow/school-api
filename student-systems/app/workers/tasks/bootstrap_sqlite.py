@@ -5,7 +5,6 @@ from datetime import date
 from itertools import batched
 import logging
 import math
-import uuid
 from tqdm.auto import tqdm
 
 from bs4 import BeautifulSoup
@@ -17,12 +16,13 @@ from app.workers.http_client import scrape
 from app.db.models import Semester
 
 logger = logging.getLogger(__name__)
+
+
 async def bootstrap_sqlite(ctx: dict) -> None:
     """Out-of-band task: Fetches external HTTP catalog, saves to Postgres, updates Cache."""
     start_time = time.time()
     db: DB = ctx["db"]
     print("Starting external catalog sync via httpx...")
-    
 
     try:
         async with db.get_session() as session:
@@ -68,26 +68,24 @@ async def bootstrap_sqlite(ctx: dict) -> None:
             print("Preparing to retrieve existing semster IDs for departments...")
             results = await session.scalars(select(Semester).distinct())
 
-
             sems_to_scrape = {r for r in results.all() if r is not None}
-
 
             seen_dep_ids = set()
             if sems_to_scrape:
-                print(
-                    f"Scraping departments for {len(sems_to_scrape)} semesters..."
-                )
+                print(f"Scraping departments for {len(sems_to_scrape)} semesters...")
                 total_chunks = math.ceil(len(sems_to_scrape) / CHUNK_SIZE)
                 for sem_chunk in tqdm(
-                        batched(sems_to_scrape, CHUNK_SIZE),
-                        total=total_chunks,
-                        desc="Saving departments to DB"
+                    batched(sems_to_scrape, CHUNK_SIZE),
+                    total=total_chunks,
+                    desc="Saving departments to DB",
                 ):
                     new_departments = []
 
-
                     raw_department_result = await asyncio.gather(
-                        *(scrape(ctx=ctx, url=str(sem.link), tag="a") for sem in sem_chunk)
+                        *(
+                            scrape(ctx=ctx, url=str(sem.link), tag="a")
+                            for sem in sem_chunk
+                        )
                     )
 
                     for sublist in raw_department_result:
@@ -115,14 +113,12 @@ async def bootstrap_sqlite(ctx: dict) -> None:
                                     )
 
                     if new_departments:
-                        await save_ntut_operations(session, {"dep_list": new_departments})
+                        await save_ntut_operations(
+                            session, {"dep_list": new_departments}
+                        )
                 print("Successfully saved department data into database")
 
-
-
-
             all_dept_records = (await session.scalars(select(Department))).all()
-
 
             seen_class_ids = set()
             if all_dept_records:
@@ -131,16 +127,19 @@ async def bootstrap_sqlite(ctx: dict) -> None:
                 )
                 total_chunks = math.ceil(len(all_dept_records) / CHUNK_SIZE)
                 for dep_chunk in tqdm(
-                        batched(all_dept_records, CHUNK_SIZE),
-                        total=total_chunks,
-                        desc="Saving department years to DB"
+                    batched(all_dept_records, CHUNK_SIZE),
+                    total=total_chunks,
+                    desc="Saving department years to DB",
                 ):
                     department_years_list = []
 
                     raw_department_year_result = await asyncio.gather(
-                        *(scrape(ctx=ctx, url=str(dept.link), tag="a") for dept in dep_chunk)
+                        *(
+                            scrape(ctx=ctx, url=str(dept.link), tag="a")
+                            for dept in dep_chunk
+                        )
                     )
-           
+
                     for sublist, parent_dept in zip(
                         raw_department_year_result, dep_chunk
                     ):
@@ -170,35 +169,34 @@ async def bootstrap_sqlite(ctx: dict) -> None:
                                             "link": department_year["href"],
                                         }
                                     )
-                
-                    if department_years_list:
-                        await save_ntut_operations(session, {"dep_year_list": department_years_list})
-                        session.expunge_all()
 
+                    if department_years_list:
+                        await save_ntut_operations(
+                            session, {"dep_year_list": department_years_list}
+                        )
+                        session.expunge_all()
 
                 print("Successfully saved department years data into database")
 
-
             # Courses
-            
+
             dep_years_to_scrape = (await session.scalars(select(DepartmentYear))).all()
 
             if dep_years_to_scrape:
                 total_chunks = math.ceil(len(dep_years_to_scrape) / CHUNK_SIZE)
                 for dep_year_chunk in tqdm(
-                        batched(dep_years_to_scrape, CHUNK_SIZE),
-                        total=total_chunks,
-                        desc="Scraping & Saving Courses",
+                    batched(dep_years_to_scrape, CHUNK_SIZE),
+                    total=total_chunks,
+                    desc="Scraping & Saving Courses",
                 ):
                     course_list = []
-                    
+
                     raw_course_result = await asyncio.gather(
                         *(
-                            scrape(ctx=ctx,url=str(dep_year.link), tag="tr")
+                            scrape(ctx=ctx, url=str(dep_year.link), tag="tr")
                             for dep_year in dep_year_chunk
                         )
                     )
-
 
                     for sublist, parent_dep_year in zip(
                         raw_course_result, dep_year_chunk
@@ -215,7 +213,7 @@ async def bootstrap_sqlite(ctx: dict) -> None:
                                     {
                                         "id": f"{parent_dep_year.year}_{parent_dep_year.sem}_{parent_dep_year.code}_{cells[0].text.strip() if cells[0].text.strip() else cells[1].text.strip()}",
                                         "department_year_id": parent_dep_year.id,
-                                        "year":parent_dep_year.year,
+                                        "year": parent_dep_year.year,
                                         "sem": parent_dep_year.sem,
                                         "code": cells[0].text.strip().zfill(6)
                                         if cells[0].text.strip()
@@ -288,7 +286,9 @@ async def bootstrap_sqlite(ctx: dict) -> None:
                                 soup.decompose()
 
                     if course_list:
-                        await save_ntut_operations(session, {"course_list": course_list})
+                        await save_ntut_operations(
+                            session, {"course_list": course_list}
+                        )
                         session.expunge_all()
                 print("Successfully saved courses data into database")
 
@@ -304,5 +304,3 @@ async def bootstrap_sqlite(ctx: dict) -> None:
 
     except Exception:
         logger.exception("NTUT -> DB sync failed")
-
-

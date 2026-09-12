@@ -3,11 +3,12 @@ from typing import Any
 from sqlalchemy.ext.asyncio import AsyncEngine
 from app.db.models import Base
 from tqdm.asyncio import tqdm
-async def bootstrap_mssql(ctx:dict):
+
+
+async def bootstrap_mssql(ctx: dict):
     sqlite_engine: AsyncEngine = ctx["db"].engine
     mssql_engine: AsyncEngine = ctx["mssql_db"].engine
 
-    from typing import Any
     from sqlalchemy import select
 
     async with mssql_engine.begin() as ms_conn:

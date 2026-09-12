@@ -14,9 +14,7 @@ DATA_DIR = Path(__file__).resolve().parent.parent / "data"
 os.makedirs(DATA_DIR, exist_ok=True)
 
 
-
 class DB:
-
     def __init__(self, db_url: str):
         # 1. Handle driver-specific connect args
         connect_args = {}
@@ -29,21 +27,17 @@ class DB:
             pool_pre_ping=True,
         )
 
-        self.session_factory: async_sessionmaker[AsyncSession] = (
-            async_sessionmaker(
-                bind=self.engine,
-                autocommit=False,
-                autoflush=False,
-                expire_on_commit=False,
-            )
+        self.session_factory: async_sessionmaker[AsyncSession] = async_sessionmaker(
+            bind=self.engine,
+            autocommit=False,
+            autoflush=False,
+            expire_on_commit=False,
         )
 
     @asynccontextmanager
     async def get_session(self) -> AsyncGenerator[AsyncSession, None]:
-            async with self.session_factory() as session:
-                yield session
+        async with self.session_factory() as session:
+            yield session
 
     async def close(self) -> None:
         await self.engine.dispose()
-
-

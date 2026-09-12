@@ -14,8 +14,9 @@ from app.workers.http_client import get_scrape_client
 load_dotenv()
 DATA_DIR = Path(__file__).resolve().parent.parent.parent / "data"
 
+
 async def startup(ctx: dict):
-    bootstrap_engine = DB(os.getenv('BOOTSTRAP_URL', '')).engine
+    bootstrap_engine = DB(os.getenv("BOOTSTRAP_URL", "")).engine
 
     async with bootstrap_engine.connect() as conn:
         conn = await conn.execution_options(isolation_level="AUTOCOMMIT")
@@ -31,19 +32,19 @@ async def startup(ctx: dict):
 
     await bootstrap_engine.dispose()
     print((f"sqlite+aiosqlite:///{DATA_DIR / 'ntut_boostrap.db'}"))
-    ctx['db'] = DB(f"sqlite+aiosqlite:///{DATA_DIR / 'ntut_boostrap.db'}")
-    ctx['mssql_db'] = DB(os.getenv('DB_URL', ''))
-    ctx['client']= get_scrape_client()
+    ctx["db"] = DB(f"sqlite+aiosqlite:///{DATA_DIR / 'ntut_boostrap.db'}")
+    ctx["mssql_db"] = DB(os.getenv("DB_URL", ""))
+    ctx["client"] = get_scrape_client()
     print("ARQ Worker initialized database engine.")
 
 
 async def shutdown(ctx: dict):
     await close_scrape_client()
-    if ctx['db']:
-        await ctx['db'].close()
+    if ctx["db"]:
+        await ctx["db"].close()
         print("SQLite database engine disposed.")
-    if ctx['mssql_db']:
-        await ctx['mssql_db'].close()
+    if ctx["mssql_db"]:
+        await ctx["mssql_db"].close()
         print("MSSQL database engine disposed.")
 
 
@@ -56,4 +57,3 @@ class WorkerSettings:
     job_timeout = 3000
     on_startup = startup
     on_shutdown = shutdown
-
