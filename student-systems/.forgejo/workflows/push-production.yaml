@@ -20,7 +20,7 @@ jobs:
           enable-cache: true
 
       - name: Install Dependencies
-        run: uv sync --no-default-groups --group prod
+        run: uv sync
 
       - name: Run Linter (Ruff)
         run: uv run ruff check
