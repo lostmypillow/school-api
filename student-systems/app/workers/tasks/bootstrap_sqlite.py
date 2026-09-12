@@ -76,7 +76,7 @@ async def bootstrap_sqlite(ctx: dict) -> None:
                     f"Scraping departments for {len(sems_to_scrape)} semesters..."
                 )
                 raw_department_result = await tqdm_asyncio.gather(
-                    *(scrape(ctx=ctx, url=sem.link, tag="a") for sem in sems_to_scrape)
+                    *(scrape(ctx=ctx, url=str(sem.link), tag="a") for sem in sems_to_scrape)
                 )
 
                 for sublist in raw_department_result:

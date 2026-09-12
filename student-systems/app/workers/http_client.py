@@ -53,7 +53,7 @@ async def fetch_html(
 
     # 1. Try reading from Redis cache
     cached_bytes = await redis.get(cache_key)
-    if cached_bytes is not None:
+    if cached_bytes is not None and isinstance(cached_bytes, bytes):
         return cached_bytes.decode("utf-8")
 
     # 2. Fetch from network on cache miss
