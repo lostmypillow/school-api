@@ -1,7 +1,0 @@
-{
-    "recommendations": [
-        "charliermarsh.ruff",
-        "adpyke.vscode-sql-formatter",
-        "the0807.uv-toolkit"
-    ]
-}
