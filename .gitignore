@@ -1,1 +1,14 @@
 .idea
+.DS_Store
+.venv
+.env
+*.swp
+__pycache__
+.pytest_cache
+.venv
+*.egg-info
+
+# CDK asset staging directory
+.cdk.staging
+cdk.out
+.idea
