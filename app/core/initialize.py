@@ -10,7 +10,7 @@ from sqlalchemy.ext.asyncio import (
     AsyncEngine,
 )
 
-DATA_DIR = Path(__file__).resolve().parent.parent / "data"
+DATA_DIR = Path(__file__).resolve().parent.parent.parent / "data"
 os.makedirs(DATA_DIR, exist_ok=True)
 
 

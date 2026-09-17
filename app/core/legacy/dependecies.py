@@ -4,7 +4,7 @@ from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.database.engine import async_session
+from app.core.legacy.engine import async_session
 
 
 async def get_session() -> AsyncGenerator[AsyncSession, None]:

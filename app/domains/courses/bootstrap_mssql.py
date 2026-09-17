@@ -1,7 +1,7 @@
 from typing import Any
 
 from sqlalchemy.ext.asyncio import AsyncEngine
-from app.core.database.models import Base
+from app.core.models import Base
 from tqdm.asyncio import tqdm
 
 

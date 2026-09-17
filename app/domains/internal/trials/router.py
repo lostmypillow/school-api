@@ -9,7 +9,7 @@ from sqlalchemy import RowMapping, text
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.database.dependecies import get_session
+from app.database import get_session
 
 logger = logging.getLogger(__name__)
 

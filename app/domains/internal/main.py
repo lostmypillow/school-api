@@ -21,8 +21,8 @@ from fastapi.openapi.docs import (
 )
 from fastapi.responses import HTMLResponse
 
-from app.database.dependecies import get_session_ctx
-from app.database.engine import async_engine
+from app.database import get_session_ctx
+from app.core.legacy.engine import async_engine
 from app.domains.internal.card.router import router as card_router
 from app.domains.internal.ldap.repositories.ldap_repo import LdapRepository
 from app.domains.internal.ldap.routers.ldap_router import router as ldap_router

@@ -2,7 +2,7 @@ from typing import List
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.database.new_exec_sql import exec_sql
+from app.database import exec_sql
 
 
 class SourceRepository:

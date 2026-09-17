@@ -40,15 +40,15 @@ services:
     ports:
       - "8080:8080"
     env_file:
-      - .env
+      - .env.dev
 
 
   student-system-worker:
     build: .
-    command: ["python", "-m", "arq", "app.workers.settings.WorkerSettings" ]
+    command: ["python", "-m", "arq", "app.worker.WorkerSettings" ]
     restart: always
     env_file:
-      - .env
+      - .env.dev
 
 volumes:
   mssql_data:

@@ -2,7 +2,7 @@
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.database.dependecies import get_session
+from app.database import get_session
 from app.features.ldap.repositories.ldap_repo import LdapRepository
 from app.features.ldap.services.ldap_service import LdapService
 from app.features.ldap.services.source_service import SourceService

@@ -1,19 +1,25 @@
 import asyncio
+import hashlib
 import re
 import time
+import traceback
+import uuid
 from datetime import date
 from itertools import batched
 import logging
 import math
+
+import httpx
+from arq import ArqRedis
 from tqdm.auto import tqdm
 
 from bs4 import BeautifulSoup
 from sqlalchemy import select
-from app.core.database.crud import save_ntut_operations
-from app.core.database.initialize import DB
-from app.core.database.models import Department, DepartmentYear
-from app.worker import scrape
-from app.core.database.models import Semester
+from app.core.crud import save_ntut_operations
+from app.core.initialize import DB
+from app.core.models import Department, DepartmentYear
+from app.core.models import Semester
+from app.core.custom_http_client import CustomAsyncClient
 
 logger = logging.getLogger(__name__)
 
@@ -304,3 +310,78 @@ async def bootstrap_sqlite(ctx: dict) -> None:
 
     except Exception:
         logger.exception("NTUT -> DB sync failed")
+
+
+async def scrape(ctx: dict, url: str, tag: str):
+    """Scrapes using the shared internal HTTP client with error handling and Redis caching.
+
+    Designed for use as an arq task accepting `ctx` containing `redis`.
+    """
+    redis: ArqRedis = ctx["redis"]
+    client: CustomAsyncClient = ctx["client"]  #
+
+    async with client.semaphore:
+        combined_url = "https://aps.ntut.edu.tw/course/tw/" + url
+        bs4_mode = "html.parser" if tag == "sem" else "lxml"
+
+        if tag == "sem":
+
+            def bs4_function(t):
+                return t.name == "a" and t.get("href", "").startswith("Subj")
+        else:
+            bs4_function = tag
+
+        try:
+            # Fetch from Redis cache or network
+            html_text = await fetch_html(ctx, redis, combined_url)
+            return BeautifulSoup(html_text, bs4_mode).find_all(bs4_function)
+
+        except httpx.HTTPError as exc:
+            error_id = str(uuid.uuid4())
+
+            req_info = (
+                f"{exc.request.method} {exc.request.url}"
+                if exc.request
+                else "No request"
+            )
+            resp_info = ""
+            if isinstance(exc, httpx.HTTPStatusError) and exc.response is not None:
+                resp_info = f" | Status: {exc.response.status_code} | Body: {exc.response.text[:300]}"
+            print(
+                f"[ERROR ID {error_id}] [{type(exc).__name__}] {req_info}{resp_info} => {exc}"
+            )
+            print(traceback.format_exc())
+
+            return BeautifulSoup("<error></error>", bs4_mode).find_all("error")
+
+        except Exception as e:
+            error_id = str(uuid.uuid4())
+            print(f"[ERROR ID {error_id}] [{type(e).__name__}] => {e}")
+            print(traceback.format_exc())
+
+            return BeautifulSoup("<error></error>", bs4_mode).find_all("error")
+
+
+async def fetch_html(
+    ctx,
+    redis: ArqRedis,
+    combined_url: str,
+    ttl_seconds: int = 86400,
+) -> str:
+    """Fetches raw HTML from Redis cache, or falls back to HTTP request on miss."""
+    url_hash = hashlib.sha256(combined_url.encode("utf-8")).hexdigest()
+    cache_key = f"cache:html:{url_hash}"
+
+    # 1. Try reading from Redis cache
+    cached_val = await redis.get(cache_key)
+    if cached_val is not None:
+        if isinstance(cached_val, bytes):
+            return cached_val.decode("utf-8")
+        return cached_val
+    response = await ctx["client"].get(combined_url)
+    response.raise_for_status()
+    html_text = response.text
+
+    # 3. Save response string to Redis with TTL
+    await redis.set(cache_key, html_text, ex=ttl_seconds)
+    return html_text

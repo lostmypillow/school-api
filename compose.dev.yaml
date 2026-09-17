@@ -56,7 +56,7 @@ services:
   student-system-worker-dev:
     container_name: student-system-worker-dev
     build: .
-    command: ["python", "-m", "arq", "app.workers.settings.WorkerSettings" ]
+    command: ["python", "-m", "arq", "app.worker.WorkerSettings" ]
     restart: always
     env_file:
       - .env.dev
