@@ -1,0 +1,50 @@
+[project]
+name = "school-api"
+version = "3.0.0"
+description = "API to search NTUT courses and movies"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "beautifulsoup4>=4.15.0",
+    "fastapi[standard]>=0.141.1",
+    "httpx>=0.28.1",
+    "lxml>=6.1.2",
+    "pydantic>=2.13.4",
+    "python-dotenv>=1.2.3",
+    "gunicorn>=26.2.0; sys_platform != 'win32'",
+    "sqlalchemy>=2.0.52",
+    "aiosqlite>=0.22.1",
+    "fastapi-redis-sdk>=0.8.0",
+    "greenlet>=3.5.5",
+    "arq>=0.25.0",
+    "asyncpg>=0.31.0",
+    "tqdm>=4.70.0",
+    "types-tqdm>=4.70.0.20260906",
+    "pyodbc>=5.3.0",
+    "aioodbc>=0.5.0",
+    "cachetools>=7.1.8",
+    "asyncache>=0.1.1",
+]
+
+
+[dependency-groups]
+dev = [
+    "pyrefly>=1.2.0",
+    "pytest-asyncio>=1.4.0",
+    "pytest>=9.1.1",
+    "ruff>=0.16.3",
+]
+
+[tool.pyrefly]
+preset = "default"
+search-path = ["app"]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+
+[tool.ruff.lint]
+select = ["E", "F", "ASYNC"] # Adds async-specific checks
+ignore = ["N999", "E501"]
+
+[tool.fastapi]
+entrypoint = "app.main:app"
