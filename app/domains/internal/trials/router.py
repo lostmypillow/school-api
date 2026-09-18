@@ -1,0 +1,316 @@
+import logging
+from collections.abc import Sequence
+from datetime import date, datetime
+from typing import Annotated, Any, Literal
+
+from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel, Field, model_validator
+from sqlalchemy import RowMapping, text
+from sqlalchemy.exc import IntegrityError
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.database import get_session
+
+logger = logging.getLogger(__name__)
+
+
+router = APIRouter(prefix="/trials", tags=["TrialRecords"])
+
+class LogRecordCreate(BaseModel):
+    employee_name: str    # 對應: 員工姓名
+    category: str         # 對應: 類別
+    log_content: str      # 對應: 記錄檔 (ntext)
+    computer_name: str    # 對應: 電腦名稱
+    employee_id: str       # 對應: 學號
+
+class LogRecordResponse(LogRecordCreate):
+    id: int
+    date: datetime
+    time: datetime
+
+
+class SchoolRecord(BaseModel):
+    id: int
+    name: str
+    city: str
+
+
+class TrialRecordBase(BaseModel):
+    source: str | None = None
+    student_id: str | None = Field(
+        None,
+        pattern=r"^\d{6}$",
+        description="若有提供, 則必須剛好為 6 位數字。",
+    )
+    student_name: str | None = None
+    middle_school_name: str | None = None
+    middle_school_class: str | None = None
+    high_school_name: str | None = None
+    high_school_class: str | None = None
+    registered_class: str | None = None
+    trial_date: date | None = None
+    telephone: str | None = None
+    mobile: str | None = None
+    notes: str = ""
+    parent_name: str | None = None
+    manager: str | None = None
+    status: str | None = None
+    current_grade: str | None = None
+
+    @model_validator(mode="after")
+    def check_school_and_contact_requirements(self):  # noqa: ANN201
+        if not self.middle_school_name and not self.high_school_name:
+            no_school_error_message = "必須提供至少一個學校名稱(國中校名或高中校名)。"
+            raise ValueError(no_school_error_message)
+
+        if not self.telephone and not self.mobile:
+            no_phone_error_message = "必須提供至少一個聯絡電話 (市話或手機)。"
+            raise ValueError(no_phone_error_message)
+
+        return self
+
+
+class TrialRecordCreate(TrialRecordBase):
+    pass
+
+
+class TrialRecordResponse(TrialRecordBase):
+    id: int
+    created_at: datetime
+    updated_at: datetime
+
+
+@router.post("/log", response_model=LogRecordResponse)
+async def create_log(
+        log_entry: LogRecordCreate,
+        db: Annotated[AsyncSession, Depends(get_session)],
+) -> dict:
+    query = text("""
+        INSERT INTO .dbo.修改記錄
+        ([員工姓名], [類別], [記錄檔], [日期], [時間], [電腦名稱], [學號])
+        OUTPUT Inserted.[自動編號] AS id, Inserted.[日期] AS date, Inserted.[時間] AS time
+        VALUES
+        (:employee_name, :category, :log_content, GETDATE(), GETDATE(), :computer_name, :employee_id)
+    """)
+
+    try:
+        # model_dump() matches the keys to the bound parameters in the SQL query
+        result = await db.execute(query, log_entry.model_dump())
+        inserted_row = result.mappings().first()
+        await db.commit()
+
+        # Combine the input data with the database-generated values (id, date, time)
+        return {**log_entry.model_dump(), **inserted_row}
+
+    except IntegrityError as e:
+        await db.rollback()
+        error_message = f"資料庫完整性錯誤：{e.orig}"
+        logger.exception(error_message)
+        raise HTTPException(status_code=400, detail=error_message) from None
+
+    except Exception as e:
+        await db.rollback()
+        error_message = f"建立日誌時發生非預期的錯誤。{e}"
+        logger.exception(error_message)
+        raise HTTPException(status_code=500, detail=error_message) from e
+
+
+@router.get("/schools")
+async def get_schools(
+    db: Annotated[AsyncSession, Depends(get_session)],
+    level: Literal["middle", "high"] = "middle",
+):
+    level_id = 2 if level == "middle" else 3
+    query = text("""
+   select 自動編號 as id, 名稱 as name, 縣市 as city from .dbo.學校
+  where 類別 = :level_id
+    """)
+    result = await db.execute(query, {"level_id": level_id})
+    return result.mappings().all()
+
+
+@router.get("/managers")
+async def get_managers(db: Annotated[AsyncSession, Depends(get_session)]) -> Sequence[Any]:
+    query = text("""
+    select
+	姓名
+from
+	.dbo.使用者
+where
+	是業務 = 1
+	AND 狀態 = 1
+	AND LEN(學號) >= 6
+    """)
+    result = await db.execute(query)
+    return result.scalars().all()
+
+
+@router.post("/", response_model=TrialRecordResponse)
+async def create_trial(
+    trial: TrialRecordCreate,
+    db: Annotated[AsyncSession, Depends(get_session)],
+) -> dict:
+    query = text("""
+        INSERT INTO trial_records
+        (source, student_id, student_name, middle_school_name, middle_school_class,
+         high_school_name, high_school_class, registered_class, trial_date,
+         telephone, mobile, notes, parent_name, manager, status, current_grade,
+         created_at, updated_at)
+        OUTPUT Inserted.id, Inserted.created_at, Inserted.updated_at
+        VALUES
+        (:source, :student_id, :student_name, :middle_school_name, :middle_school_class,
+         :high_school_name, :high_school_class, :registered_class, :trial_date,
+         :telephone, :mobile, :notes, :parent_name, :manager, :status, :current_grade,
+         GETDATE(), GETDATE())
+    """)
+
+    try:
+        result = await db.execute(query, trial.model_dump())
+        inserted_row = result.mappings().first()
+        await db.commit()
+        return {**trial.model_dump(), **inserted_row}
+    except IntegrityError as e:
+        await db.rollback()
+        error_message = f"資料庫完整性錯誤：{e.orig}"
+        logger.exception(error_message)
+        raise HTTPException(status_code=400, detail=error_message) from None
+    except Exception as e:
+        await db.rollback()
+        error_message = f"建立試用時發生非預期的錯誤。{e}"
+        logger.exception(error_message)
+        raise HTTPException(status_code=500, detail=error_message) from e
+
+
+@router.get("/")
+async def read_trials(
+    db: Annotated[AsyncSession, Depends(get_session)], skip: int = 0, limit: int = 50
+):
+    #    SELECT id, source, student_id, student_name, middle_school_name, middle_school_class,
+    #                high_school_name, high_school_class, registered_class, trial_date,
+    #                telephone, mobile, notes, parent_name, manager, status, current_grade, created_at, updated_at
+    #         FROM trial_records
+    #         ORDER BY id
+    #         OFFSET :skip ROWS
+    #         FETCH NEXT :limit ROWS ONLY
+    query = text("""
+        WITH PagedResults AS (
+    SELECT id, source, student_id, student_name, middle_school_name, middle_school_class,
+           high_school_name, high_school_class, registered_class, trial_date,
+           telephone, mobile, notes, parent_name, manager, status, current_grade, 
+           created_at, updated_at,
+           ROW_NUMBER() OVER (ORDER BY created_at DESC) AS row_num,
+           COUNT(*) OVER() AS total_count
+    FROM trial_records
+)
+SELECT id, source, student_id, student_name, middle_school_name, middle_school_class,
+       high_school_name, high_school_class, registered_class, trial_date,
+       telephone, mobile, notes, parent_name, manager, status, current_grade, 
+       created_at, updated_at, total_count
+FROM PagedResults
+WHERE row_num > :skip AND row_num <= (:skip + :limit)
+ORDER BY created_at DESC;
+    """)
+
+    result = await db.execute(query, {"skip": skip, "limit": limit})
+    rows = result.mappings().all()
+    total = rows[0]["total_count"] if rows else 0
+
+    return {
+        "data": rows,
+        "total": total,
+    }
+
+
+@router.get("/{trial_id}", response_model=TrialRecordResponse)
+async def read_trial(
+    trial_id: int, db: Annotated[AsyncSession, Depends(get_session)]
+) -> RowMapping:
+    query = text("""
+        SELECT id, source, student_id, student_name, middle_school_name, middle_school_class,
+               high_school_name, high_school_class, registered_class, trial_date,
+               telephone, mobile, notes, parent_name, manager, status, current_grade, created_at, updated_at
+        FROM trial_records
+        WHERE id = :id
+    """)
+
+    result = await db.execute(query, {"id": trial_id})
+    row = result.mappings().first()
+
+    if not row:
+        error_message = "找不到問課紀錄 (TrialRecord)"
+        logger.error("找不到問課紀錄 (TrialRecord): %s", result)
+        raise HTTPException(status_code=404, detail=error_message)
+    return row
+
+
+@router.put("/{trial_id}", response_model=TrialRecordResponse)
+async def update_trial(
+    trial_id: int, trial: TrialRecordBase, db: Annotated[AsyncSession, Depends(get_session)]
+) -> dict[str, Any]:
+    check_query = text("SELECT id FROM trial_records WHERE id = :id")
+    check_result = await db.execute(check_query, {"id": trial_id})
+    if not check_result.scalar():
+        error_message = "找不到問課紀錄 (TrialRecord)"
+        logger.exception(error_message, check_result)
+        raise HTTPException(status_code=404, detail=error_message)
+
+    update_query = text("""
+        UPDATE trial_records
+        SET source = :source,
+            student_id = :student_id,
+            student_name = :student_name,
+            middle_school_name = :middle_school_name,
+            middle_school_class = :middle_school_class,
+            high_school_name = :high_school_name,
+            high_school_class = :high_school_class,
+            registered_class = :registered_class,
+            trial_date = :trial_date,
+            telephone = :telephone,
+            mobile = :mobile,
+            notes = :notes,
+            parent_name = :parent_name,
+            manager = :manager,
+            status = :status,
+            current_grade = :current_grade, updated_at = GETDATE()
+        OUTPUT Inserted.id, Inserted.created_at, Inserted.updated_at
+        WHERE id = :id
+    """)
+
+    params = trial.model_dump()
+    params["id"] = trial_id
+
+    try:
+        result = await db.execute(update_query, params)
+        updated_row = result.mappings().first()
+        await db.commit()
+        return {**trial.model_dump(), **updated_row}
+    except IntegrityError as e:
+        await db.rollback()
+        error_message = f"Database integrity error: {e.orig}"
+        logger.exception(error_message)
+        raise HTTPException(status_code=400, detail=error_message) from None
+    except Exception as e:
+        await db.rollback()
+        error_message = "An unexpected error occurred while updating the trial."
+        logger.exception(error_message)
+        raise HTTPException(status_code=500, detail=error_message) from e
+
+
+@router.delete("/{trial_id}")
+async def delete_trial(
+    trial_id: int, db: Annotated[AsyncSession, Depends(get_session)]
+) -> dict[str, str]:
+    query = text("""
+        DELETE FROM trial_records
+        WHERE id = :id
+    """)
+
+    result = await db.execute(query, {"id": trial_id})
+    await db.commit()
+
+    if result.rowcount == 0:
+        error_message = "找不到問課紀錄 (TrialRecord)"
+        logger.exception(error_message)
+        raise HTTPException(status_code=404, detail=error_message)
+
+    return {"detail": "TrialRecord deleted successfully"}

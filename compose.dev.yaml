@@ -1,0 +1,75 @@
+services:
+  student-system-mssql:
+    container_name: student-system-mssql
+    image: mcr.microsoft.com/mssql/server:2025-latest
+    platform: linux/amd64
+    environment:
+      - ACCEPT_EULA=Y
+      - MSSQL_SA_PASSWORD=YourPassword123!
+      - MSSQL_PID=Developer
+    ports:
+      - "1433:1433"
+    volumes:
+      - mssql_data:/var/opt/mssql
+    healthcheck:
+      test: /opt/mssql-tools18/bin/sqlcmd -S 127.0.0.1 -U sa -P 'YourPassword123!' -Q 'SELECT 1' -C
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    networks:
+      - proxy-net
+
+
+  student-system-redis:
+    container_name: student-system-redis
+    image: redis:7-alpine
+    restart: always
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    depends_on:
+      - student-system-mssql
+    networks:
+      - proxy-net
+
+  student-system-api-dev:
+    container_name: student-system-api-dev
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8081:8080"
+    env_file:
+      - .env.dev
+    networks:
+      - proxy-net
+    depends_on:
+      - student-system-mssql
+      - student-system-redis
+
+
+  student-system-worker-dev:
+    container_name: student-system-worker-dev
+    build: .
+    command: ["python", "-m", "arq", "app.worker.WorkerSettings" ]
+    restart: always
+    env_file:
+      - .env.dev
+    networks:
+      - proxy-net
+    depends_on:
+      - student-system-redis
+      - student-system-mssql
+      - student-system-api-dev
+
+networks:
+  proxy-net:
+    external: true
+
+volumes:
+  mssql_data:
