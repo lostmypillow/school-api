@@ -49,6 +49,9 @@ services:
     restart: always
     env_file:
       - .env.dev
+    depends_on:
+      - student-system-mssql
+      - student-system-redis
 
 volumes:
   mssql_data:
