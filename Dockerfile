@@ -5,21 +5,24 @@ FROM python:3.13.15-slim-trixie AS builder
 
 WORKDIR /app
 
-COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 COPY pyproject.toml .
 COPY uv.lock .
+# 1. Install curl so the download script works
+RUN pip install -vvv --no-cache-dir uv -i https://mirror.kakao.com/pypi/simple
+# 4. Sync your project
 RUN uv sync --no-dev
 
 # ==========================================
 # Stage 2: Runtime image
 # ==========================================
-FROM python:3.13.15-slim-trixie
+FROM python:3.14-slim
 
 WORKDIR /app
 COPY --from=builder /app/.venv ./.venv
 COPY . .
 
-RUN apt-get update && apt-get install -y --no-install-recommends \
+RUN apt-get update -o Debug::Acquire::http=true \
+    && apt-get install -y -V -o Debug::Acquire::http=true --no-install-recommends \
         curl \
         gnupg \
         unixodbc-dev \
@@ -28,11 +31,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && if ! echo "9 10 11 12 13" | grep -qw "$DEBIAN_VERSION"; then \
         echo "Debian $DEBIAN_VERSION is not currently supported." && exit 1; \
     fi \
-    && curl -fsSL -O "https://packages.microsoft.com/config/debian/${DEBIAN_VERSION}/packages-microsoft-prod.deb" \
-    && dpkg -i packages-microsoft-prod.deb \
+    && curl -v -L -O "https://packages.microsoft.com/config/debian/${DEBIAN_VERSION}/packages-microsoft-prod.deb" \
+    && dpkg -D1 -i packages-microsoft-prod.deb \
     && rm packages-microsoft-prod.deb \
-    && apt-get update \
-    && ACCEPT_EULA=Y apt-get install -y --no-install-recommends \
+    && apt-get update -o Debug::Acquire::http=true \
+    && ACCEPT_EULA=Y apt-get install -y -V -o Debug::Acquire::http=true --no-install-recommends \
         msodbcsql18 \
         mssql-tools18 \
     && echo 'export PATH="$PATH:/opt/mssql-tools18/bin"' >> /etc/bash.bashrc \
