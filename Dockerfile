@@ -1,7 +1,7 @@
 # ==========================================
 # Stage 1: Build dependencies
 # ==========================================
-FROM python:3.13.15-slim-trixie AS builder
+FROM python:3.14 AS builder
 
 WORKDIR /app
 
@@ -10,12 +10,12 @@ COPY uv.lock .
 # 1. Install curl so the download script works
 RUN pip install -vvv --no-cache-dir uv -i https://mirror.kakao.com/pypi/simple
 # 4. Sync your project
-RUN uv sync --no-dev
+RUN uv sync --no-dev --no-install-project
 
-# ==========================================
+# ===============a===========================
 # Stage 2: Runtime image
 # ==========================================
-FROM python:3.14-slim
+FROM python:3.14-bookworm
 
 WORKDIR /app
 COPY --from=builder /app/.venv ./.venv
@@ -45,7 +45,7 @@ RUN apt-get update -o Debug::Acquire::http=true \
 ENV PYTHONUNBUFFERED=1
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PATH="/app/.venv/bin:$PATH"
-ENV PYTHONPATH="/app/.venv/lib/python3.13/site-packages:/app"
+ENV PYTHONPATH="/app/.venv/lib/python3.14/site-packages:/app"
 
 EXPOSE 8080
 
