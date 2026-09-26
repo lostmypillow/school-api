@@ -40,10 +40,10 @@ async def lifespan(app: FastAPI):
     await app.state.arq_redis.close()
 
 
-app = FastAPI(title="School API", version="3.0.0", lifespan=lifespan)
+app = FastAPI(title="School API", version="4.0.1", lifespan=lifespan)
 
 
-origins = ["http://localhost:5173", "http://localhost:8081", "https://search.lostmypillow.com"]
+origins = ["http://localhost:5173", "http://localhost:8081", "http://localhost:8000", "https://school.lostmypillow.com", "https://school-dev.lostmypillow.com"]
 
 app.add_middleware(
     CORSMiddleware,  # type: ignore[arg-type]
