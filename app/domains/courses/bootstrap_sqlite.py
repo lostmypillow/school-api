@@ -24,7 +24,7 @@ from app.core.custom_http_client import CustomAsyncClient
 logger = logging.getLogger(__name__)
 
 
-async def bootstrap_sqlite(ctx: dict) -> None:
+async def bootstrap_sqlite(ctx: dict, *args, **kwargs) -> None:
     """Out-of-band task: Fetches external HTTP catalog, saves to Postgres, updates Cache."""
     start_time = time.time()
     db: DB = ctx["database"]

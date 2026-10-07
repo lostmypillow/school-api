@@ -1,6 +1,6 @@
 services:
-  student-system-mssql:
-    container_name: student-system-mssql
+  db:
+    container_name: school-db-dev
     image: mcr.microsoft.com/mssql/server:2025-latest
     platform: linux/amd64
     environment:
@@ -11,65 +11,78 @@ services:
       - "1433:1433"
     volumes:
       - mssql_data:/var/opt/mssql
+    deploy:
+      resources:
+        limits:
+          memory: 2048M
+          cpus: '2.0'
+        reservations:
+          memory: 2048M
+          cpus: '1.0'
+    networks:
+      - schoolapp-internal-dev-net
     healthcheck:
       test: /opt/mssql-tools18/bin/sqlcmd -S 127.0.0.1 -U sa -P 'YourPassword123!' -Q 'SELECT 1' -C
       interval: 10s
       timeout: 5s
       retries: 5
       start_period: 20s
-    networks:
-      - proxy-net
 
-
-  student-system-redis:
-    container_name: student-system-redis
+  redis:
+    container_name: school-redis-dev
     image: redis:7-alpine
     restart: always
-    ports:
-      - "6379:6379"
+    networks:
+      - schoolapp-internal-dev-net
     healthcheck:
       test: [ "CMD", "redis-cli", "ping" ]
       interval: 5s
       timeout: 3s
       retries: 5
     depends_on:
-      - student-system-mssql
-    networks:
-      - proxy-net
+      db:
+        condition: service_healthy
 
-  student-system-api-dev:
-    container_name: student-system-api-dev
+
+  api:
     build:
       context: .
       dockerfile: Dockerfile
-    ports:
-      - "8081:8080"
-    env_file:
-      - .env.dev
     networks:
-      - proxy-net
+      - schoolapp-internal-dev-net
+    env_file:
+      - .env
     depends_on:
-      - student-system-mssql
-      - student-system-redis
+      worker:
+        condition: service_started
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
 
 
-  student-system-worker-dev:
-    container_name: student-system-worker-dev
+  worker:
     build: .
     command: ["python", "-m", "arq", "app.worker.WorkerSettings" ]
     restart: always
     env_file:
-      - .env.dev
+      - .env
     networks:
-      - proxy-net
+      - schoolapp-internal-dev-net
+      - schoolapp-worker-dev-net
     depends_on:
-      - student-system-redis
-      - student-system-mssql
-      - student-system-api-dev
+      redis:
+        condition: service_started
 
-networks:
-  proxy-net:
-    external: true
 
 volumes:
   mssql_data:
+
+networks:
+  schoolapp-worker-dev-net:
+    driver: bridge
+    name: schoolapp-worker-dev-net
+  schoolapp-internal-dev-net:
+    driver: bridge
+    name: schoolapp-internal-dev-net
+    internal: true
