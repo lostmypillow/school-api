@@ -1,3 +1,9 @@
+import asyncio
+# Ensure an active event loop exists on Python 3.12+ for arq 0.25.0
+try:
+    asyncio.get_event_loop()
+except RuntimeError:
+    asyncio.set_event_loop(asyncio.new_event_loop())
 import logging
 import os
 from pathlib import Path

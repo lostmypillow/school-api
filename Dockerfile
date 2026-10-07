@@ -47,6 +47,6 @@ ENV PYTHONDONTWRITEBYTECODE=1
 ENV PATH="/app/.venv/bin:$PATH"
 ENV PYTHONPATH="/app/.venv/lib/python3.14/site-packages:/app"
 
-EXPOSE 8080
+EXPOSE 8000
 
-CMD ["python", "-m", "gunicorn", "app.main:app", "-k", "uvicorn.workers.UvicornWorker", "--bind", "0.0.0.0:8080"]
+CMD ["python", "-m", "gunicorn", "app.main:app", "-k", "uvicorn.workers.UvicornWorker", "--bind", "0.0.0.0:8000"]
