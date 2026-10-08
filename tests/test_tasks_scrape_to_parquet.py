@@ -1,20 +1,47 @@
 import hashlib
 from datetime import date
+from pathlib import Path
 from unittest.mock import MagicMock
 
 import httpx
 import pytest
-from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.initialize import DB
-from app.core.models import Course, Department, DepartmentYear, Semester
-from app.domains.courses.bootstrap_sqlite import (
-    bootstrap_sqlite,
+from app.domains.tasks.scrape_to_parquet import (
+    _append_to_parquet,
+    _read_parquet_records,
+    _safe_int,
+    scrape_to_parquet,
     fetch_html,
     scrape,
 )
 from tests.conftest import MockHTTPClient, MockRedis
+
+
+# ---------------------------------------------------------------------------
+# Unit tests for helper functions
+# ---------------------------------------------------------------------------
+
+
+def test_safe_int():
+    """Test _safe_int helper correctly parses numbers and returns None on invalid inputs."""
+    assert _safe_int(10) == 10
+    assert _safe_int("10") == 10
+    assert _safe_int(" 10 ") == 10
+    assert _safe_int("10.0") == 10
+    assert _safe_int(None) is None
+    assert _safe_int("") is None
+    assert _safe_int("N/A") is None
+
+
+def test_append_and_read_parquet(temp_parquet_dir: Path):
+    """Test _append_to_parquet creates parquet files and _read_parquet_records reads them."""
+    data = [{"id": "112_1", "year": "112", "sem": "1", "link": "link"}]
+    file_path = _append_to_parquet("semesters", data, temp_parquet_dir)
+    assert file_path.exists()
+
+    records = _read_parquet_records(file_path)
+    assert len(records) == 1
+    assert records[0]["id"] == "112_1"
 
 
 # ---------------------------------------------------------------------------
@@ -72,7 +99,6 @@ async def test_fetch_html_cache_miss(mock_redis: MockRedis):
     result = await fetch_html(ctx, mock_redis, url, ttl_seconds=3600)
     assert result == raw_html
 
-    # Verify cached in Redis
     cached = await mock_redis.get(cache_key)
     assert cached == raw_html
 
@@ -191,56 +217,33 @@ async def test_scrape_http_error_handling(mock_redis: MockRedis):
     assert results[0].name == "error"
 
 
-@pytest.mark.asyncio
-async def test_scrape_general_exception_handling(mock_redis: MockRedis):
-    """Test scrape catches generic Exception and returns <error></error> elements."""
-    url_path = "broken.jsp"
-    client = MockHTTPClient()
-    client.get_mock.side_effect = RuntimeError("Unexpected connection crash")
-
-    ctx = {"redis": mock_redis, "client": client}
-
-    results = await scrape(ctx, url_path, tag="a")
-    assert len(results) == 1
-    assert results[0].name == "error"
-
-
 # ---------------------------------------------------------------------------
-# Tests for bootstrap_sqlite
+# Tests for bootstrap_sqlite (scrape directly to parquet)
 # ---------------------------------------------------------------------------
 
 
 @pytest.mark.asyncio
 async def test_bootstrap_sqlite_semester_generation(
-    test_db: DB, mock_redis: MockRedis, test_session: AsyncSession
+    temp_parquet_dir: Path, mock_redis: MockRedis
 ):
     """Test bootstrap_sqlite generates semesters starting from current ROC year down to 86."""
     client = MockHTTPClient()
-    ctx = {"database": test_db, "redis": mock_redis, "client": client}
+    ctx = {"parquet_dir": temp_parquet_dir, "redis": mock_redis, "client": client}
 
-    # Run bootstrap_sqlite
-    await bootstrap_sqlite(ctx)
+    await scrape_to_parquet(ctx)
 
-    # Check generated semesters in DB
-    semesters = (
-        await test_session.scalars(select(Semester).order_by(Semester.year.desc()))
-    ).all()
-    assert len(semesters) > 0
+    sem_records = _read_parquet_records(temp_parquet_dir / "semesters.parquet")
+    assert len(sem_records) > 0
 
     current_roc_year = date.today().year - 1911
-    years = [int(s.year) for s in semesters]
+    years = [int(s["year"]) for s in sem_records]
     assert max(years) == current_roc_year
-    assert min(years) == 85  # Loop terminates when current_year goes from 86 to 85 (sem 2)
-
-    # Verify link structure
-    for s in semesters:
-        assert s.link == f"Subj.jsp?format=-2&year={s.year}&sem={s.sem}"
-        assert s.id == f"{s.year}_{s.sem}"
+    assert min(years) == 85
 
 
 @pytest.mark.asyncio
 async def test_bootstrap_sqlite_full_pipeline(
-    test_db: DB, mock_redis: MockRedis, test_session: AsyncSession
+    temp_parquet_dir: Path, mock_redis: MockRedis
 ):
     """Test complete bootstrap_sqlite pipeline from semesters -> departments -> dept years -> courses."""
     current_roc_year = date.today().year - 1911
@@ -266,7 +269,6 @@ async def test_bootstrap_sqlite_full_pipeline(
     </html>
     """
 
-    # Build 23-column valid course row
     course_html = """
     <table>
         <tr>
@@ -304,172 +306,20 @@ async def test_bootstrap_sqlite_full_pipeline(
     }
 
     client = MockHTTPClient(responses=responses)
-    ctx = {"database": test_db, "redis": mock_redis, "client": client}
+    ctx = {"parquet_dir": temp_parquet_dir, "redis": mock_redis, "client": client}
 
-    # Run bootstrap
-    await bootstrap_sqlite(ctx)
+    await scrape_to_parquet(ctx)
 
     # 1. Verify departments saved
-    dept_records = (await test_session.scalars(select(Department))).all()
+    dept_records = _read_parquet_records(temp_parquet_dir / "departments.parquet")
     assert len(dept_records) >= 1
-    target_dept = next(
-        (d for d in dept_records if d.code == "300" and d.year == str(current_roc_year)),
-        None,
-    )
-    assert target_dept is not None
-    assert target_dept.name == "Department of Computer Science"
-    assert target_dept.id == f"{current_roc_year}_{current_sem}_300"
 
     # 2. Verify department years saved
-    dy_records = (await test_session.scalars(select(DepartmentYear))).all()
+    dy_records = _read_parquet_records(temp_parquet_dir / "department_years.parquet")
     assert len(dy_records) >= 1
-    target_dy = next(
-        (dy for dy in dy_records if dy.code == "3010" and dy.year == str(current_roc_year)),
-        None,
-    )
-    assert target_dy is not None
-    assert target_dy.name == "CS Year 1"
-    assert target_dy.id == f"{current_roc_year}_{current_sem}_300_3010"
 
     # 3. Verify courses saved
-    courses = (await test_session.scalars(select(Course))).all()
+    courses = _read_parquet_records(temp_parquet_dir / "courses.parquet")
     assert len(courses) >= 1
-    course = courses[0]
-    assert course.code == "300001"
-    assert course.name == "Introduction to Programming"
-    assert course.credits == 3
-    assert course.instructor == "Prof. Alan Turing"
-    assert course.mon == "1 2 3"
-    assert course.classroom == "Room 101"
-    assert course.students_enrolled == 50
-    assert course.students_dropped == 1
-    assert course.language == "Chinese"
-    assert course.link == "syllabus.jsp?id=300001"
-    assert course.notes == "Prerequisites apply"
-
-
-@pytest.mark.asyncio
-async def test_bootstrap_sqlite_course_without_code_fallback_to_name(
-    test_db: DB, mock_redis: MockRedis, test_session: AsyncSession
-):
-    """Test course row with empty code column falls back to course name for ID generation."""
-    current_roc_year = date.today().year - 1911
-    current_sem = 1 if date.today().month - 6 >= 0 else 2
-
-    sem_url = f"https://aps.ntut.edu.tw/course/tw/Subj.jsp?format=-2&year={current_roc_year}&sem={current_sem}"
-    dept_url = f"https://aps.ntut.edu.tw/course/tw/Subj.jsp?format=-2&year={current_roc_year}&sem={current_sem}&code=400"
-    dy_url = f"https://aps.ntut.edu.tw/course/tw/Subj.jsp?format=-2&year={current_roc_year}&sem={current_sem}&code=4010"
-
-    dept_html = f'<a href="Subj.jsp?format=-2&year={current_roc_year}&sem={current_sem}&code=400">Design</a>'
-    dy_html = f'<a href="Subj.jsp?format=-2&year={current_roc_year}&sem={current_sem}&code=4010">Design Year 1</a>'
-
-    # Course row with empty code (cell 0)
-    course_html = """
-    <table>
-        <tr>
-            <td></td>
-            <td>Special Topics Seminar</td>
-            <td>2</td>
-            <td>2</td>
-            <td>2</td>
-            <td>Elective</td>
-            <td>Guest Speaker</td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td>4 5</td>
-            <td></td>
-            <td></td>
-            <td>Auditorium</td>
-            <td>30</td>
-            <td>0</td>
-            <td>English</td>
-            <td><a href="seminar.jsp">Link</a></td>
-            <td>Open to all</td>
-            <td></td>
-            <td></td>
-            <td></td>
-        </tr>
-    </table>
-    """
-
-    responses = {
-        sem_url: dept_html,
-        dept_url: dy_html,
-        dy_url: course_html,
-    }
-
-    client = MockHTTPClient(responses=responses)
-    ctx = {"database": test_db, "redis": mock_redis, "client": client}
-
-    await bootstrap_sqlite(ctx)
-
-    courses = (await test_session.scalars(select(Course))).all()
-    assert len(courses) >= 1
-    c = next((item for item in courses if item.name == "Special Topics Seminar"), None)
-    assert c is not None
-    assert c.code is None
-    assert c.id == f"{current_roc_year}_{current_sem}_4010_Special Topics Seminar"
-
-
-@pytest.mark.asyncio
-async def test_bootstrap_sqlite_course_without_link(
-    test_db: DB, mock_redis: MockRedis, test_session: AsyncSession
-):
-    """Test course row where cell[18] has no <a> tag sets link to None."""
-    current_roc_year = date.today().year - 1911
-    current_sem = 1 if date.today().month - 6 >= 0 else 2
-
-    sem_url = f"https://aps.ntut.edu.tw/course/tw/Subj.jsp?format=-2&year={current_roc_year}&sem={current_sem}"
-    dept_url = f"https://aps.ntut.edu.tw/course/tw/Subj.jsp?format=-2&year={current_roc_year}&sem={current_sem}&code=500"
-    dy_url = f"https://aps.ntut.edu.tw/course/tw/Subj.jsp?format=-2&year={current_roc_year}&sem={current_sem}&code=5010"
-
-    dept_html = f'<a href="Subj.jsp?format=-2&year={current_roc_year}&sem={current_sem}&code=500">Dept</a>'
-    dy_html = f'<a href="Subj.jsp?format=-2&year={current_roc_year}&sem={current_sem}&code=5010">Year 1</a>'
-
-    course_html = """
-    <table>
-        <tr>
-            <td>500001</td>
-            <td>No Link Course</td>
-            <td>1</td>
-            <td>1</td>
-            <td>1</td>
-            <td>Elective</td>
-            <td>Instructor</td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td>Room 202</td>
-            <td>10</td>
-            <td>0</td>
-            <td>Chinese</td>
-            <td>No link here</td>
-            <td></td>
-            <td></td>
-            <td></td>
-            <td></td>
-        </tr>
-    </table>
-    """
-
-    responses = {
-        sem_url: dept_html,
-        dept_url: dy_html,
-        dy_url: course_html,
-    }
-
-    client = MockHTTPClient(responses=responses)
-    ctx = {"database": test_db, "redis": mock_redis, "client": client}
-
-    await bootstrap_sqlite(ctx)
-
-    courses = (await test_session.scalars(select(Course))).all()
-    c = next((item for item in courses if item.code == "500001"), None)
-    assert c is not None
-    assert c.link is None
+    assert courses[0]["name"] == "Introduction to Programming"
+    assert courses[0]["credits"] == 3

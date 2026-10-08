@@ -45,6 +45,7 @@ services:
 
 
   api:
+    container_name: school-fastapi-prod
     build:
       context: .
       dockerfile: Dockerfile
@@ -52,6 +53,8 @@ services:
       - schoolapp-internal-prod-net
     env_file:
       - .env
+    environment:
+      - PYTHONWARNINGS=ignore:resource_tracker:UserWarning
     depends_on:
       worker:
         condition: service_started
@@ -62,8 +65,9 @@ services:
 
 
   worker:
+    container_name: school-worker-local
     build: .
-    command: ["python", "-m", "arq", "app.worker.WorkerSettings" ]
+    command: ["python", "-m", "app.worker"]
     restart: always
     env_file:
       - .env
@@ -73,6 +77,9 @@ services:
     depends_on:
       redis:
         condition: service_started
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
 
 
 volumes:

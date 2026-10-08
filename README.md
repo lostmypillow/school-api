@@ -123,3 +123,4 @@ AWS-Dev (Base dependencies + dev tools + AWS extra)
 Bash
 
 uv sync --only-group aws-dev
+uv run --env-file .env.local python -m app.worker

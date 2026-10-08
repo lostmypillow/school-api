@@ -1,78 +1,32 @@
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
+from redis import Redis
+from rq import Queue, Worker
 
-from app.domains.courses.bootstrap_mssql import bootstrap_mssql
-from app.domains.courses.bootstrap_sqlite import bootstrap_sqlite
-from app.worker import WorkerSettings, shutdown, startup
-
-
-@pytest.mark.asyncio
-async def test_worker_settings():
-    """Test WorkerSettings configuration values."""
-    assert WorkerSettings.functions == [bootstrap_sqlite, bootstrap_mssql]
-    assert WorkerSettings.max_jobs == 10
-    assert WorkerSettings.job_timeout == 3000
-    assert WorkerSettings.on_startup == startup
-    assert WorkerSettings.on_shutdown == shutdown
+from app.domains.tasks.jobs import bootstrap_mssql_task, scrape_to_parquet_task
+from app.worker import run_worker
 
 
-@pytest.mark.asyncio
-async def test_worker_startup_database_creation():
-    """Test startup checks for student_db existence and creates it if missing."""
-    ctx = {}
-
-    mock_bootstrap_conn = MagicMock()
-    mock_bootstrap_conn.execution_options = AsyncMock(return_value=mock_bootstrap_conn)
-    mock_result = MagicMock()
-    mock_result.scalar.return_value = None  # DB does not exist
-    mock_bootstrap_conn.execute = AsyncMock(return_value=mock_result)
-
-    mock_bootstrap_engine = MagicMock()
-    mock_bootstrap_engine.connect.return_value.__aenter__ = AsyncMock(
-        return_value=mock_bootstrap_conn
-    )
-    mock_bootstrap_engine.connect.return_value.__aexit__ = AsyncMock(return_value=None)
-    mock_bootstrap_engine.dispose = AsyncMock()
-
-    with patch("app.worker.DB") as mock_db_class:
-        mock_db_instance = MagicMock()
-        mock_db_instance.engine = mock_bootstrap_engine
-        mock_db_class.return_value = mock_db_instance
-
-        await startup(ctx)
-
-        assert "database" in ctx
-        assert "mssql_db" in ctx
-        assert "client" in ctx
-        assert ctx["client"] is not None
-
-        # Clean up client
-        await ctx["client"].aclose()
+def test_task_functions_exist_and_callable():
+    """Verify standard synchronous RQ tasks are imported and callable."""
+    assert callable(scrape_to_parquet_task)
+    assert callable(bootstrap_mssql_task)
 
 
-@pytest.mark.asyncio
-async def test_worker_shutdown():
-    """Test shutdown disposes all database connections and closes HTTP client."""
-    mock_sqlite = MagicMock()
-    mock_sqlite.close = AsyncMock()
+def test_run_worker():
+    """Verify run_worker initializes standard Redis connection, Queue, and Worker."""
+    with patch("app.worker.Redis.from_url") as mock_from_url, patch(
+        "app.worker.Worker"
+    ) as mock_worker_cls:
+        mock_conn = MagicMock(spec=Redis)
+        mock_from_url.return_value = mock_conn
 
-    mock_mssql = MagicMock()
-    mock_mssql.close = AsyncMock()
+        mock_worker_instance = MagicMock(spec=Worker)
+        mock_worker_cls.return_value = mock_worker_instance
 
-    mock_client = MagicMock()
-    mock_client.is_closed = False
-    mock_client.aclose = AsyncMock()
+        run_worker()
 
-    ctx = {
-        "database": mock_sqlite,
-        "mssql_db": mock_mssql,
-        "client": mock_client,
-    }
-
-    await shutdown(ctx)
-
-    mock_sqlite.close.assert_awaited_once()
-    mock_mssql.close.assert_awaited_once()
-    mock_client.aclose.assert_awaited_once()
-    assert ctx["client"] is None
+        mock_from_url.assert_called_once()
+        mock_worker_cls.assert_called_once()
+        mock_worker_instance.work.assert_called_once()
