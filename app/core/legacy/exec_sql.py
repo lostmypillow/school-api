@@ -14,21 +14,23 @@ logger = logging.getLogger(__name__)
 async def exec_sql(
     mode: Literal["commit", "one", "all"],
     command_name: str,
+    sql_command: str | None,
     session: AsyncSession,
     **args,
 ) -> dict | list[dict] | None:
-    file_path = Path(__file__).resolve().parent / "sql" / f"{command_name}.sql"
+    if sql_command is None:
+        file_path = Path(__file__).resolve().parent / "sql" / f"{command_name}.sql"
 
-    if not Path(file_path).is_file():
-        logger.info(f"sql_not_found: SQL file does not exist at {file_path}")
-        raise FileNotFoundError
+        if not Path(file_path).is_file():
+            logger.info(f"sql_not_found: SQL file does not exist at {file_path}")
+            raise FileNotFoundError
 
-    # noinspection PyBroadException
-    try:
-        async with await anyio.open_file(file_path, encoding="utf-8") as file_buffer:
-            sql_command = await file_buffer.read()
-    except Exception:  # noqa: BLE001
-        logger.info(f"sql_cant_read: Failed to read SQL file from {file_path}")
+        # noinspection PyBroadException
+        try:
+            async with await anyio.open_file(file_path, encoding="utf-8") as file_buffer:
+                sql_command = await file_buffer.read()
+        except Exception:  # noqa: BLE001
+            logger.info(f"sql_cant_read: Failed to read SQL file from {file_path}")
 
     try:
         result = await session.execute(text(sql_command), args)

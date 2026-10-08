@@ -1,4 +1,5 @@
 import asyncio
+from contextlib import asynccontextmanager
 from typing import AsyncGenerator
 from unittest.mock import AsyncMock, MagicMock
 
@@ -13,13 +14,42 @@ from sqlalchemy.ext.asyncio import (
     create_async_engine,
 )
 
-from app.core.initialize import DB
 from app.core.models import Base
 from app.domains.courses.router import router as courses_router
 
 
+class DB:
+    """Test helper DB class providing async session management."""
+
+    def __init__(self, db_url: str):
+        connect_args = {}
+        if "sqlite" in db_url:
+            connect_args["check_same_thread"] = False
+
+        self.engine: AsyncEngine = create_async_engine(
+            db_url,
+            connect_args=connect_args,
+            pool_pre_ping=True,
+        )
+
+        self.session_factory: async_sessionmaker[AsyncSession] = async_sessionmaker(
+            bind=self.engine,
+            autocommit=False,
+            autoflush=False,
+            expire_on_commit=False,
+        )
+
+    @asynccontextmanager
+    async def get_session(self) -> AsyncGenerator[AsyncSession, None]:
+        async with self.session_factory() as session:
+            yield session
+
+    async def close(self) -> None:
+        await self.engine.dispose()
+
+
 class MockRedis:
-    """In-memory mock for ArqRedis / Redis client."""
+    """In-memory mock for Redis client."""
 
     def __init__(self):
         self.store = {}
@@ -38,6 +68,7 @@ class MockHTTPClient:
     """Mock for CustomAsyncClient."""
 
     def __init__(self, responses: dict[str, str] | None = None, default_response: str = "<html><body></body></html>"):
+        self.is_closed = False
         self.semaphore = asyncio.Semaphore(10)
         self.responses = responses or {}
         self.default_response = default_response
@@ -127,3 +158,12 @@ async def app_client(test_db: DB) -> AsyncGenerator[AsyncClient, None]:
         transport=ASGITransport(app=app), base_url="http://test"
     ) as client:
         yield client
+
+
+@pytest.fixture
+def temp_parquet_dir(tmp_path):
+    parquet_dir = tmp_path / "parquet_data"
+    parquet_dir.mkdir(parents=True, exist_ok=True)
+    return parquet_dir
+
+

@@ -18,21 +18,15 @@ async def test_health_check_success():
 
 
 @pytest.mark.asyncio
-@pytest.mark.xfail(
-    reason="Bug in main.py line 59: health_check accesses req.app.state.db_engine instead of req.app.state.db, raising AttributeError on live app",
-    strict=True,
-)
-async def test_health_check_live_app_attribute_error_bug():
-    """Edge Case: Calling GET /health on app configured by lifespan.
-
-    Bug: lifespan sets `app.state.db`, but health_check accesses `req.app.state.db_engine` raising AttributeError.
-    """
+async def test_health_check_live_app():
+    """Test calling GET /health on app configured by lifespan returns 200 OK."""
     mock_db = MagicMock()
     mock_redis = MagicMock()
 
     test_app = FastAPI()
-    test_app.state.db = mock_db  # Note: db is set, db_engine is NOT set
-    test_app.state.arq_redis = mock_redis
+    test_app.state.db = mock_db
+    test_app.state.redis = mock_redis
+    test_app.state.rq_redis = mock_redis
     test_app.add_api_route("/health", health_check, methods=["GET"])
 
     async with AsyncClient(
@@ -44,26 +38,23 @@ async def test_health_check_live_app_attribute_error_bug():
 
 @pytest.mark.asyncio
 async def test_app_lifespan():
-    """Test lifespan initializes db, creates tables, and tears down connections."""
+    """Test lifespan enables pooling, creates redis connection, and tears down on exit."""
     test_app = FastAPI()
 
-    mock_conn = MagicMock()
-    mock_conn.run_sync = AsyncMock()
-
-    mock_db = MagicMock()
-    mock_db.engine.begin.return_value.__aenter__ = AsyncMock(return_value=mock_conn)
-    mock_db.engine.begin.return_value.__aexit__ = AsyncMock(return_value=None)
-    mock_db.close = AsyncMock()
-
     mock_redis = MagicMock()
-    mock_redis.close = AsyncMock()
+    mock_redis.close = MagicMock()
 
-    with patch("app.main.DB", return_value=mock_db), patch(
-        "app.main.create_pool", AsyncMock(return_value=mock_redis)
+    with patch("app.main.PoolingManager") as mock_pool, patch(
+        "app.main.Redis.from_url", return_value=mock_redis
     ):
-        async with lifespan(test_app):
-            assert test_app.state.db is mock_db
-            assert test_app.state.arq_redis is mock_redis
+        mock_pool.is_enabled.side_effect = [False, True]
 
-        mock_db.close.assert_awaited_once()
-        mock_redis.close.assert_awaited_once()
+        async with lifespan(test_app):
+            assert test_app.state.redis is mock_redis
+            assert test_app.state.rq_redis is mock_redis
+            mock_pool.enable.assert_called_once_with(max_size=50, idle_timeout=600)
+
+        mock_pool.disable.assert_called_once()
+        mock_redis.close.assert_called_once()
+
+

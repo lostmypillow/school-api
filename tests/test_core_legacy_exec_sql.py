@@ -16,6 +16,7 @@ async def test_exec_sql_file_not_found(test_session: AsyncSession):
         await legacy_exec_sql.exec_sql(
             mode="all",
             command_name="non_existent_sql_file_12345",
+            sql_command=None,
             session=test_session,
         )
 
@@ -44,6 +45,7 @@ async def test_exec_sql_commit_mode(monkeypatch, test_session: AsyncSession):
     result = await legacy_exec_sql.exec_sql(
         mode="commit",
         command_name="update_query",
+        sql_command=None,
         session=mock_session,
     )
     assert result is None
@@ -78,6 +80,7 @@ async def test_exec_sql_one_mode(monkeypatch):
     result = await legacy_exec_sql.exec_sql(
         mode="one",
         command_name="get_one",
+        sql_command=None,
         session=mock_session,
     )
     assert result == {"num": 1}
@@ -113,6 +116,7 @@ async def test_exec_sql_all_mode(monkeypatch):
     result = await legacy_exec_sql.exec_sql(
         mode="all",
         command_name="get_all",
+        sql_command=None,
         session=mock_session,
     )
     assert result == [{"id": 1, "name": "Alice"}, {"id": 2, "name": "Bob"}]
@@ -141,8 +145,10 @@ async def test_exec_sql_error_propagation(monkeypatch):
         await legacy_exec_sql.exec_sql(
             mode="all",
             command_name="bad_query",
+            sql_command=None,
             session=mock_session,
         )
+
 
 
 @pytest.mark.asyncio

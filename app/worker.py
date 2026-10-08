@@ -1,80 +1,25 @@
-import asyncio
-# Ensure an active event loop exists on Python 3.12+ for arq 0.25.0
-try:
-    asyncio.get_event_loop()
-except RuntimeError:
-    asyncio.set_event_loop(asyncio.new_event_loop())
 import logging
 import os
-from pathlib import Path
 
-import httpx
-from arq.connections import RedisSettings
-
-from app.core.custom_http_client import CustomAsyncClient
-from app.core.initialize import DB
-from app.domains.courses.bootstrap_sqlite import bootstrap_sqlite
-from sqlalchemy import text
 from dotenv import load_dotenv
-from app.domains.courses.bootstrap_mssql import bootstrap_mssql
+from redis import Redis
+from rq import Queue, Worker
+
 load_dotenv()
-
-DATA_DIR = Path(__file__).resolve().parent.parent / "data"
-_client: CustomAsyncClient | None = None
-
-async def startup(ctx: dict):
-    print(DATA_DIR)
-    bootstrap_engine = DB(os.getenv("BOOTSTRAP_URL", "")).engine
-
-    async with bootstrap_engine.connect() as conn:
-        conn = await conn.execution_options(isolation_level="AUTOCOMMIT")
-        result = await conn.execute(
-            text("SELECT name FROM sys.databases WHERE name = 'student_db'")
-        )
-        db_exists = result.scalar()
-
-        if not db_exists:
-            print("Database 'student_db' not found. Creating...")
-            await conn.execute(text("CREATE DATABASE student_db"))
-            print("Database 'student_db' created successfully.")
-
-    await bootstrap_engine.dispose()
-    print((f"sqlite+aiosqlite:///{DATA_DIR / 'ntut_bootstrap.db'}"))
-    ctx["database"] = DB(f"sqlite+aiosqlite:///{DATA_DIR / 'ntut_bootstrap.db'}")
-    ctx["mssql_db"] = DB(os.getenv("DB_URL", ""))
-    limits = httpx.Limits(
-            max_connections=10, max_keepalive_connections=10
-        )
-    ctx["client"] = CustomAsyncClient(
-            verify=False, limits=limits, timeout=30.0
-        )
-    print("ARQ Worker initialized database engine.")
-
-
-async def shutdown(ctx: dict):
-    if ctx["database"]:
-        await ctx["database"].close()
-        print("SQLite database engine disposed.")
-    if ctx["mssql_db"]:
-        await ctx["mssql_db"].close()
-        print("MSSQL database engine disposed.")
-    if ctx["client"] is not None and not ctx["client"].is_closed:
-        await ctx["client"].aclose()
-        ctx["client"] = None
-
-
-class WorkerSettings:
-    functions = [bootstrap_sqlite, bootstrap_mssql]
-    redis_settings = RedisSettings.from_dsn(
-        os.getenv("REDIS_URL", "redis://localhost:6379/0")
-    )
-    max_jobs = 10
-    job_timeout = 3000
-    on_startup = startup
-    on_shutdown = shutdown
-
-
+logging.basicConfig(level=logging.INFO)
+logging.getLogger("httpx").setLevel(logging.ERROR)
+logging.getLogger("httpcore").setLevel(logging.ERROR)
 logger = logging.getLogger(__name__)
 
 
+def run_worker():
+    redis_url = os.getenv("REDIS_URL", "redis://localhost:6379/0")
+    conn = Redis.from_url(redis_url)
+    queues = [Queue("default", connection=conn)]
+    worker = Worker(queues, connection=conn)
+    logger.info("Starting standard RQ worker listening on 'default' queue...")
+    worker.work()
 
+
+if __name__ == "__main__":
+    run_worker()
