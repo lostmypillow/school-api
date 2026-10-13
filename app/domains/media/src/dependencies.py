@@ -11,7 +11,7 @@ from src.config import settings
 import pyodbc
 from typing import Literal, Any, AsyncGenerator
 
-logger = logging.getLogger("rich")
+logger = logging.getLogger("__name__")
 import smbclient
 
 

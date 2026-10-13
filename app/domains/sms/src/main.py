@@ -21,7 +21,7 @@ import faulthandler
 faulthandler.enable()
 
 
-logger = logging.getLogger("rich")
+logger = logging.getLogger("__name__")
 
 
 @asynccontextmanager
@@ -121,7 +121,7 @@ async def swagger_ui_redirect():
 )
 async def send_sms(
     background_tasks: BackgroundTasks,
-    student_id: str = Query(..., description="學生學號"),
+    student_id: str = Query(..., description="學生student_id"),
     recipient: str = Query(..., description="收件人姓名"),
     phone_number: str = Query(..., description="手機號碼"),
     message_content: str = Query(..., description="簡訊內容"),

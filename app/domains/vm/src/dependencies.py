@@ -9,7 +9,7 @@ import pyodbc
 from typing import Literal, Any, AsyncGenerator
 import logging
 
-logger = logging.getLogger("rich")
+logger = logging.getLogger("__name__")
 pyodbc.pooling = False
 
 # ---------- Database URL and Engine Setup ----------

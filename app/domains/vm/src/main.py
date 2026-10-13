@@ -76,7 +76,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-logger = logging.getLogger("rich")
+logger = logging.getLogger("__name__")
 
 
 @app.get("/docs", include_in_schema=False)

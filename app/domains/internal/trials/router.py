@@ -21,7 +21,7 @@ class LogRecordCreate(BaseModel):
     category: str         # 對應: 類別
     log_content: str      # 對應: 記錄檔 (ntext)
     computer_name: str    # 對應: 電腦名稱
-    employee_id: str       # 對應: 學號
+    employee_id: str       # 對應: student_id
 
 class LogRecordResponse(LogRecordCreate):
     id: int
@@ -87,8 +87,8 @@ async def create_log(
 ) -> dict:
     query = text("""
         INSERT INTO .dbo.修改記錄
-        ([員工姓名], [類別], [記錄檔], [日期], [時間], [電腦名稱], [學號])
-        OUTPUT Inserted.[自動編號] AS id, Inserted.[日期] AS date, Inserted.[時間] AS time
+        ([員工姓名], [類別], [記錄檔], [record_date], [course_time], [電腦名稱], [student_id])
+        OUTPUT Inserted.[自動編號] AS id, Inserted.[record_date] AS date, Inserted.[course_time] AS time
         VALUES
         (:employee_name, :category, :log_content, GETDATE(), GETDATE(), :computer_name, :employee_id)
     """)
@@ -133,13 +133,13 @@ async def get_schools(
 async def get_managers(db: Annotated[AsyncSession, Depends(get_session)]) -> Sequence[Any]:
     query = text("""
     select
-	姓名
+	name
 from
-	.dbo.使用者
+	.dbo.users
 where
 	是業務 = 1
 	AND 狀態 = 1
-	AND LEN(學號) >= 6
+	AND LEN(student_id) >= 6
     """)
     result = await db.execute(query)
     return result.scalars().all()
