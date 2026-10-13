@@ -75,19 +75,25 @@ def _append_to_parquet(
     return file_path
 
 
+def _resolve_parquet_dir(ctx: dict) -> Path:
+    """Resolves and ensures the parquet output directory exists."""
+    if "parquet_dir" not in ctx:
+        data_dir = Path(__file__).resolve().parent.parent.parent.parent / "data"
+        parquet_dir = data_dir / "parquet"
+        parquet_dir.mkdir(parents=True, exist_ok=True)
+        ctx["parquet_dir"] = parquet_dir
+        return parquet_dir
+    parquet_dir = Path(ctx["parquet_dir"])
+    parquet_dir.mkdir(parents=True, exist_ok=True)
+    return parquet_dir
+
+
 async def scrape_to_parquet(ctx: dict | None = None, *args, **kwargs) -> None:
     """Scrapes NTUT catalog and writes directly to Parquet snapshot files."""
     start_time = time.time()
     if ctx is None:
         ctx = {}
-    if "parquet_dir" not in ctx:
-        DATA_DIR = Path(__file__).resolve().parent.parent.parent.parent / "data"
-        parquet_dir = DATA_DIR / "parquet"
-        parquet_dir.mkdir(parents=True, exist_ok=True)
-        ctx["parquet_dir"] = parquet_dir
-    else:
-        parquet_dir = Path(ctx["parquet_dir"])
-        parquet_dir.mkdir(parents=True, exist_ok=True)
+    parquet_dir = _resolve_parquet_dir(ctx)
     if "client" not in ctx:
         ctx["client"] = CustomAsyncClient(
             verify=False,

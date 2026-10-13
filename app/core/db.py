@@ -9,8 +9,7 @@ import mssql_python
 from sqlalchemy.dialects import mssql
 from sqlalchemy.schema import CreateTable
 
-from app.core.models import Base
-
+from app.core.models.base_model import Base
 logger = logging.getLogger(__name__)
 
 CONNECT_RETRY_ERRORS = frozenset(
@@ -38,6 +37,7 @@ def connect_with_retry(
         except mssql_python.OperationalError as exc:
             err_msg = getattr(exc, "driver_error", str(exc))
             if err_msg not in CONNECT_RETRY_ERRORS or attempt == max_attempts:
+                print(f"DEBUG: err_msg={err_msg!r}")
                 logger.error(
                     "connect failed on attempt %d/%d: %s",
                     attempt,
@@ -62,10 +62,14 @@ def exec_mssql(
     *params: Any,
     fetch: bool = True,
     batch_params: list[tuple] | list[list] | None = None,
-) -> list[Any] | None:
+) -> list[Any]:
     """Executes a named SQL script file from app/core/sql/ using mssql-python."""
-    conn_str: str
-    if command_name == "create_tables":
+
+    conn_str = getenv("DB_URL", "")
+    if command_name == "create_database":
+        conn_str = getenv("BOOTSTRAP_URL", "")
+        sql_command = "IF NOT EXISTS (SELECT name FROM sys.databases WHERE name = N'student_db') CREATE DATABASE student_db;"
+    elif command_name == "create_tables":
         dialect = mssql.dialect()
         ddl_statements = []
 
@@ -78,10 +82,14 @@ def exec_mssql(
             ddl_statements.append(wrapped_sql)
 
         sql_command = "\n\n".join(ddl_statements)
-        conn_str = getenv("BOOTSTRAP_URL", "")
     else:
-        file_path = Path(__file__).resolve().parent / "sql" / f"{command_name}.sql"
-        conn_str = getenv("DB_URL", "")
+        base_sql_dir = Path(__file__).resolve().parent / "sql"
+        file_path = base_sql_dir / f"{command_name}.sql"
+        if not file_path.exists():
+            matched = list(base_sql_dir.rglob(f"{command_name}.sql"))
+            if matched:
+                file_path = matched[0]
+
 
         try:
             sql_command = file_path.read_text(encoding="utf-8")
@@ -98,18 +106,28 @@ def exec_mssql(
 
     try:
         with connect_with_retry(conn_str) as conn:
+            if command_name == 'create_database':
+                conn.autocommit = True
             with conn.cursor() as cursor:
                 if batch_params is not None:
                     cursor.executemany(sql_command, batch_params)
-                    result = None
+                    result: list[Any] = []
                 else:
                     cursor.execute(sql_command, *params)
                     try:
-                        result = cursor.fetchall() if fetch else None
+                        if fetch and cursor.description:
+                            col_names = [col[0] for col in cursor.description]
+                            rows = cursor.fetchall()
+                            result = [dict(zip(col_names, row)) for row in rows] if rows else []
+                        elif fetch:
+                            rows = cursor.fetchall()
+                            result = list(rows) if rows else []
+                        else:
+                            result = []
                     except mssql_python.Error:
-                        result = None
+                        result = []
             conn.commit()
-            return result
+            return result if result is not None else []
     except mssql_python.Error as exc:
         logger.error("mssql_execution_error: Error running %s: %s", command_name, exc)
         raise
@@ -120,8 +138,14 @@ async def exec_mssql_async(
     *params: Any,
     fetch: bool = True,
     batch_params: list[tuple] | list[list] | None = None,
-) -> list[Any] | None:
+) -> list[Any]:
     """Asynchronously executes a named SQL script in a worker thread."""
     return await asyncio.to_thread(
         exec_mssql, command_name, *params, fetch=fetch, batch_params=batch_params
     )
+
+
+# Aliases
+execute_mssql = exec_mssql
+mssql_async = exec_mssql_async
+execute_mssql_async = exec_mssql_async

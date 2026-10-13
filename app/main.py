@@ -1,8 +1,7 @@
+from app.domains.tutor.routers import announcement_router, ws_router, update_router, card_router
 import logging
 import os
 from contextlib import asynccontextmanager
-from pathlib import Path
-
 from dotenv import load_dotenv
 from fastapi import FastAPI, Request, status
 from fastapi.middleware.cors import CORSMiddleware
@@ -10,7 +9,7 @@ from mssql_python.pooling import PoolingManager
 from redis import Redis
 from redis_fastapi import FastAPIRedis
 from rq import Queue
-
+from app.domains.tasks.bootstrap_mssql import bootstrap_mssql
 from app.domains.courses import router as course_router
 from app.domains.tasks import router as tasks_router
 
@@ -31,7 +30,8 @@ async def lifespan(app: FastAPI):
     redis_conn = Redis.from_url(redis_url)
     app.state.redis = redis_conn
     app.state.rq_redis = redis_conn
-    app.state.rq_queue = Queue(connection=redis_conn)
+    app.state.rq_queue = Queue(connection=app.state.redis)
+    app.state.rq_queue.enqueue(bootstrap_mssql)
 
     yield
     if PoolingManager.is_enabled():
@@ -61,8 +61,10 @@ async def health_check(req: Request):
 
 app.include_router(course_router)
 app.include_router(tasks_router)
+app.include_router(announcement_router)
+app.include_router(ws_router)
+app.include_router(update_router)
+app.include_router(card_router)
 
 
 FastAPIRedis(app).lifespan().caching()
-DATA_DIR = Path(__file__).resolve().parent.parent / "data"
-DB_URL = os.getenv("DB_URL", "")

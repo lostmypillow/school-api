@@ -1,5 +1,6 @@
 import asyncio
 from contextlib import asynccontextmanager
+from datetime import UTC, datetime
 from typing import AsyncGenerator
 from unittest.mock import AsyncMock, MagicMock
 
@@ -7,6 +8,7 @@ import pytest
 import pytest_asyncio
 from fastapi import FastAPI
 from httpx import ASGITransport, AsyncClient
+from sqlalchemy import event
 from sqlalchemy.ext.asyncio import (
     AsyncEngine,
     AsyncSession,
@@ -14,7 +16,7 @@ from sqlalchemy.ext.asyncio import (
     create_async_engine,
 )
 
-from app.core.models import Base
+from app.core.models.base_model import Base
 from app.domains.courses.router import router as courses_router
 
 
@@ -101,6 +103,13 @@ async def test_engine() -> AsyncGenerator[AsyncEngine, None]:
         "sqlite+aiosqlite:///:memory:",
         connect_args={"check_same_thread": False},
     )
+
+    @event.listens_for(engine.sync_engine, "connect")
+    def _register_sqlite_functions(dbapi_connection, connection_record):
+        dbapi_connection.create_function(
+            "SYSDATETIMEOFFSET", 0, lambda: datetime.now(UTC).isoformat()
+        )
+
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
     yield engine
