@@ -26,7 +26,7 @@ CHUNK_SIZE = 512 * 1024  # 512 KB
 STATIC_FOLDER = "./static"
 video_cycler = None
 # Configure logging
-logger = logging.getLogger("rich")
+logger = logging.getLogger("__name__")
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):

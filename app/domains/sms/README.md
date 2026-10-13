@@ -11,7 +11,7 @@ POST http://192.168.x.x/sms
 Content-Type: application/json
 
 {
-    <!-- 學號 -->
+    <!-- student_id -->
   "student_id": "string",
 
     <!-- 對象 -->
@@ -20,7 +20,7 @@ Content-Type: application/json
    <!-- 手機 -->
   "phone_number": "string",
 
-   <!-- 內容 -->
+   <!-- contents -->
   "message_content": "string"
 }
 

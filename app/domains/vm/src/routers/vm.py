@@ -10,7 +10,7 @@ from sqlalchemy.exc import IntegrityError
 import logging
 from src.dependencies import exec_sql, get_session
 
-logger = logging.getLogger("rich")
+logger = logging.getLogger("__name__")
 router = APIRouter(
     tags=["Virtual Machines"],
 )

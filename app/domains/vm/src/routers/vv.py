@@ -15,7 +15,7 @@ from src.services.custom import CustomService
 router = APIRouter(
     tags=["Generate vv files"],
 )
-logger = logging.getLogger("rich")
+logger = logging.getLogger("__name__")
 
 
 @router.get("/config/{owner}")

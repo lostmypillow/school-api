@@ -1,14 +1,18 @@
-from sqlalchemy import Column, DateTime, Integer, String
+from datetime import datetime
+from typing import Optional
 
-from app.core.models.base_model import Base
+from sqlalchemy import DateTime, Integer, String
+from sqlalchemy.orm import Mapped, mapped_column
+
+from app.core.models.base import Base
 
 
 class TutorAppointment(Base):
     __tablename__ = "tutor_appointments"
 
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    date = Column(String(10), nullable=True)
-    student_id = Column(String(20), nullable=True)
-    teacher_id = Column(String(20), nullable=True)
-    start_time = Column(DateTime, nullable=True)
-    end_time = Column(DateTime, nullable=True)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    date: Mapped[Optional[str]] = mapped_column(String(10), nullable=True)
+    student_id: Mapped[Optional[str]] = mapped_column(String(20), nullable=True)
+    teacher_id: Mapped[Optional[str]] = mapped_column(String(20), nullable=True)
+    start_time: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+    end_time: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)

@@ -12,7 +12,7 @@ from rq import Queue
 from app.domains.tasks.bootstrap_mssql import bootstrap_mssql
 from app.domains.courses import router as course_router
 from app.domains.tasks import router as tasks_router
-
+from app.domains.touch import router as touch_router
 load_dotenv()
 logger = logging.getLogger("uvicorn.error")
 logger.setLevel(logging.INFO)
@@ -39,7 +39,7 @@ async def lifespan(app: FastAPI):
     app.state.redis.close()
 
 
-app = FastAPI(title="School API", version="4.0.1", lifespan=lifespan)
+app = FastAPI(title="School API", version="4.3.0", lifespan=lifespan)
 
 
 origins = ["http://localhost:5173", "http://localhost:8081", "http://localhost:8000", "https://school.lostmypillow.com", "https://school-dev.lostmypillow.com"]
@@ -65,6 +65,6 @@ app.include_router(announcement_router)
 app.include_router(ws_router)
 app.include_router(update_router)
 app.include_router(card_router)
-
+app.include_router(touch_router)
 
 FastAPIRedis(app).lifespan().caching()

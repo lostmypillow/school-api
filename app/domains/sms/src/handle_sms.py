@@ -7,7 +7,7 @@ from src.database.exec_sql import exec_sql
 from src.config import settings
 from src.dependencies import return_url_list
 from pprint import pformat
-logger = logging.getLogger("rich")
+logger = logging.getLogger("__name__")
 
 
 async def handle_sms(data: SMSModel):

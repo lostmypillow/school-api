@@ -4,7 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.dependencies import exec_sql, get_session
 import logging
 from time import perf_counter
-logger = logging.getLogger("rich")
+logger = logging.getLogger("__name__")
 
 router = APIRouter(
     prefix="/picture",
@@ -22,7 +22,7 @@ router = APIRouter(
             "content": {"image/png": {}},
         },
         404: {
-            "description": "Image not found or something, I don't know why it just says '照片' for Exception if it doesn't find any, so I use 'Image not found'",
+            "description": "Image not found or something, I don't know why it just says 'photo_bytes' for Exception if it doesn't find any, so I use 'Image not found'",
             "content": {"application/json": {"example": {"detail": "Image not found"}}},
         },
     },
@@ -54,7 +54,7 @@ async def get_image(
 
 
         logger.info(f"Elapsed time during the whole program in seconds: {t1_stop-t1_start}s")
-        return Response(content= image_data["照片"], media_type="image/png")
+        return Response(content= image_data["photo_bytes"], media_type="image/png")
     except Exception as e:
         logger.exception(f"Image not found")
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Image not found")

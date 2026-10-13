@@ -1,12 +1,12 @@
 INSERT INTO
     簡訊資料 (
-        學號,
+        student_id,
         對象,
         手機,
         簡訊編號,
         發送日期,
         發送時間,
-        內容,
+        contents,
         簡訊發送商
     )
 VALUES

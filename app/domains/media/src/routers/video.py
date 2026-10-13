@@ -6,7 +6,7 @@ import smbclient
 import logging
 import shutil
 from src.config import settings
-logger = logging.getLogger("rich")
+logger = logging.getLogger("__name__")
 import os
 video_cycler = None
 router = APIRouter(

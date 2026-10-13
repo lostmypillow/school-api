@@ -1,6 +1,6 @@
 SELECT
-    照片
+    photo_bytes
 FROM
-    員工照片
+    employee_photos
 WHERE
-    學號 = :id
+    student_id = :id

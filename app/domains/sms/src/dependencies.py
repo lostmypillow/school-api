@@ -5,7 +5,7 @@ from urllib.parse import unquote
 import chardet
 from src.config import settings
 
-logger = logging.getLogger("rich")
+logger = logging.getLogger("__name__")
 
 
 def return_url_list(data: SMSModel):
