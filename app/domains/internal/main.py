@@ -28,7 +28,7 @@ from app.domains.internal.ldap.repositories.ldap_repo import LdapRepository
 from app.domains.internal.ldap.routers.ldap_router import router as ldap_router
 from app.domains.internal.ldap.services.ldap_service import LdapService
 from app.domains.internal.talk.router import router as talk_router
-from app.domains.internal.trials.router import router as submission_router
+from app.domains.trials.router import router as submission_router
 
 # Disable FastAPI CLI pretty logs & duplicate uvicorn logs
 logging.getLogger("uvicorn.error").propagate = False
