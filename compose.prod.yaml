@@ -2,11 +2,10 @@ services:
   db:
     container_name: school-db-prod
     image: mcr.microsoft.com/mssql/server:2025-latest
-    platform: linux/amd64
     environment:
       - ACCEPT_EULA=Y
       - MSSQL_SA_PASSWORD=YourPassword123!
-      - MSSQL_PID=prodeloper
+      - MSSQL_PID=Developer
     ports:
       - "1433:1433"
     volumes:
@@ -32,6 +31,8 @@ services:
     container_name: school-redis-prod
     image: redis:7-alpine
     restart: always
+    environment:
+      - TZ=Asia/Taipei
     networks:
       - schoolapp-internal-prod-net
     healthcheck:
@@ -69,12 +70,17 @@ services:
     build: .
     command: ["python", "-m", "app.worker"]
     restart: always
+    environment:
+      - PYTHONWARNINGS=ignore:resource_tracker:UserWarning
+      - TZ=Asia/Taipei
     env_file:
       - .env
     networks:
       - schoolapp-internal-prod-net
       - schoolapp-worker-prod-net
     depends_on:
+      db:
+        condition: service_healthy
       redis:
         condition: service_started
     dns:

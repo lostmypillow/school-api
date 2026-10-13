@@ -17,19 +17,32 @@ def _read_parquet_records(file_path: Path) -> list[dict[str, Any]]:
     return pq.read_table(file_path).to_pylist()
 
 
+def _resolve_parquet_dir(ctx: dict) -> Path:
+    """Resolves and ensures the parquet input directory exists."""
+    if "parquet_dir" not in ctx:
+        data_dir = Path(__file__).resolve().parent.parent.parent.parent / "data"
+        parquet_dir = data_dir / "parquet"
+        parquet_dir.mkdir(parents=True, exist_ok=True)
+        ctx["parquet_dir"] = parquet_dir
+        return parquet_dir
+    parquet_dir = Path(ctx["parquet_dir"])
+    parquet_dir.mkdir(parents=True, exist_ok=True)
+    return parquet_dir
+
+
 async def bootstrap_mssql(ctx: dict | None = None, *args, **kwargs) -> dict[str, Any]:
     """Bootstraps MSSQL by reading Parquet snapshot files and calling named SQL commands."""
     if ctx is None:
         ctx = {}
-    if "parquet_dir" not in ctx:
-        DATA_DIR = Path(__file__).resolve().parent.parent.parent.parent / "data"
-        parquet_dir = DATA_DIR / "parquet"
-        parquet_dir.mkdir(parents=True, exist_ok=True)
-        ctx["parquet_dir"] = parquet_dir
-    parquet_dir = Path(ctx["parquet_dir"])
+    parquet_dir = _resolve_parquet_dir(ctx)
 
     summary: dict[str, int] = {}
     BATCH_SIZE = 5000
+    await exec_mssql_async("create_database")
+
+    await exec_mssql_async("create_tables")
+
+    await exec_mssql_async("tutors/bootstrap_tutor", fetch=False)
 
     # 1. Semesters -> upsert_semester
     sem_file = parquet_dir / "semesters.parquet"
@@ -44,7 +57,7 @@ async def bootstrap_mssql(ctx: dict | None = None, *args, **kwargs) -> dict[str,
             )
             for r in sem_records
         ]
-        await exec_mssql_async("upsert_semester", fetch=False, batch_params=sem_tuples)
+        await exec_mssql_async("courses/upsert_semester", fetch=False, batch_params=sem_tuples)
         logger.info("Upserted %d semesters to MSSQL", len(sem_tuples))
     summary["semesters"] = len(sem_records)
 
@@ -66,7 +79,7 @@ async def bootstrap_mssql(ctx: dict | None = None, *args, **kwargs) -> dict[str,
         ]
         for batch in itertools.batched(dept_tuples, BATCH_SIZE):
             await exec_mssql_async(
-                "upsert_department", fetch=False, batch_params=list(batch)
+                "courses/upsert_department", fetch=False, batch_params=list(batch)
             )
         logger.info("Upserted %d departments to MSSQL", len(dept_tuples))
     summary["departments"] = len(dept_records)
@@ -89,7 +102,7 @@ async def bootstrap_mssql(ctx: dict | None = None, *args, **kwargs) -> dict[str,
         ]
         for batch in itertools.batched(dy_tuples, BATCH_SIZE):
             await exec_mssql_async(
-                "upsert_department_year", fetch=False, batch_params=list(batch)
+                "courses/upsert_department_year", fetch=False, batch_params=list(batch)
             )
         logger.info("Upserted %d department years to MSSQL", len(dy_tuples))
     summary["department_years"] = len(dy_records)
@@ -130,7 +143,7 @@ async def bootstrap_mssql(ctx: dict | None = None, *args, **kwargs) -> dict[str,
         ]
         for batch in itertools.batched(course_tuples, BATCH_SIZE):
             await exec_mssql_async(
-                "upsert_course", fetch=False, batch_params=list(batch)
+                "courses/upsert_course", fetch=False, batch_params=list(batch)
             )
         logger.info("Upserted %d courses to MSSQL", len(course_tuples))
     summary["courses"] = len(course_records)

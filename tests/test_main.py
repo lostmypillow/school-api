@@ -11,7 +11,7 @@ from app.main import health_check, lifespan
 async def test_health_check_success():
     """Test health_check endpoint when req.app.state.db_engine is set."""
     mock_request = MagicMock(spec=Request)
-    mock_request.app.state.db_engine = "Engine(sqlite+aiosqlite:///:memory:)"
+    mock_request.app.state.db_engine = "Engine(mssql+aioodbc://...)"
 
     response = await health_check(mock_request)
     assert response == {"status": "healthy"}

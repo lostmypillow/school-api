@@ -1,16 +1,15 @@
 services:
   db:
     container_name: school-db-dev
-    image: mcr.microsoft.com/mssql/server:2025-latest
-    platform: linux/amd64
+    image: mcr.microsoft.com/azure-sql-edge:latest
+    user: root
     environment:
       - ACCEPT_EULA=Y
       - MSSQL_SA_PASSWORD=YourPassword123!
-      - MSSQL_PID=Developer
     ports:
       - "1433:1433"
     volumes:
-      - mssql_data:/var/opt/mssql
+      - sqledge_data:/var/opt/mssql
     deploy:
       resources:
         limits:
@@ -20,9 +19,10 @@ services:
           memory: 2048M
           cpus: '1.0'
     networks:
+      - nginx-schoolapi-dev-net
       - schoolapp-internal-dev-net
     healthcheck:
-      test: /opt/mssql-tools18/bin/sqlcmd -S 127.0.0.1 -U sa -P 'YourPassword123!' -Q 'SELECT 1' -C
+      test: [ "CMD", "/bin/bash", "-c", "</dev/tcp/127.0.0.1/1433" ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -32,6 +32,8 @@ services:
     container_name: school-redis-dev
     image: redis:7-alpine
     restart: always
+    environment:
+      - TZ=Asia/Taipei
     networks:
       - schoolapp-internal-dev-net
     healthcheck:
@@ -45,7 +47,7 @@ services:
 
 
   api:
-    container_name: school-fastapi-local
+    container_name: school-fastapi-dev
     build:
       context: .
       dockerfile: Dockerfile
@@ -55,6 +57,7 @@ services:
       - .env
     environment:
       - PYTHONWARNINGS=ignore:resource_tracker:UserWarning
+      - TZ=Asia/Taipei
     depends_on:
       worker:
         condition: service_started
@@ -69,6 +72,9 @@ services:
     build: .
     command: ["python", "-m", "app.worker"]
     restart: always
+    environment:
+      - PYTHONWARNINGS=ignore:resource_tracker:UserWarning
+      - TZ=Asia/Taipei
     volumes:
       - /var/lib/school-api/data:/app/data
     env_file:
@@ -77,6 +83,8 @@ services:
       - schoolapp-internal-dev-net
       - schoolapp-worker-dev-net
     depends_on:
+      db:
+        condition: service_healthy
       redis:
         condition: service_started
     dns:
