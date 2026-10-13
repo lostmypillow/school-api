@@ -1,31 +1,33 @@
 from datetime import datetime, UTC
 
-from sqlalchemy import Unicode, ForeignKey, DateTime, UniqueConstraint
-from sqlalchemy.orm import relationship, Mapped, mapped_column
+from sqlalchemy import Column, Unicode, ForeignKey, DateTime, UniqueConstraint
+from sqlalchemy.orm import relationship
 
-from app.core.models.base import Base
+from app.core.models.base_model import Base
 
 
 class Department(Base):
     __tablename__ = "departments"
 
-    id: Mapped[str] = mapped_column(Unicode(64), primary_key=True)
-    semester_id: Mapped[str] = mapped_column(
-        Unicode(36), ForeignKey("semesters.id", ondelete="CASCADE")
+    id = Column[str](Unicode(64), primary_key=True)  # Slug: e.g., "112_1_01"
+    semester_id = Column[str](
+        Unicode(36), ForeignKey("semesters.id", ondelete="CASCADE"), nullable=False
     )
-    year:Mapped[str] = mapped_column(Unicode(10))
-    sem: Mapped[str] = mapped_column(Unicode(10))
-    code: Mapped[str] = mapped_column(Unicode(20))
-    name: Mapped[str] = mapped_column(Unicode(255))
-    link: Mapped[str] = mapped_column(Unicode(2048))
-    created_at: Mapped[datetime] = mapped_column(
+    year = Column[str](Unicode(10), nullable=False)
+    sem = Column[str](Unicode(10), nullable=False)
+    code = Column[str](Unicode(20), nullable=False)
+    name = Column[str](Unicode(255), nullable=False)
+    link = Column[str](Unicode(2048), nullable=False)
+    created_at = Column[datetime](
         DateTime(timezone=True),
         default=lambda: datetime.now(UTC),
+        nullable=False,
     )
-    updated_at: Mapped[datetime] = mapped_column(
+    updated_at = Column[datetime](
         DateTime(timezone=True),
         default=lambda: datetime.now(UTC),
         onupdate=lambda: datetime.now(UTC),
+        nullable=False,
     )
 
     __table_args__ = (
