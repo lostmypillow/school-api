@@ -1,13 +1,10 @@
-from typing import Optional
+from sqlalchemy import Column, Integer, String
 
-from sqlalchemy import Integer, String
-from sqlalchemy.orm import Mapped, mapped_column
-
-from app.core.models.base import Base
+from app.core.models.base_model import Base
 
 
 class Device(Base):
     __tablename__ = "devices"
 
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=False)
-    teacher_id: Mapped[Optional[str]] = mapped_column(String(20))
+    id = Column(Integer, primary_key=True, autoincrement=False)
+    teacher_id = Column(String(20), nullable=True)

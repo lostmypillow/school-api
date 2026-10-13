@@ -1,54 +1,54 @@
 from datetime import datetime
-from typing import Optional
 
-from sqlalchemy import Unicode, ForeignKey, Integer, UnicodeText, DateTime, UniqueConstraint, text
-from sqlalchemy.orm import relationship, Mapped, mapped_column
+from sqlalchemy import Column, Unicode, ForeignKey, Integer, UnicodeText, DateTime, UniqueConstraint, text
+from sqlalchemy.orm import relationship
 
-from app.core.models.base  import Base
+from app.core.models.base_model  import Base
 
 
 class Course(Base):
     __tablename__ = "courses"
 
-    id: Mapped[str]= mapped_column(Unicode(64), primary_key=True)
-    department_year_id: Mapped[str] = mapped_column(
+    id = Column[str](Unicode(64), primary_key=True)  # Slug: e.g., "112_1_301_CS101"
+    department_year_id = Column[str](
         Unicode(64),
-        ForeignKey(column="department_years.id", ondelete="CASCADE")
+        ForeignKey("department_years.id", ondelete="CASCADE"),
+        nullable=False,
     )
-    year: Mapped[str] = mapped_column(Unicode(10))
-    sem: Mapped[str] = mapped_column(Unicode(10))
-    code: Mapped[Optional[str]] = mapped_column(Unicode(50))
-    name: Mapped[str] = mapped_column(Unicode(255))
-    link: Mapped[Optional[str]]  = mapped_column(Unicode(2048))
-    credits: Mapped[Optional[int]] = mapped_column(Integer)
-    course_type: Mapped[Optional[str]]  = mapped_column(Unicode(20))
-    instructor: Mapped[Optional[str]]  = mapped_column(Unicode(255))
+    year = Column[str](Unicode(10), nullable=False)
+    sem = Column[str](Unicode(10), nullable=False)
+    code = Column[str](Unicode(50), nullable=True)
+    name = Column[str](Unicode(255), nullable=False)
+    link = Column[str](Unicode(2048), nullable=True)
+    credits = Column[int](Integer, nullable=True)  # Set to nullable=True for flexibility
+    course_type = Column[str](Unicode(20), nullable=True)
+    instructor = Column[str](Unicode(255), nullable=True)
 
     # Schedule & Location
-    sun: Mapped[Optional[str]]  = mapped_column(Unicode(50))
-    mon: Mapped[Optional[str]]  = mapped_column(Unicode(50))
-    tue: Mapped[Optional[str]]  = mapped_column(Unicode(50))
-    wed: Mapped[Optional[str]]  = mapped_column(Unicode(50))
-    thu: Mapped[Optional[str]]  = mapped_column(Unicode(50))
-    fri: Mapped[Optional[str]]  = mapped_column(Unicode(50))
-    sat: Mapped[Optional[str]]  = mapped_column(Unicode(50))
-    classroom: Mapped[Optional[str]]  = mapped_column(Unicode(255))
+    sun = Column[str](Unicode(50), nullable=True)
+    mon = Column[str](Unicode(50), nullable=True)
+    tue = Column[str](Unicode(50), nullable=True)
+    wed = Column[str](Unicode(50), nullable=True)
+    thu = Column[str](Unicode(50), nullable=True)
+    fri = Column[str](Unicode(50), nullable=True)
+    sat = Column[str](Unicode(50), nullable=True)
+    classroom = Column[str](Unicode(255), nullable=True)
 
     # Metrics & Metadata
-    students_enrolled: Mapped[Optional[int]] = mapped_column(Integer)
-    students_dropped: Mapped[Optional[int]] = mapped_column(Integer)
-    language: Mapped[Optional[str]]  = mapped_column(Unicode(50))
-    notes: Mapped[Optional[str]]  = mapped_column(UnicodeText)
-    with_class: Mapped[Optional[str]]  = mapped_column(Unicode(255))
-    experiment: Mapped[Optional[str]]  = mapped_column(Unicode(255))
-    cross_discipline: Mapped[Optional[str]]  = mapped_column(Unicode(255))
+    students_enrolled = Column[int](Integer, nullable=True)
+    students_dropped = Column[int](Integer, nullable=True)
+    language = Column[str](Unicode(50), nullable=True)
+    notes = Column[str](UnicodeText, nullable=True)
+    with_class = Column[str](Unicode(255), nullable=True)
+    experiment = Column[str](Unicode(255), nullable=True)
+    cross_discipline = Column[str](Unicode(255), nullable=True)
 
-    created_at: Mapped[datetime] = mapped_column(
+    created_at = Column[datetime](
         DateTime(timezone=True),
         server_default=text("SYSDATETIMEOFFSET()"),
         nullable=False,
     )
-    updated_at: Mapped[datetime] = mapped_column(
+    updated_at = Column[datetime](
         DateTime(timezone=True),
         server_default=text("SYSDATETIMEOFFSET()"),
         nullable=False,
