@@ -92,12 +92,12 @@ async def exec_sql(
     **kwargs,
 ) -> Any:
     """Executes SQL command from file and returns result based on mode."""
-    file_path = path.join(getcwd(), "sql", f"{command_name}.sql")
+    file_path = path.join(getcwd(), "media", f"{command_name}.media")
     logger.info(f"Reading SQL file from: {file_path}")
 
     if not path.isfile(file_path):
         logger.error(f"SQL file does not exist at {file_path}")
-        raise FileNotFoundError(f"SQL file {command_name}.sql not found")
+        raise FileNotFoundError(f"SQL file {command_name}.media not found")
 
     try:
         with open(file_path, "r", encoding="utf-8") as file_buffer:

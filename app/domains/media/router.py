@@ -15,7 +15,7 @@ from fastapi.openapi.docs import (
     get_swagger_ui_oauth2_redirect_html,
 )
 from src.dependencies import async_engine
-from .routers import video, picture
+from app.domains.media.routers import video, picture
 
 # Static variables
 # TODO move them to .env
