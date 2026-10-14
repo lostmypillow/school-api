@@ -1,4 +1,4 @@
 DELETE FROM
-    vm_details
+vm_details
 WHERE
-    id = :id;
+    id = ?;

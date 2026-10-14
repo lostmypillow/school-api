@@ -6,34 +6,34 @@ WITH FIRSTQUERY AS (
         [legacy_course_num]
     FROM
         [todays_seats]
-),
-SQ AS (
-    SELECT
-        STUFF((
-            SELECT ',' + CAST([SEATS_RECORDS].SN AS NVARCHAR(MAX))
-            FROM [seats_records]
-            WHERE
-                [SEATS_RECORDS].STUDENT_ID IS NULL
-                AND [SEATS_RECORDS].FILE_NO = FQ.FILE_NO
-            FOR XML PATH (''), TYPE
-        ).value('.', 'NVARCHAR(MAX)'
-        ), 1, 1, '') AS SEAT_NO,
-        STUFF((
-            SELECT ',' + CAST([SEATS_RECORDS].SEAT_NO AS NVARCHAR(MAX))
-            FROM [seats_records]
-            WHERE
-                [SEATS_RECORDS].STUDENT_ID IS NULL
-                AND [SEATS_RECORDS].FILE_NO = FQ.FILE_NO
-            FOR XML PATH (''), TYPE
-        ).value('.', 'NVARCHAR(MAX)'
-        ), 1, 1, '') AS 座位
 )
+
 SELECT
     FQ.[file_no],
     FQ.[course_name],
     FQ.[legacy_course_num],
     SQ.SEAT_NO,
-    SQ.座位
+    SQ.SEAT
 FROM FIRSTQUERY AS FQ
-OUTER APPLY SQ
+OUTER APPLY ( -- noqa: ST05
+    SELECT
+        STUFF((
+            SELECT ',' + CAST([seats_records].[sn] AS NVARCHAR(MAX))
+            FROM [seats_records]
+            WHERE
+                [seats_records].[student_id] IS NULL
+                AND [seats_records].[file_no] = FQ.[file_no]
+            FOR XML PATH (''), TYPE
+        ).value('.', 'NVARCHAR(MAX)'
+        ), 1, 1, '') AS SEAT_NO,
+        STUFF((
+            SELECT ',' + CAST([seats_records].[seat_no] AS NVARCHAR(MAX))
+            FROM [seats_records]
+            WHERE
+                [seats_records].[student_id] IS NULL
+                AND [seats_records].[file_no] = FQ.[file_no]
+            FOR XML PATH (''), TYPE
+        ).value('.', 'NVARCHAR(MAX)'
+        ), 1, 1, '') AS SEAT
+) AS SQ
 WHERE EXISTS (SELECT 1 FROM FIRSTQUERY);

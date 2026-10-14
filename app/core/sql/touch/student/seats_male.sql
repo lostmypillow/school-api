@@ -5,6 +5,6 @@ SELECT
 FROM
     [seats_records]
 WHERE
-    file_no = :class_id
+    file_no = ?
     AND [student_id] IS NULL
     AND CAST(RIGHT(seat_no, 2) AS INT) > 15

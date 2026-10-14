@@ -1,6 +1,6 @@
 select name
 from
-    .dbo.users
+    users
 where
     是業務 = 1
     and 狀態 = 1

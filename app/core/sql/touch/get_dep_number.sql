@@ -1,6 +1,5 @@
-SELECT
-    main_department
+SELECT main_department
 FROM
     users
 WHERE
-    student_id = :employee_id
+    student_id = ?

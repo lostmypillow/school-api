@@ -1,8 +1,12 @@
 SELECT
-    *
+    [sn],
+    [file_no],
+    [seat_no],
+    [student_id],
+    [created_at]
 FROM
-    seats_records
+    [seats_records]
 WHERE
-    file_no = :course_id
-    AND student_id = :student_id
-    AND CAST(created_at AS DATE) = CAST(GETDATE() AS DATE);
+    [file_no] = ?
+    AND [student_id] = ?
+    AND CAST([created_at] AS DATE) = CAST(GETDATE() AS DATE);
