@@ -1,4 +1,3 @@
-SELECT
-    *
+SELECT *
 FROM
     vm_details

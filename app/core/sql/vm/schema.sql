@@ -1,7 +1,7 @@
 DROP TABLE IF EXISTS vm_details;
 
 CREATE TABLE vm_details (
-    id INT IDENTITY(1, 1) PRIMARY KEY,
+    id INT IDENTITY (1, 1) PRIMARY KEY,
     vm_name NVARCHAR(100) NOT NULL,
     human_owner NVARCHAR(100) NULL,
     pc_owner NVARCHAR(100) NULL,
@@ -32,71 +32,71 @@ CREATE TABLE vm_details (
 );
 
 INSERT INTO
-    vm_details (
-        vm_name,
-        human_owner,
-        pc_owner,
-        pve,
-        pve_host,
-        pve_token_username,
-        pve_token_name,
-        pve_token_value,
-        pve_vm_id,
-        pve_proxy,
-        spice_proxy,
-        vm_password,
-        usb,
-        created_at
-    )
+vm_details (
+    vm_name,
+    human_owner,
+    pc_owner,
+    pve,
+    pve_host,
+    pve_token_username,
+    pve_token_name,
+    pve_token_value,
+    pve_vm_id,
+    pve_proxy,
+    spice_proxy,
+    vm_password,
+    usb,
+    created_at
+)
 VALUES
-    (
-        'Win10',
-        '201350',
-        NULL,
-        1,
-        '192.168.2.13:8006',
-        'lostmypillow',
-        'lostmypillow',
-        '245a4a7a-581f-434d-be48-e393d9578aa0',
-        301,
-        'pve3.kaowei.tw:3128',
-        '192.168.2.13:3128',
-        NULL,
-        0,
-        SYSDATETIME()
-    );
+(
+    'Win10',
+    '201350',
+    NULL,
+    1,
+    '192.168.2.13:8006',
+    'lostmypillow',
+    'lostmypillow',
+    '245a4a7a-581f-434d-be48-e393d9578aa0',
+    301,
+    'pve3.kaowei.tw:3128',
+    '192.168.2.13:3128',
+    NULL,
+    0,
+    SYSDATETIME()
+);
 
 INSERT INTO
-    vm_details (
-        vm_name,
-        human_owner,
-        pc_owner,
-        pve,
-        pve_host,
-        pve_token_username,
-        pve_token_name,
-        pve_token_value,
-        pve_vm_id,
-        pve_proxy,
-        spice_proxy,
-        vm_password,
-        usb,
-        created_at
-    )
+vm_details (
+    vm_name,
+    human_owner,
+    pc_owner,
+    pve,
+    pve_host,
+    pve_token_username,
+    pve_token_name,
+    pve_token_value,
+    pve_vm_id,
+    pve_proxy,
+    spice_proxy,
+    vm_password,
+    usb,
+    created_at
+)
 VALUES
-    (
-        'hanWin7',
-        '200829',
-        NULL,
-        0,
-        NULL,
-        NULL,
-        NULL,
-        NULL,
-        NULL,
-        NULL,
-        '192.168.2.21:8283',
-        '8283',
-        0,
-        SYSDATETIME()
-    );
+(
+    'hanWin7',
+    '200829',
+    NULL,
+    0,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    '192.168.2.21:8283',
+    '8283',
+    0,
+    SYSDATETIME()
+);

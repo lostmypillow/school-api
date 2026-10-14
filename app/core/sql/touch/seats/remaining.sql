@@ -1,4 +1,3 @@
-SELECT
-    TOP 1 *
+SELECT TOP 1 *
 FROM
     todays_seats
