@@ -2,7 +2,7 @@
 import mssql_python
 import pytest
 
-from app.core.db import exec_mssql, exec_mssql_async
+from app.core.exec_mssql_async import exec_mssql, exec_mssql_async
 from tests.sql.conftest import MASTER_URL, TEST_DB_URL
 
 

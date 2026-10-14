@@ -1,10 +1,10 @@
-from fastapi import APIRouter, Response, HTTPException, Path, Depends, status
-from typing import Literal
-from sqlalchemy.ext.asyncio import AsyncSession
 import logging
 from time import perf_counter
+from typing import Literal
 
-from app.core.db import exec_mssql_async
+from fastapi import APIRouter, Response, HTTPException, Path, status
+
+from app.core.exec_mssql_async import exec_mssql_async
 
 logger = logging.getLogger("__name__")
 
@@ -34,7 +34,7 @@ async def get_image(
     role: Literal["employee", "student"] = Path(
         ..., description="Role, either 'employee' or 'student'"
     ),
-    id: str = Path(..., description="The ID of the employee or student, e.g. 300003"),
+    personnel_id: str = Path(..., description="The ID of the employee or student, e.g. 300003"),
 ):
     """Gets an image of either an employee or a student
 
@@ -42,12 +42,12 @@ async def get_image(
     ----------
     role : Literal[&#39;employee&#39;, &#39;student&#39;]
         Either 'employee' or 'student'
-    id : str
+    personnel_id : str
         ID of either employee or student
     """
     t1_start = perf_counter() 
     try:
-        image_data = await exec_mssql_async(f"picture_{role}", id)
+        image_data = await exec_mssql_async(f"picture_{role}", personnel_id)
         t1_stop = perf_counter()
 
         logger.info(f"Elapsed time: {t1_stop, t1_start}") 
@@ -55,6 +55,6 @@ async def get_image(
 
         logger.info(f"Elapsed time during the whole program in seconds: {t1_stop-t1_start}s")
         return Response(content= image_data["photo_bytes"], media_type="image/png")
-    except Exception as e:
-        logger.exception(f"Image not found")
+    except Exception:
+        logger.exception("Image not found")
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Image not found")

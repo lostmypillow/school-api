@@ -1,7 +1,7 @@
 from fastapi import APIRouter, status, Path
 from typing import Union, List
 
-from app.core.db import exec_mssql_async
+from app.core.exec_mssql_async import exec_mssql_async
 from ..models import VMResponse, ErrorResponse, MessageResponse, VMDetails
 from pprint import pformat
 
@@ -39,7 +39,7 @@ async def return_vm_info(
             logger.info("vm_details:")
             logger.info(pformat(vm_details))
             return vm_details
-    except Exception as e:
+    except Exception:
         logger.exception("VM details not found")
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="VM details not found"
@@ -63,7 +63,7 @@ async def create_vm_details(
         logger.info(vm_details.model_dump_json(indent=2))
         await exec_mssql_async("commit", "insert", **vm_details.model_dump().values())
         return {"message": "ok"}
-    except IntegrityError as e:
+    except IntegrityError:
         logger.exception("IntegrityError raised")
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="IntegrityError raised"
@@ -86,10 +86,10 @@ async def update_vm_details(
         await exec_mssql_async("vm/update",  vm_details.model_dump().values(), vm_id, fetch=False)
         logger.info("SQL UPDATE Success!")
         return {"message": "ok"}
-    except IntegrityError as e:
+    except IntegrityError:
         logger.exception("IntegrityError raised")
         raise HTTPException(status_code=404, detail="IntegrityError raised")
-    except Exception as e:
+    except Exception:
         logger.exception("Exception raised")
         raise HTTPException(status_code=404, detail="Exception raised")
 
@@ -106,6 +106,6 @@ async def delete_vm_details(vm_id: int):
         await exec_mssql_async( "vm/delete", vm_id, fetch=False)
         logger.info("SQL DELETE Success!")
         return {"message": "ok"}
-    except Exception as e:
+    except Exception:
         logging.exception("Exception raised")
         raise HTTPException(status_code=404, detail="Exception raised")

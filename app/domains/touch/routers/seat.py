@@ -6,7 +6,7 @@ import logging
 
 from fastapi import APIRouter, HTTPException
 
-from app.core.db import exec_mssql_async
+from app.core.exec_mssql_async import exec_mssql_async
 
 logger = logging.getLogger("__name__")
 from app.domains.touch.models.error_response import ErrorResponse
@@ -37,11 +37,11 @@ async def register_seat(seat_info: SeatInfo):
         await exec_mssql_async(
             "register_seat",
             seat_info.student_id,
-            seat_info.號碼,
+            seat_info.seat_number,
             fetch=False
         )
         return SuccessMessage(message="success")
     except Exception as e:
         logger.exception(
-            msg=f"[SEAT ERROR] student_id={seat_info.student_id}, 號碼={seat_info.號碼} - {e}", exc_info=e)
+            msg=f"[SEAT ERROR] student_id={seat_info.student_id}, 號碼={seat_info.seat_number} - {e}", exc_info=e)
         raise HTTPException(status_code=500, detail="抱歉，系統發生錯誤，請洽導師! Error 010")

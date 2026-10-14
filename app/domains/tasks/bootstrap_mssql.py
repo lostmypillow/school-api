@@ -5,7 +5,7 @@ from typing import Any
 
 import pyarrow.parquet as pq
 
-from app.core.db import exec_mssql_async
+from app.core.exec_mssql_async import exec_mssql_async
 
 logger = logging.getLogger(__name__)
 

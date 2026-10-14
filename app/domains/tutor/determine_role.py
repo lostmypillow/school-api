@@ -3,7 +3,7 @@ import logging
 
 logger: logging.Logger = logging.getLogger(__name__)
 
-from app.core.db import exec_mssql_async
+from app.core.exec_mssql_async import exec_mssql_async
 from app.domains.tutor.models import Cardholder
 from app.domains.tutor.schemas import StudentSqlRow, TeacherSqlRow, AssociatedDeviceSqlRow
 

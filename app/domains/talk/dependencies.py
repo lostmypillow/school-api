@@ -1,7 +1,7 @@
 from fastapi import Depends
 
-from app.features.talk.repositories import NextcloudRepository
-from app.features.talk.services import NextcloudService
+from app.domains.talk.repositories import NextcloudRepository
+from app.domains.talk.services import NextcloudService
 
 
 def get_bot_repo():

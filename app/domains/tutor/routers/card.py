@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, Path, status
 from pydantic import BaseModel, Field
 
-from app.core.db import exec_mssql_async
+from app.core.exec_mssql_async import exec_mssql_async
 from app.domains.tutor.process_card import process_card
 from app.domains.tutor.models import Cardholder
 from app.domains.tutor.lib.sync_frontend import sync_frontend

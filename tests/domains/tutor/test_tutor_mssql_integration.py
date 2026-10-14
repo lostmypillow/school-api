@@ -14,7 +14,7 @@ import mssql_python
 import pytest
 import pytest_asyncio
 
-from app.core.db import exec_mssql, exec_mssql_async
+from app.core.exec_mssql_async import exec_mssql, exec_mssql_async
 from app.domains.tutor.process_card import process_card
 from app.domains.tutor.determine_role import determine_role
 from app.domains.tutor.models import Cardholder

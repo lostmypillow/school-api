@@ -6,7 +6,7 @@ from fastapi import APIRouter, HTTPException, status
 
 
 
-from app.core.db import exec_mssql_async
+from app.core.exec_mssql_async import exec_mssql_async
 from app.domains.trials.models.log_record_create import LogRecordCreate
 from app.domains.trials.models.log_record_response import LogRecordResponse
 from app.domains.trials.models.trial_record_base import TrialRecordBase

@@ -1,5 +1,5 @@
 from pydantic import BaseModel, computed_field
-from app.features.ldap.models.ipa_formatted_user import IpaFormattedUser
+from app.domains.ldap.models.ipa_formatted_user import IpaFormattedUser
 
 
 class FilteredList(BaseModel):

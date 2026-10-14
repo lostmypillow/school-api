@@ -1,6 +1,6 @@
 import logging
 from fastapi.responses import orjson
-from app.core.db import exec_mssql_async
+from app.core.exec_mssql_async import exec_mssql_async
 from app.domains.tutor.models import Cardholder
 from app.domains.tutor.lib.connection_manager import manager
 

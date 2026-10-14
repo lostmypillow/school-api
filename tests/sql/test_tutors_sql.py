@@ -4,7 +4,7 @@ from datetime import datetime
 import mssql_python
 import pytest
 
-from app.core.db import exec_mssql_async
+from app.core.exec_mssql_async import exec_mssql_async
 from tests.sql.conftest import TEST_DB_URL
 
 

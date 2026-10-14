@@ -28,6 +28,10 @@ dependencies = [
     "apscheduler>=3.11.3",
     "smbprotocol>=1.17.0",
     "proxmoxer>=2.3.0",
+    "requests-async>=0.2.4",
+    "chardet>=7.6.0",
+    "pymupdf>=1.28.2",
+    "aiofiles>=25.1.0",
 ]
 
 

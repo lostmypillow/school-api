@@ -7,13 +7,13 @@ from fastapi import APIRouter
 from fastapi.responses import Response
 
 
-def _mm_to_points(mm):
+def mm_to_points(mm):
     return (mm * 72) / 25.4
 
 
 def generate_bytes(title: str, name: str) -> bytes:
-    title_insert_point = pymupdf.Point(_mm_to_points(15.798), _mm_to_points(19.09))
-    name_insert_point = pymupdf.Point(_mm_to_points(10.75), _mm_to_points(38.402))
+    title_insert_point = pymupdf.Point(mm_to_points(15.798), mm_to_points(19.09))
+    name_insert_point = pymupdf.Point(mm_to_points(10.75), mm_to_points(38.402))
     template_pdf_path = str(Path(__file__).parent / "template_empty.pdf")
     font_path = str(Path(__file__).parent / "font.ttc")
     doc = pymupdf.open(template_pdf_path)

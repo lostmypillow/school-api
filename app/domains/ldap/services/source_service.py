@@ -1,28 +1,19 @@
-from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.features.ldap.models.filtered_response import FilteredList
-from app.features.ldap.models.raw_user_data import RawUserData
-from app.features.ldap.repositories.source_repo import SourceRepository
-from app.features.ldap.settings import DEPS
+from app.core.exec_mssql_async import exec_mssql_async
+from app.domains.ldap.models.filtered_response import FilteredList
+from app.domains.ldap.models.raw_user_data import RawUserData
+from app.domains.ldap.settings import DEPS
 from typing import List
-from app.features.ldap.models.ipa_formatted_user import IpaFormattedUser
+from app.domains.ldap.models.ipa_formatted_user import IpaFormattedUser
 class SourceService:
-    def __init__(self, session: AsyncSession) -> None:
-        self.session = session
-        self.user_repo = SourceRepository(session=session)
+    def __init__(self) -> None:
+        pass
 
     async def return_modified_users(self) -> FilteredList:
-        # raw_users: list[RawUserData] =
-        # # clean user repo
-        # for user in raw_users:
-        #     user.uid = str(user.uid).strip()
-        #
-        raw_dicts: list[dict] = await self.user_repo.load_users()
+        raw_dicts: list[dict] = await exec_mssql_async(command_name="ldap/ldap_get_all_users")
         raw_users: list[RawUserData] = [RawUserData(**u) for u in raw_dicts]
         users_to_add: List[IpaFormattedUser] = []
         users_to_disable: List[IpaFormattedUser] = []
-        # print(f"type: {type(raw_users)}")
-        # print(f"len: {len(raw_users)}")
         dep_lookup = {str(d["自動編號"]): d["group"] for d in DEPS}
 
         for raw_user in raw_users:
