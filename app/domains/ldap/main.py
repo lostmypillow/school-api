@@ -23,11 +23,11 @@ from fastapi.responses import HTMLResponse
 
 from app.database import get_session_ctx
 from app.core.legacy.engine import async_engine
-from app.domains.internal.card.router import router as card_router
-from app.domains.internal.ldap.repositories.ldap_repo import LdapRepository
-from app.domains.internal.ldap.routers.ldap_router import router as ldap_router
-from app.domains.internal.ldap.services.ldap_service import LdapService
-from app.domains.internal.talk.router import router as talk_router
+from app.domains.card import router as card_router
+from app.domains.ldap.repositories.ldap_repo import LdapRepository
+from app.domains.ldap.routers.ldap_router import router as ldap_router
+from app.domains.ldap.services.ldap_service import LdapService
+from app.domains.talk.router import router as talk_router
 from app.domains.trials.router import router as submission_router
 
 # Disable FastAPI CLI pretty logs & duplicate uvicorn logs

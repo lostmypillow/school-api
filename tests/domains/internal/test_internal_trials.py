@@ -6,6 +6,10 @@ import pytest
 from fastapi import HTTPException, status
 from pydantic import ValidationError
 from sqlalchemy.ext.asyncio import AsyncSession
+from app.domains.trials.models.trial_record_create import TrialRecordCreate
+from app.domains.trials.models.trial_record_base import TrialRecordBase
+from app.domains.trials.models.log_record_response import LogRecordResponse
+from app.domains.trials.models.log_record_create import LogRecordCreate
 
 # Alias app.database to legacy dependecies for internal domain imports
 from app.core.legacy import dependecies
@@ -19,10 +23,7 @@ from app.domains.trials.router import (  # noqa: E402
     read_trial,
     read_trials,
 )
-from app.domains.trials.models.trial_record_create import TrialRecordCreate
-from app.domains.trials.models.trial_record_base import TrialRecordBase
-from app.domains.trials.models.log_record_response import LogRecordResponse
-from app.domains.trials.models.log_record_create import LogRecordCreate
+
 
 
 # ---------------------------------------------------------------------------

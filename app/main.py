@@ -1,6 +1,5 @@
 from app.domains.tutor.routers import announcement_router, ws_router, update_router, card_router
 import logging
-from app.domains.tutor.routers import announcement_router, ws_router, update_router, card_router
 import os
 from contextlib import asynccontextmanager
 from dotenv import load_dotenv

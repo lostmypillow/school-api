@@ -3,19 +3,19 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from app.domains.internal.talk import repositories as talk_repositories
+from app.domains.talk import repositories as talk_repositories
 
 # Alias legacy module path app.features.talk.repositories for talk service
 sys.modules["app.features.talk.repositories"] = talk_repositories
 
-from app.domains.internal.talk.repositories import (  # noqa: E402
+from app.domains.talk import (  # noqa: E402
     NextcloudRepository,
 )
-from app.domains.internal.talk.schemas import (  # noqa: E402
+from app.domains.talk.schemas import (  # noqa: E402
     SendMessageRequest,
     SendMessageResponse,
 )
-from app.domains.internal.talk.services import NextcloudService  # noqa: E402
+from app.domains.talk import NextcloudService  # noqa: E402
 
 
 def test_talk_schemas():
