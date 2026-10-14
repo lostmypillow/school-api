@@ -1,4 +1,3 @@
-from app.domains.tutor.routers import announcement_router, ws_router, update_router, card_router
 import logging
 import os
 from contextlib import asynccontextmanager
@@ -12,6 +11,7 @@ from rq import Queue
 from app.domains.tasks.bootstrap_mssql import bootstrap_mssql
 from app.domains.courses import router as course_router
 from app.domains.tasks import router as tasks_router
+from app.domains.tutor import router as tutor_router
 
 load_dotenv()
 logger = logging.getLogger("uvicorn.error")
@@ -61,10 +61,6 @@ async def health_check(req: Request):
 
 app.include_router(course_router)
 app.include_router(tasks_router)
-app.include_router(announcement_router)
-app.include_router(ws_router)
-app.include_router(update_router)
-app.include_router(card_router)
-
+app.include_router(tutor_router)
 
 FastAPIRedis(app).lifespan().caching()

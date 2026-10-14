@@ -9,11 +9,11 @@ from fastapi import APIRouter, HTTPException
 
 from app.core.exec_mssql_async import exec_mssql_async
 
-logger = logging.getLogger(__name__)
 from app.domains.touch.models.error_response import ErrorResponse
 from app.domains.touch.models.success_message import SuccessMessage
 from app.domains.touch.models.survey_info import SurveyInfo
 
+logger = logging.getLogger(__name__)
 router = APIRouter(
     prefix="/survey",
     tags=["Survey"],

@@ -1,17 +1,16 @@
-from typing import Any, cast
 import logging
+from typing import Any, cast
 
-logger: logging.Logger = logging.getLogger(__name__)
-
-from fastapi import HTTPException
-from fastapi import status
+from fastapi import HTTPException, status
 
 from app.core.exec_mssql_async import exec_mssql_async
 from app.domains.tutor.determine_role import determine_role
-from app.domains.tutor.models import Cardholder, Device
 from app.domains.tutor.lib.sync_frontend import sync_frontend
-from app.domains.tutor.schemas import CheckDeviceTeacherSqlRow, AppointmentSqlRow
+from app.domains.tutor.models import Cardholder, Device
+from app.domains.tutor.schemas.appointment_sql import AppointmentSqlRow
+from app.domains.tutor.schemas.check_device_teacher import CheckDeviceTeacherSqlRow
 
+logger: logging.Logger = logging.getLogger(__name__)
 
 async def process_card(device_id: int, card_id: str) -> str | None | Any:
     """Process a card swipe for a given device and card ID."""

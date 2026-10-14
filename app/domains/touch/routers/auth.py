@@ -5,9 +5,9 @@ from fastapi import APIRouter, HTTPException, status
 
 from app.core.exec_mssql_async import exec_mssql_async
 from app.domains.touch.lib import deps, get_class_with_seats
+from app.domains.touch.models import AuthRequest, AuthResponse, ErrorResponse, RateableEmployee
 
 logger = logging.getLogger("__name__")
-from app.domains.touch.models import AuthRequest, AuthResponse, ErrorResponse, RateableEmployee
 
 router = APIRouter(
     prefix="/auth",

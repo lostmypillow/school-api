@@ -1,16 +1,12 @@
 from fastapi import APIRouter, HTTPException, Path, status
-from pydantic import BaseModel, Field
 
 from app.core.exec_mssql_async import exec_mssql_async
 from app.domains.tutor.process_card import process_card
 from app.domains.tutor.models import Cardholder
 from app.domains.tutor.lib.sync_frontend import sync_frontend
+from app.domains.tutor.models.update_teacher_response import UpdateTeacherResponse
 
-router: APIRouter = APIRouter(prefix="/tutor/card", tags=["Tutor"])
-
-
-class UpdateTeacherResponse(BaseModel):
-    detail: str = Field(default="Update success", description="操作結果訊息")
+router: APIRouter = APIRouter(prefix="/card", tags=["Card Swipe"])
 
 
 @router.get(

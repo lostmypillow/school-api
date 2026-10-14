@@ -1,16 +1,11 @@
-"""WebSocket 端點."""
 import logging
-
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
+from pprint import pformat
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from app.domains.touch.lib.get_class_with_seats import get_class_with_seats
 
 logger = logging.getLogger(__name__)
 logging.getLogger("apscheduler").setLevel(logging.WARNING)
-from pprint import pformat
-
-from apscheduler.schedulers.asyncio import AsyncIOScheduler
-
-from app.domains.touch.lib.get_class_with_seats import get_class_with_seats
-
 client_connections: dict[str, WebSocket] = {}
 debug_connections: dict[str, WebSocket] = {}
 router = APIRouter(

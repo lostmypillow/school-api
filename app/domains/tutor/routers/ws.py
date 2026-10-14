@@ -9,7 +9,7 @@ from app.domains.tutor.lib.sync_frontend import sync_frontend
 logger = logging.getLogger(__name__)
 router = APIRouter(
     prefix="/tutor/ws",
-    tags=["Websocket / Control"],
+    tags=["Websocket sync for client"],
 )
 
 

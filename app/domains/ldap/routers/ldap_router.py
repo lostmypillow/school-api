@@ -1,5 +1,4 @@
 from fastapi import APIRouter, BackgroundTasks, HTTPException
-from app.domains.ldap.repositories.ldap_repo import LdapRepository
 from app.domains.ldap.services.ldap_service import LdapService
 from app.domains.ldap.services.source_service import SourceService
 
@@ -14,10 +13,7 @@ async def sync_mssql_to_ldap( background_tasks: BackgroundTasks,  dry_run: bool 
             source_service = SourceService()
             return await source_service.return_modified_users()
         else:
-            ldap_repo = LdapRepository()
-            # await ldap_repo.login()
             ldap_service = LdapService()
-            # await ldap_service.login_repo()
             background_tasks.add_task(ldap_service.sync_all_users)
             return "Sync queued"
     except Exception as e:

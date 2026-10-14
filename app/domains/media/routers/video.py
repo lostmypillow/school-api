@@ -9,9 +9,11 @@ from smbclient import open_file, scandir
 
 from app.domains.media.get_smb_session import get_smb_session
 from app.domains.media.smb_session import SMBSession
+import os
+from itertools import cycle
 
 logger = logging.getLogger("__name__")
-import os
+
 video_cycler = None
 router = APIRouter(
     prefix="/video",
@@ -20,7 +22,7 @@ router = APIRouter(
 STATIC_FOLDER = "/srv/dl_videos"
 SMB_URL = f"//{getenv('SMB_HOST', '')}{getenv('SMB_FOLDER')}"
 
-from itertools import cycle
+
 
 @router.post("/sync")
 def sync_videos_from_smb_2_local(smb: SMBSession = Depends(get_smb_session)):
