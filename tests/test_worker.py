@@ -1,8 +1,7 @@
 from unittest.mock import MagicMock, patch
 
-import pytest
 from redis import Redis
-from rq import Queue, Worker
+from rq import Worker
 
 from app.domains.tasks.jobs import bootstrap_mssql_task, scrape_to_parquet_task
 from app.worker import run_worker

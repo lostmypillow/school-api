@@ -3,7 +3,7 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from app.domains.tasks.bootstrap_mssql import _read_parquet_records, bootstrap_mssql
+from app.domains.tasks.bootstrap_mssql import bootstrap_mssql
 from app.domains.tasks.scrape_to_parquet import _append_to_parquet
 
 
