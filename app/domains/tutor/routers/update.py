@@ -2,10 +2,10 @@ from fastapi import APIRouter, status
 from pydantic import BaseModel, Field
 
 from app.core.exec_mssql_async import exec_mssql_async
-from app.domains.tutor.models import Cardholder
+from app.domains.tutor.schemas.cardholder import Cardholder
 from app.domains.tutor.lib.sync_frontend import sync_frontend
 
-router: APIRouter = APIRouter(prefix="/update", tags=["Update tutor details"])
+router = APIRouter(prefix="/update", tags=["Update tutor details"])
 
 
 class UpdateTeacherResponse(BaseModel):

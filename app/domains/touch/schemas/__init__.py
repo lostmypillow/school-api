@@ -1,4 +1,4 @@
-"""Pydantic models.
+"""Pydantic schemas.
 
 詳情見: https://docs.pydantic.dev/latest/ 以及 https://fastapi.tiangolo.com/tutorial/body-nested-models/
 

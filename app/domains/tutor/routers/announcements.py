@@ -6,8 +6,8 @@ from fastapi import APIRouter
 from fastapi.exceptions import HTTPException
 
 from app.core.exec_mssql_async import exec_mssql_async
-from app.domains.tutor.models.announcement import AddAnnouncement, Announcement, UpdateAnnouncement
-from app.domains.tutor.models.api_response import APIResponse
+from app.domains.tutor.schemas.announcement import AddAnnouncement, Announcement, UpdateAnnouncement
+from app.domains.tutor.schemas.api_response import APIResponse
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/announcements", tags=["Announcements"])

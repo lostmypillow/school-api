@@ -4,7 +4,7 @@ import logging
 from typing import List
 
 
-from app.domains.ldap.models.ipa_formatted_user import IpaFormattedUser
+from app.domains.ldap.schemas.ipa_formatted_user import IpaFormattedUser
 from app.domains.ldap.repositories.ldap_repo import LdapRepository
 from app.domains.ldap.services.source_service import SourceService
 DEPS: dict = {

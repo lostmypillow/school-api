@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from app.domains.trials.models.log_record_create import LogRecordCreate
+from app.domains.trials.schemas.log_record_create import LogRecordCreate
 
 
 class LogRecordResponse(LogRecordCreate):

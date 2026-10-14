@@ -7,9 +7,9 @@ import logging
 from fastapi import APIRouter, HTTPException
 
 from app.core.exec_mssql_async import exec_mssql_async
-from app.domains.touch.models.error_response import ErrorResponse
-from app.domains.touch.models.seat_info import SeatInfo
-from app.domains.touch.models.success_message import SuccessMessage
+from app.domains.touch.schemas.error_response import ErrorResponse
+from app.domains.touch.schemas.seat_info import SeatInfo
+from app.domains.touch.schemas.success_message import SuccessMessage
 
 logger = logging.getLogger("__name__")
 router = APIRouter(

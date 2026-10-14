@@ -6,7 +6,8 @@ from fastapi import HTTPException, status
 from app.core.exec_mssql_async import exec_mssql_async
 from app.domains.tutor.determine_role import determine_role
 from app.domains.tutor.lib.sync_frontend import sync_frontend
-from app.domains.tutor.models import Cardholder, Device
+from app.domains.tutor.schemas.cardholder import Cardholder
+from app.domains.tutor.schemas.device import Device
 from app.domains.tutor.schemas.appointment_sql import AppointmentSqlRow
 from app.domains.tutor.schemas.check_device_teacher import CheckDeviceTeacherSqlRow
 

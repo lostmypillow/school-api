@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from app.domains.trials.models.trial_record_base import TrialRecordBase
+from app.domains.trials.schemas.trial_record_base import TrialRecordBase
 
 
 class TrialRecordResponse(TrialRecordBase):

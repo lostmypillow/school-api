@@ -1,10 +1,10 @@
 
 from app.core.exec_mssql_async import exec_mssql_async
-from app.domains.ldap.models.filtered_response import FilteredList
-from app.domains.ldap.models.raw_user_data import RawUserData
+from app.domains.ldap.schemas.filtered_response import FilteredList
+from app.domains.ldap.schemas.raw_user_data import RawUserData
 from app.domains.ldap.settings import DEPS
 from typing import List
-from app.domains.ldap.models.ipa_formatted_user import IpaFormattedUser
+from app.domains.ldap.schemas.ipa_formatted_user import IpaFormattedUser
 class SourceService:
     def __init__(self) -> None:
         pass

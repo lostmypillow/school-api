@@ -5,7 +5,7 @@ from fastapi import APIRouter, HTTPException, status
 
 from app.core.exec_mssql_async import exec_mssql_async
 from app.domains.touch.lib import deps, get_class_with_seats
-from app.domains.touch.models import AuthRequest, AuthResponse, ErrorResponse, RateableEmployee
+from app.domains.touch.schemas import AuthRequest, AuthResponse, ErrorResponse, RateableEmployee
 
 logger = logging.getLogger("__name__")
 

@@ -1,4 +1,4 @@
-"""設備資訊. 這個或 `src.models.device`是多餘的."""
+"""設備資訊. 這個或 `src.schemas.device`是多餘的."""
 from pydantic import AliasChoices, BaseModel, Field
 
 

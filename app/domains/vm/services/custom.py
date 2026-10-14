@@ -1,4 +1,4 @@
-from app.domains.vm.models import VMDetails
+from app.domains.vm.schemas import VMDetails
 
 
 class CustomService:

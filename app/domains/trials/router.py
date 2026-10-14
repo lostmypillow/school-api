@@ -7,11 +7,11 @@ from fastapi import APIRouter, HTTPException, status
 
 
 from app.core.exec_mssql_async import exec_mssql_async
-from app.domains.trials.models.log_record_create import LogRecordCreate
-from app.domains.trials.models.log_record_response import LogRecordResponse
-from app.domains.trials.models.trial_record_base import TrialRecordBase
-from app.domains.trials.models.trial_record_create import TrialRecordCreate
-from app.domains.trials.models.trial_record_response import TrialRecordResponse
+from app.domains.trials.schemas.log_record_create import LogRecordCreate
+from app.domains.trials.schemas.log_record_response import LogRecordResponse
+from app.domains.trials.schemas.trial_record_base import TrialRecordBase
+from app.domains.trials.schemas.trial_record_create import TrialRecordCreate
+from app.domains.trials.schemas.trial_record_response import TrialRecordResponse
 
 logger = logging.getLogger(__name__)
 
