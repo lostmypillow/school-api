@@ -11,7 +11,7 @@ from app.core.crud import (
     get_scraped_semester_ids_for_departments,
     save_ntut_operations,
 )
-from app.core.models import Course, Department, DepartmentYear, Semester
+from app.core.tables import Course, Department, DepartmentYear, Semester
 
 
 @pytest.mark.asyncio

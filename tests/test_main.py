@@ -38,7 +38,7 @@ async def test_health_check_live_app():
 
 @pytest.mark.asyncio
 async def test_app_lifespan():
-    """Test lifespan enables pooling, creates redis connection, and tears down on exit."""
+    """Test lifespan enables pooling, creates Redis connection, and tears down on exit."""
     test_app = FastAPI()
 
     mock_redis = MagicMock()

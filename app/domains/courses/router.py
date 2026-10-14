@@ -4,7 +4,7 @@ import uuid
 from redis_fastapi import cache
 from sqlalchemy import select
 
-from app.core.models.courses import Semester, Department, DepartmentYear, Course
+from app.core.tables.courses import Semester, Department, DepartmentYear, Course
 
 router = APIRouter(prefix="/courses", tags=["Courses"])
 

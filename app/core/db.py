@@ -9,7 +9,7 @@ import mssql_python
 from sqlalchemy.dialects import mssql
 from sqlalchemy.schema import CreateTable
 
-from app.core.models.base_model import Base
+from app.core.tables.base_model import Base
 logger = logging.getLogger(__name__)
 
 CONNECT_RETRY_ERRORS = frozenset(

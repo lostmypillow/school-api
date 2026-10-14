@@ -11,10 +11,6 @@ from app.domains.trials.models.trial_record_base import TrialRecordBase
 from app.domains.trials.models.log_record_response import LogRecordResponse
 from app.domains.trials.models.log_record_create import LogRecordCreate
 
-# Alias app.database to legacy dependecies for internal domain imports
-from app.core.legacy import dependecies
-sys.modules["app.database"] = dependecies
-
 from app.domains.trials.router import (  # noqa: E402
     create_trial,
     delete_trial,

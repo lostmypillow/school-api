@@ -15,7 +15,7 @@ dependencies = [
     "sqlalchemy==2.1.4",
     "aiosqlite>=0.22.1",
     "fastapi-redis-sdk==0.8.1",
-    "greenlet>=3.5.5",
+    "greenlet==3.5.6",
     "rq>=2.0.0",
     "tqdm==4.70.1",
     "types-tqdm>=4.70.0.20260906",

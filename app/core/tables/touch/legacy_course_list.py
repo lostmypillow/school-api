@@ -4,7 +4,7 @@ from typing import Optional
 from sqlalchemy import Integer, Unicode, Time, String
 from sqlalchemy.orm import Mapped, mapped_column
 
-from app.core.models.base import Base
+from app.core.tables.base import Base
 
 
 class LegacyCourseList(Base):

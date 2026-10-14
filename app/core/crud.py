@@ -1,10 +1,10 @@
-from app.core.models import Course
+from app.core.tables import Course
 from datetime import UTC, datetime
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.models import Department, DepartmentYear, Semester
+from app.core.tables import Department, DepartmentYear, Semester
 
 
 async def save_ntut_operations(db: AsyncSession, payload: dict) -> None:

@@ -51,7 +51,7 @@ def test_append_and_read_parquet(temp_parquet_dir: Path):
 
 @pytest.mark.asyncio
 async def test_fetch_html_cache_hit_string(mock_redis: MockRedis):
-    """Test fetch_html returns cached string directly without calling HTTP client."""
+    """Test fetch_HTML returns cached string directly without calling HTTP client."""
     url = "https://aps.ntut.edu.tw/course/tw/Subj.jsp?format=-2&year=112&sem=1"
     url_hash = hashlib.sha256(url.encode("utf-8")).hexdigest()
     cache_key = f"cache:html:{url_hash}"
@@ -69,7 +69,7 @@ async def test_fetch_html_cache_hit_string(mock_redis: MockRedis):
 
 @pytest.mark.asyncio
 async def test_fetch_html_cache_hit_bytes(mock_redis: MockRedis):
-    """Test fetch_html decodes cached bytes to utf-8 string."""
+    """Test fetch_HTML decodes cached bytes to utf-8 string."""
     url = "https://aps.ntut.edu.tw/course/tw/Subj.jsp?format=-2&year=112&sem=2"
     url_hash = hashlib.sha256(url.encode("utf-8")).hexdigest()
     cache_key = f"cache:html:{url_hash}"
@@ -87,7 +87,7 @@ async def test_fetch_html_cache_hit_bytes(mock_redis: MockRedis):
 
 @pytest.mark.asyncio
 async def test_fetch_html_cache_miss(mock_redis: MockRedis):
-    """Test fetch_html fetches from HTTP client on cache miss and stores in Redis."""
+    """Test fetch_HTML fetches from HTTP client on cache miss and stores in Redis."""
     url = "https://aps.ntut.edu.tw/course/tw/Subj.jsp?format=-2&year=111&sem=1"
     url_hash = hashlib.sha256(url.encode("utf-8")).hexdigest()
     cache_key = f"cache:html:{url_hash}"
@@ -105,7 +105,7 @@ async def test_fetch_html_cache_miss(mock_redis: MockRedis):
 
 @pytest.mark.asyncio
 async def test_fetch_html_http_status_error(mock_redis: MockRedis):
-    """Test fetch_html propagates HTTP errors when client returns non-200."""
+    """Test fetch_HTML propagates HTTP errors when client returns non-200."""
     url = "https://aps.ntut.edu.tw/course/tw/error_page.jsp"
 
     client = MockHTTPClient()
@@ -155,7 +155,7 @@ async def test_scrape_sem_tag(mock_redis: MockRedis):
 
 @pytest.mark.asyncio
 async def test_scrape_a_tag(mock_redis: MockRedis):
-    """Test scrape with tag='a' extracts all <a> tags using lxml."""
+    """Test scrape with tag=`a` extracts all <a> tags using lxml."""
     url_path = "dept_list.jsp"
     full_url = "https://aps.ntut.edu.tw/course/tw/" + url_path
     html_content = """
@@ -177,7 +177,7 @@ async def test_scrape_a_tag(mock_redis: MockRedis):
 
 @pytest.mark.asyncio
 async def test_scrape_tr_tag(mock_redis: MockRedis):
-    """Test scrape with tag='tr' extracts all <tr> elements."""
+    """Test scrape with tag='tr' extracts all `tr` elements."""
     url_path = "course_list.jsp"
     full_url = "https://aps.ntut.edu.tw/course/tw/" + url_path
     html_content = """

@@ -5,7 +5,7 @@ from fastapi import HTTPException, Request, status
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.models import Course, Department, DepartmentYear, Semester
+from app.core.tables import Course, Department, DepartmentYear, Semester
 from app.domains.courses.router import (
     get_course,
     get_departments,
