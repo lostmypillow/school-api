@@ -4,8 +4,8 @@ import chardet
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, status
 from fastapi.responses import HTMLResponse
 
-from app.features.talk.dependencies import get_message_service
-from app.features.talk.services import NextcloudService
+from app.domains.talk.dependencies import get_message_service
+from app.domains.talk.services import NextcloudService
 
 router = APIRouter(prefix="/talk", tags=["Nextcloud Talk bridge"])
 

@@ -1,7 +1,5 @@
-from fastapi import APIRouter, Depends
-from sqlalchemy.ext.asyncio import AsyncSession
+from fastapi import APIRouter
 
-from src.dependencies import exec_sql, get_session
 import logging
 from pprint import pformat
 
@@ -9,7 +7,7 @@ from fastapi import status, Response
 
 from fastapi.exceptions import HTTPException
 
-from app.core.db import exec_mssql_async
+from app.core.exec_mssql_async import exec_mssql_async
 from app.domains.vm.services.proxmox import ProxmoxService
 from app.domains.vm.services.custom import CustomService
 router = APIRouter(
@@ -21,19 +19,16 @@ logger = logging.getLogger("__name__")
 @router.get("/config/{owner}")
 async def get_config(
     owner: str,
-    session: AsyncSession = Depends(get_session),
 ):
     try:
         if owner == "all":
-            all_vm_details = await exec_sql("all", "read_all", session=session)
+            all_vm_details = await exec_mssql_async("vm/read_all")
             logger.info("all_vm_details:")
             logger.info(pformat(all_vm_details))
             return all_vm_details
-        vm_details = await exec_sql(
-            "all",
+        vm_details = await exec_mssql_async(
             "read_for_owner",
-            request_owner=owner,
-            session=session,
+            owner
         )
         return vm_details
     except Exception:
@@ -45,8 +40,8 @@ async def get_config(
 
 
 @router.get("/file/{id}")
-async def generate_vv(id: str, session: AsyncSession = Depends(get_session),):
-    vm_details = await exec_mssql_async("vm/select_by_id", id, session)
+async def generate_vv(vm_id: str ):
+    vm_details = await exec_mssql_async("vm/select_by_id", vm_id)
     if vm_details["pve"]:
         service = ProxmoxService(vm_details=vm_details)
     else:

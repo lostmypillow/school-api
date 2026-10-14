@@ -1,26 +1,22 @@
-# app/features/ldap/routers/ldap_router.py
-from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException
-from sqlalchemy.ext.asyncio import AsyncSession
-
-from app.database import get_session
-from app.features.ldap.repositories.ldap_repo import LdapRepository
-from app.features.ldap.services.ldap_service import LdapService
-from app.features.ldap.services.source_service import SourceService
+from fastapi import APIRouter, BackgroundTasks, HTTPException
+from app.domains.ldap.repositories.ldap_repo import LdapRepository
+from app.domains.ldap.services.ldap_service import LdapService
+from app.domains.ldap.services.source_service import SourceService
 
 router = APIRouter(prefix="/ldap", tags=["ldap / FreeIPA"])
 
 
 @router.post("/users/sync")
-async def sync_mssql_to_ldap( background_tasks: BackgroundTasks, session: AsyncSession = Depends(get_session),  dry_run: bool = True):
+async def sync_mssql_to_ldap( background_tasks: BackgroundTasks,  dry_run: bool = True):
     """Add all users from MSSQL to FreeIPA."""
     try:
         if dry_run:
-            source_service = SourceService(session=session)
+            source_service = SourceService()
             return await source_service.return_modified_users()
         else:
             ldap_repo = LdapRepository()
             # await ldap_repo.login()
-            ldap_service = LdapService(session=session)
+            ldap_service = LdapService()
             # await ldap_service.login_repo()
             background_tasks.add_task(ldap_service.sync_all_users)
             return "Sync queued"

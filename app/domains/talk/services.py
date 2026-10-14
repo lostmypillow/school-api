@@ -1,5 +1,5 @@
 # services/message_service.py
-from app.features.talk.repositories import NextcloudRepository
+from app.domains.talk.repositories import NextcloudRepository
 
 
 class NextcloudService:

@@ -5,7 +5,7 @@ import nh3
 from fastapi import APIRouter
 from fastapi.exceptions import HTTPException
 
-from app.core.db import exec_mssql_async
+from app.core.exec_mssql_async import exec_mssql_async
 from app.domains.tutor.models.announcement import AddAnnouncement, Announcement, UpdateAnnouncement
 from app.domains.tutor.models.api_response import APIResponse
 

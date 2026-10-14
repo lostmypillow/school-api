@@ -1,10 +1,15 @@
-from fastapi import APIRouter, Depends, BackgroundTasks
-from app.domains.media.dependencies import SMBSession, get_smb_session
+import logging
+import shutil
+from os import getenv
+
+from fastapi import APIRouter, Depends
 from fastapi.exceptions import HTTPException
 from fastapi.responses import PlainTextResponse
 from smbclient import open_file, scandir
-import logging
-import shutil
+
+from app.domains.media.get_smb_session import get_smb_session
+from app.domains.media.smb_session import SMBSession
+
 logger = logging.getLogger("__name__")
 import os
 video_cycler = None
@@ -13,16 +18,16 @@ router = APIRouter(
     tags=["Videos"],
 )
 STATIC_FOLDER = "/srv/dl_videos"
-SMB_URL = f"//{settings.SMB_HOST}{settings.SMB_FOLDER}"
+SMB_URL = f"//{getenv('SMB_HOST', '')}{getenv('SMB_FOLDER')}"
 
 from itertools import cycle
 
 @router.post("/sync")
 def sync_videos_from_smb_2_local(smb: SMBSession = Depends(get_smb_session)):
 
-    def dl_vid(file):
+    def dl_vid(target_file):
         with open_file(
-                            os.path.join(SMB_URL, file.name), mode="rb"
+                            os.path.join(SMB_URL, target_file.name), mode="rb"
                         ) as smb_file:
                             with open(local_file_path, "wb") as local_file:
                                 shutil.copyfileobj(smb_file, local_file)
@@ -39,12 +44,12 @@ def sync_videos_from_smb_2_local(smb: SMBSession = Depends(get_smb_session)):
                     logger.info(local_file_path)
                     if not os.path.exists(local_file_path):
                         logger.info(f"Downloading {file.name} from SMB")
-                        dl_vid(file=file)
+                        dl_vid(target_file=file)
                         logger.info(f"Downloaded {file.name}")
                     else:
                         logger.info(f"{file.name} exists. Skipping.")
         except Exception as e:
-            logger.exception(f"Error syncing files from SMB", exc_info=e)
+            logger.exception("Error syncing files from SMB", exc_info=e)
         finally:
             video_cycler = cycle[str](
                 [f for f in os.listdir(STATIC_FOLDER) if f.endswith(".mp4")]

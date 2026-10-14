@@ -1,4 +1,3 @@
-import sys
 from datetime import datetime
 from unittest.mock import AsyncMock, MagicMock
 
@@ -6,11 +5,11 @@ import pytest
 from fastapi import HTTPException, status
 from pydantic import ValidationError
 from sqlalchemy.ext.asyncio import AsyncSession
-from app.domains.trials.models.trial_record_create import TrialRecordCreate
-from app.domains.trials.models.trial_record_base import TrialRecordBase
-from app.domains.trials.models.log_record_response import LogRecordResponse
-from app.domains.trials.models.log_record_create import LogRecordCreate
 
+from app.domains.trials.models.log_record_create import LogRecordCreate
+from app.domains.trials.models.log_record_response import LogRecordResponse
+from app.domains.trials.models.trial_record_base import TrialRecordBase
+from app.domains.trials.models.trial_record_create import TrialRecordCreate
 from app.domains.trials.router import (  # noqa: E402
     create_trial,
     delete_trial,
@@ -19,7 +18,6 @@ from app.domains.trials.router import (  # noqa: E402
     read_trial,
     read_trials,
 )
-
 
 
 # ---------------------------------------------------------------------------

@@ -3,12 +3,17 @@
 import logging
 from typing import List
 
-from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.features.ldap.models.ipa_formatted_user import IpaFormattedUser
-from app.features.ldap.repositories.ldap_repo import LdapRepository
-from app.features.ldap.services.source_service import SourceService
-from app.features.ldap.settings import DEPS
+from app.domains.ldap.models.ipa_formatted_user import IpaFormattedUser
+from app.domains.ldap.repositories.ldap_repo import LdapRepository
+from app.domains.ldap.services.source_service import SourceService
+DEPS: dict = {
+    "教務處": 2,
+    "學務處": 4,
+    "總務處": 8,
+    "研發處": 9,
+    "圖書館": 11,
+            }
 
 logger = logging.getLogger(__name__)
 
@@ -16,17 +21,10 @@ logger = logging.getLogger(__name__)
 class LdapService:
     """High-level logic for user and group operations in FreeIPA."""
 
-    def __init__(self, session: AsyncSession) -> None:
-        self.session = session
+    def __init__(self) -> None:
         self.ldap_repo = LdapRepository()
-        self.source_service = SourceService(session=session)
+        self.source_service = SourceService()
 
-    async def login_repo(self) -> None:
-        pass
-        # await self.ldap_repo.login()
-    # -------------------------
-    # High-level business actions
-    # -------------------------
 
     async def sync_all_users(self) -> List[str]:
         """

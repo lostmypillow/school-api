@@ -6,7 +6,7 @@ logger: logging.Logger = logging.getLogger(__name__)
 from fastapi import HTTPException
 from fastapi import status
 
-from app.core.db import exec_mssql_async
+from app.core.exec_mssql_async import exec_mssql_async
 from app.domains.tutor.determine_role import determine_role
 from app.domains.tutor.models import Cardholder, Device
 from app.domains.tutor.lib.sync_frontend import sync_frontend

@@ -5,8 +5,8 @@ from pathlib import Path
 import requests_async as requests
 from requests_async import AsyncSession
 
-from app.features.ldap.models.ipa_formatted_user import IpaFormattedUser
-from app.features.ldap.settings import settings
+from app.domains.ldap.models.ipa_formatted_user import IpaFormattedUser
+from app.domains.ldap.settings import settings
 
 logger = logging.getLogger(__name__)
 STATUS_OK = 200

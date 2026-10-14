@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from app.core.db import exec_mssql_async
+from app.core.exec_mssql_async import exec_mssql_async
 
 
 async def get_class_with_seats() -> dict:

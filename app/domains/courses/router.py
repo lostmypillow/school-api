@@ -9,7 +9,7 @@ from app.core.tables.courses import Semester, Department, DepartmentYear, Course
 router = APIRouter(prefix="/courses", tags=["Courses"])
 
 
-@router.get("/semesters", dependencies=[Depends(cache(ttl=60))])
+@router.get(path="/semesters", dependencies=[Depends(cache(ttl=60))])
 async def get_semesters(request: Request):
     try:
         result: list[Semester] = []
@@ -43,7 +43,7 @@ async def get_departments(request: Request, semester_id: str):
         )
 
 
-@router.get("/department_years", dependencies=[Depends(cache(ttl=60))])
+@router.get(path="/department_years", dependencies=[Depends(cache(ttl=60))])
 async def get_years(request: Request, department_id):
     try:
         result: list[DepartmentYear] = []
@@ -65,7 +65,7 @@ async def get_years(request: Request, department_id):
         )
 
 
-@router.get("/courses", dependencies=[Depends(cache(ttl=60))])
+@router.get(path="/courses", dependencies=[Depends(cache(ttl=60))])
 async def get_course(request: Request, department_year_id: str):
     try:
         result: list[Course] = []

@@ -22,21 +22,21 @@ logging.getLogger("httpcore").setLevel(logging.ERROR)
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI):
+async def lifespan(fastapi_app: FastAPI):
     if not PoolingManager.is_enabled():
         PoolingManager.enable(max_size=50, idle_timeout=600)
 
     redis_url = os.getenv("REDIS_URL", "redis://localhost:6379/0")
     redis_conn = Redis.from_url(redis_url)
-    app.state.redis = redis_conn
-    app.state.rq_redis = redis_conn
-    app.state.rq_queue = Queue(connection=app.state.redis)
-    app.state.rq_queue.enqueue(bootstrap_mssql)
+    fastapi_app.state.redis = redis_conn
+    fastapi_app.state.rq_redis = redis_conn
+    fastapi_app.state.rq_queue = Queue(connection=fastapi_app.state.redis)
+    fastapi_app.state.rq_queue.enqueue(bootstrap_mssql)
 
     yield
     if PoolingManager.is_enabled():
         PoolingManager.disable()
-    app.state.redis.close()
+    fastapi_app.state.redis.close()
 
 
 app = FastAPI(title="School API", version="4.0.1", lifespan=lifespan)

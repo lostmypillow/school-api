@@ -479,7 +479,6 @@ async def fetch_html(
                 return cached_val.decode("utf-8")
             return cached_val
 
-    last_exc: Exception | None = None
     for attempt in range(max_retries):
         try:
             response = await ctx["client"].get(combined_url)

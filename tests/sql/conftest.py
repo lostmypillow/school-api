@@ -6,7 +6,7 @@ import mssql_python
 import pytest
 import pytest_asyncio
 
-from app.core.db import exec_mssql
+from app.core.exec_mssql_async import exec_mssql
 
 
 MSSQL_HOST = os.getenv("TEST_MSSQL_HOST", "127.0.0.1")
