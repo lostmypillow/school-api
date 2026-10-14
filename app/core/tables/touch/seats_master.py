@@ -3,7 +3,7 @@ from datetime import datetime, UTC
 from sqlalchemy import Integer, Unicode, String, DateTime, ForeignKey
 from sqlalchemy.orm import mapped_column, Mapped
 
-from app.core.models.base import Base
+from app.core.tables.base import Base
 
 
 class SeatMaster(Base):

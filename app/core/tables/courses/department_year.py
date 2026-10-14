@@ -3,7 +3,7 @@ from datetime import datetime, UTC
 from sqlalchemy import Column, Unicode, ForeignKey, DateTime, UniqueConstraint
 from sqlalchemy.orm import relationship
 
-from app.core.models.base_model  import Base
+from app.core.tables.base_model  import Base
 
 
 class DepartmentYear(Base):

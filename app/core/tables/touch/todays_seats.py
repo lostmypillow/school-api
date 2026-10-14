@@ -3,7 +3,7 @@ from typing import Optional
 from sqlalchemy import Unicode, Integer
 from sqlalchemy.orm import mapped_column, Mapped
 
-from app.core.models.base import Base
+from app.core.tables.base import Base
 
 
 class TodaysSeats(Base):

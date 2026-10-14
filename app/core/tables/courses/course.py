@@ -3,7 +3,7 @@ from datetime import datetime
 from sqlalchemy import Column, Unicode, ForeignKey, Integer, UnicodeText, DateTime, UniqueConstraint, text
 from sqlalchemy.orm import relationship
 
-from app.core.models.base_model  import Base
+from app.core.tables.base_model  import Base
 
 
 class Course(Base):

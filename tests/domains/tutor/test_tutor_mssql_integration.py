@@ -78,7 +78,7 @@ def setup_mssql_database():
 
 @pytest_asyncio.fixture(autouse=True)
 async def seed_test_data():
-    """Seed test fixtures before each test and clean them up afterwards."""
+    """Seed test fixtures before each test and clean them up afterward."""
     # Clean up any leftover test records first
     await exec_mssql_async(
         "register_update_teacher", None, 1, fetch=False

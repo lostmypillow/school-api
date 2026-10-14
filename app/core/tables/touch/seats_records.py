@@ -3,7 +3,7 @@ from datetime import datetime, UTC
 from sqlalchemy import Integer, ForeignKey, Unicode, String, DateTime
 from sqlalchemy.orm import Mapped, mapped_column
 
-from app.core.models.base import Base
+from app.core.tables.base import Base
 
 
 class SeatRecords(Base):

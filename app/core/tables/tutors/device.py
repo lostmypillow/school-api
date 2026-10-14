@@ -1,6 +1,6 @@
 from sqlalchemy import Column, Integer, String
 
-from app.core.models.base_model import Base
+from app.core.tables.base_model import Base
 
 
 class Device(Base):

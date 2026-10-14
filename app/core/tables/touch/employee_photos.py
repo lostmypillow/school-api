@@ -3,7 +3,7 @@ from typing import Optional
 from sqlalchemy import String, LargeBinary
 from sqlalchemy.orm import Mapped, mapped_column
 
-from app.core.models.base import Base
+from app.core.tables.base import Base
 
 
 class EmployeePhotos(Base):
