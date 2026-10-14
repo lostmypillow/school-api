@@ -7,11 +7,11 @@ from pprint import pformat
 
 from fastapi import status, Response
 
-# from database.exec_sql import exec_sql
 from fastapi.exceptions import HTTPException
 
-from src.services.proxmox import ProxmoxService
-from src.services.custom import CustomService
+from app.core.db import exec_mssql_async
+from app.domains.vm.services.proxmox import ProxmoxService
+from app.domains.vm.services.custom import CustomService
 router = APIRouter(
     tags=["Generate vv files"],
 )
@@ -36,10 +36,6 @@ async def get_config(
             session=session,
         )
         return vm_details
-        logger.info("vm_details:")
-        logger.info(pformat(vm_details))
-        service = ProxmoxService(vm_details=vm_details[0])
-        return service.retrieve_config()
     except Exception:
         logger.exception("VM details not found")
         raise HTTPException(
@@ -50,12 +46,7 @@ async def get_config(
 
 @router.get("/file/{id}")
 async def generate_vv(id: str, session: AsyncSession = Depends(get_session),):
-    vm_details = await exec_sql(
-        "one",
-        "select_by_id",
-        id=id,
-        session=session
-    )
+    vm_details = await exec_mssql_async("vm/select_by_id", id, session)
     if vm_details["pve"]:
         service = ProxmoxService(vm_details=vm_details)
     else:

@@ -27,6 +27,7 @@ dependencies = [
     "mssql-python>=1.15.0",
     "apscheduler>=3.11.3",
     "smbprotocol>=1.17.0",
+    "proxmoxer>=2.3.0",
 ]
 
 

@@ -1,6 +1,7 @@
-from fastapi import APIRouter, status, Depends, Query, Path
-from sqlalchemy.ext.asyncio import AsyncSession
+from fastapi import APIRouter, status, Path
 from typing import Union, List
+
+from app.core.db import exec_mssql_async
 from ..models import VMResponse, ErrorResponse, MessageResponse, VMDetails
 from pprint import pformat
 
@@ -8,7 +9,6 @@ from pprint import pformat
 from fastapi.exceptions import HTTPException
 from sqlalchemy.exc import IntegrityError
 import logging
-from src.dependencies import exec_sql, get_session
 
 logger = logging.getLogger("__name__")
 router = APIRouter(
@@ -25,20 +25,17 @@ router = APIRouter(
 async def return_vm_info(
     owner: str = Path(
         ..., description="Use 'all' to fetch all VMs, or the owner attribute"
-    ),
-    session: AsyncSession = Depends(get_session),
+    )
 ):
     logger.info(f"owner variable is {owner}")
     try:
         if owner == "all":
-            all_vm_details = await exec_sql("all", "read_all", session=session)
+            all_vm_details = await exec_mssql_async("vm/read_all")
             logger.info("all_vm_details:")
             logger.info(pformat(all_vm_details))
             return all_vm_details
         else:
-            vm_details = await exec_sql(
-                "all", "read_for_owner", request_owner=owner, session=session
-            )
+            vm_details = await exec_mssql_async("vm/read_for_owner", owner)
             logger.info("vm_details:")
             logger.info(pformat(vm_details))
             return vm_details
@@ -56,7 +53,7 @@ async def return_vm_info(
     summary="Create New VM",
 )
 async def create_vm_details(
-    vm_details: VMDetails, session: AsyncSession = Depends(get_session)
+    vm_details: VMDetails
 ):
     """
     Insert new VM record into the database.
@@ -64,7 +61,7 @@ async def create_vm_details(
     try:
         logger.info("vm_details:")
         logger.info(vm_details.model_dump_json(indent=2))
-        await exec_sql("commit", "insert", session=session, **vm_details.model_dump())
+        await exec_mssql_async("commit", "insert", **vm_details.model_dump().values())
         return {"message": "ok"}
     except IntegrityError as e:
         logger.exception("IntegrityError raised")
@@ -80,17 +77,13 @@ async def create_vm_details(
     summary="Update VM by ID",
 )
 async def update_vm_details(
-    id: int, vm_details: VMDetails, session: AsyncSession = Depends(get_session)
+    vm_id: int, vm_details: VMDetails
 ):
     """
     Update existing VM entry by its ID.
     """
     try:
-        params = vm_details.model_dump()
-        logger.info("params:")
-        logger.info(vm_details.model_dump_json(indent=2))
-        params["id"] = id
-        await exec_sql("commit", "update", session=session, **params)
+        await exec_mssql_async("vm/update",  vm_details.model_dump().values(), vm_id, fetch=False)
         logger.info("SQL UPDATE Success!")
         return {"message": "ok"}
     except IntegrityError as e:
@@ -107,10 +100,10 @@ async def update_vm_details(
     response_model=MessageResponse,
     responses={404: {"model": ErrorResponse}},
 )
-async def delete_vm_details(id: int, session: AsyncSession = Depends(get_session)):
+async def delete_vm_details(vm_id: int):
     try:
-        logger.info(f"Deleting VM {str(id)}")
-        await exec_sql("commit", "delete", session=session, id=id)
+        logger.info(f"Deleting VM {str(vm_id)}")
+        await exec_mssql_async( "vm/delete", vm_id, fetch=False)
         logger.info("SQL DELETE Success!")
         return {"message": "ok"}
     except Exception as e:
