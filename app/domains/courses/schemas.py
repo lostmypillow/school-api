@@ -5,7 +5,7 @@ from pydantic import BaseModel, ConfigDict
 
 
 class SemesterResponseSchema(BaseModel):
-    """Schema validating the exact return format of /courses/semesters."""
+    """Schema for /courses/semesters."""
 
     model_config = ConfigDict(extra="forbid")
 
@@ -18,7 +18,7 @@ class SemesterResponseSchema(BaseModel):
 
 
 class DepartmentResponseSchema(BaseModel):
-    """Schema validating the exact return format of /courses/departments."""
+    """Schema for /courses/departments."""
 
     model_config = ConfigDict(extra="forbid")
 
@@ -34,7 +34,7 @@ class DepartmentResponseSchema(BaseModel):
 
 
 class DepartmentYearResponseSchema(BaseModel):
-    """Schema validating the exact return format of /courses/department_years."""
+    """Schema for /courses/department_years."""
 
     model_config = ConfigDict(extra="forbid")
 
@@ -50,7 +50,7 @@ class DepartmentYearResponseSchema(BaseModel):
 
 
 class CourseResponseSchema(BaseModel):
-    """Schema validating the exact return format of /courses/courses."""
+    """Schema for /courses/courses."""
 
     model_config = ConfigDict(extra="forbid")
 
@@ -81,11 +81,3 @@ class CourseResponseSchema(BaseModel):
     cross_discipline: Optional[str] = None
     created_at: datetime
     updated_at: datetime
-
-
-def validate_response_format[T: BaseModel](
-    data: list[dict], schema_cls: type[T]
-) -> list[T]:
-    """Strictly validates that data is a list of objects matching schema_cls with no extra or missing fields."""
-    assert isinstance(data, list), f"Expected list response, got {type(data).__name__}"
-    return [schema_cls.model_validate(item) for item in data]

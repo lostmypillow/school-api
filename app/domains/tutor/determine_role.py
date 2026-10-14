@@ -1,13 +1,11 @@
 from typing import cast
 import logging
-
-logger: logging.Logger = logging.getLogger(__name__)
-
 from app.core.exec_mssql_async import exec_mssql_async
 from app.domains.tutor.models import Cardholder
-from app.domains.tutor.schemas import StudentSqlRow, TeacherSqlRow, AssociatedDeviceSqlRow
+from app.domains.tutor.schemas import TeacherSqlRow, AssociatedDeviceSqlRow
+from app.domains.tutor.schemas.student_sql_row import StudentSqlRow
 
-
+logger: logging.Logger = logging.getLogger(__name__)
 async def determine_role(card_id: str) -> Cardholder | str:
     """Determine role (student vs teacher) based on card_id and return Cardholder or error string."""
     # 1. Check if cardholder is student (matches card_id or student_id)

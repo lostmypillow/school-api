@@ -1,0 +1,9 @@
+SELECT
+    [id],
+    [year],
+    [sem],
+    [link],
+    [created_at],
+    [updated_at]
+FROM
+    semesters

@@ -10,7 +10,7 @@ from app.domains.tutor.models.announcement import AddAnnouncement, Announcement,
 from app.domains.tutor.models.api_response import APIResponse
 
 logger = logging.getLogger(__name__)
-router = APIRouter(prefix="/tutor/announcements", tags=["Announcements"])
+router = APIRouter(prefix="/announcements", tags=["Announcements"])
 
 def sanitize_html(raw_html: str) -> str:
     return nh3.clean(raw_html,tags={"p", "strong", "em", "h1", "h2", "h3"})
