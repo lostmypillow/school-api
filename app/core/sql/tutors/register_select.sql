@@ -1,5 +1,4 @@
-SELECT
-    id
+SELECT id
 FROM
     dbo.tutor_appointments
 WHERE

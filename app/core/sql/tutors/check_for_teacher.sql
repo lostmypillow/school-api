@@ -1,5 +1,4 @@
-SELECT
-    teacher_id
+SELECT teacher_id
 FROM
     dbo.devices
 WHERE

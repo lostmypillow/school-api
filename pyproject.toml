@@ -32,6 +32,7 @@ dependencies = [
     "chardet>=7.6.0",
     "pymupdf>=1.28.2",
     "aiofiles>=25.1.0",
+    "sqlfluff>=4.4.0",
 ]
 
 
@@ -64,3 +65,11 @@ ignore = ["N999", "E501"]
 
 [tool.fastapi]
 entrypoint = "app.main:app"
+
+[tool.sqlfluff.core]
+dialect = "tsql"
+templater = "placeholder"
+
+[tool.sqlfluff.templater.placeholder]
+param_style = "question_mark"
+

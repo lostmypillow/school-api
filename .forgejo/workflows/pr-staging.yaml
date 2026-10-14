@@ -27,8 +27,11 @@ jobs:
       - name: Run Type checker (pyrefly)
         run: uv run pyrefly check
 
-      - name: Run Tests
+      - name: Run Tests (pytest)
         run: uv run pytest
+
+      - name: Fix SQL files and lint (sqlfluff)
+        run: uv run sqlfluff fix app/core/sql --dialect=tsql && uv run sqlfluff lint app/core/sql --dialect=tsql
 
 
   deploy-dev:
