@@ -2,7 +2,7 @@ from fastapi import APIRouter, status, Path
 from typing import Union, List
 
 from app.core.exec_mssql_async import exec_mssql_async
-from ..models import VMResponse, ErrorResponse, MessageResponse, VMDetails
+from ..schemas import VMResponse, ErrorResponse, MessageResponse, VMDetails
 from pprint import pformat
 
 # from database.exec_sql import exec_sql

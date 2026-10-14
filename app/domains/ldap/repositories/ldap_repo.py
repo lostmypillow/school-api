@@ -5,7 +5,7 @@ from pathlib import Path
 import requests_async as requests
 from requests_async import AsyncSession
 
-from app.domains.ldap.models.ipa_formatted_user import IpaFormattedUser
+from app.domains.ldap.schemas.ipa_formatted_user import IpaFormattedUser
 from app.domains.ldap.settings import settings
 
 logger = logging.getLogger(__name__)

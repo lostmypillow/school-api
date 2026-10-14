@@ -3,7 +3,7 @@ from time import sleep
 
 import proxmoxer
 
-from app.domains.vm.models import VMDetails
+from app.domains.vm.schemas import VMDetails
 
 
 class ProxmoxService:
