@@ -1,2 +1,2 @@
-  DELETE FROM trial_records
-        WHERE id = :id
+DELETE FROM trial_records
+WHERE id = ?

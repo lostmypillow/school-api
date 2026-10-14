@@ -1,7 +1,7 @@
 -- Check if the table exists, and if not, create it
 IF
     NOT EXISTS (
-        SELECT *
+        SELECT * -- noqa: AM04
         FROM
             information_schema.tables
         WHERE
@@ -15,7 +15,6 @@ IF
 
     END;
 
--- Insert ascending numbers up to 6, ensuring that the numbers fill the gaps if needed
 DECLARE @i INT = 1;
 
 WHILE @i <= 6
