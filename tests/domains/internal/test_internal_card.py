@@ -7,7 +7,7 @@ import pytest
 if "pymupdf" not in sys.modules:
     sys.modules["pymupdf"] = MagicMock()
 
-from app.domains.internal.card.router import _mm_to_points, generate_a4
+from app.domains.card import _mm_to_points, generate_a4
 
 
 def test_mm_to_points():
