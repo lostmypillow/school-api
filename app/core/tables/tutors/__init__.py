@@ -1,8 +1,8 @@
 from .announcement import Announcement
 from .appointment import TutorAppointment
 from .device import Device
-from .student import Student
-from .user import User
+from app.core.student import Student
+from app.core.employees import User
 
 __all__ = [
     "Announcement",

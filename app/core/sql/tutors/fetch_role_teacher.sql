@@ -4,7 +4,7 @@ SELECT
     college,
     new_college
 FROM
-    dbo.users
+    dbo.employees
 WHERE
     card_id = ?
     OR id = ?

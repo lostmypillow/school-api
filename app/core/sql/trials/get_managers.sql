@@ -1,6 +1,6 @@
 select name
 from
-    users
+    employees
 where
     是業務 = 1
     and 狀態 = 1

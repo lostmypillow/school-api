@@ -6,7 +6,7 @@ SELECT
     部門 AS other_grp,
     狀態 AS employment_status
 FROM
-    [users]
+    [employees]
 WHERE
     LEN(student_id) >= 6
     OR student_id = 'admin'

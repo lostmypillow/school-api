@@ -3,7 +3,7 @@ SELECT
     u.name,
     u.main_department
 FROM
-    users AS u
+    employees AS u
 WHERE
     EXISTS (
         SELECT 1

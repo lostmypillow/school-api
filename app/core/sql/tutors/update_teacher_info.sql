@@ -1,5 +1,5 @@
 UPDATE
-    dbo.users
+    dbo.employees
 SET
     new_college = ?
 WHERE

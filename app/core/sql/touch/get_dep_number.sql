@@ -1,5 +1,5 @@
 SELECT main_department
 FROM
-    users
+    employees
 WHERE
     student_id = ?

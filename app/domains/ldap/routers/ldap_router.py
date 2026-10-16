@@ -5,16 +5,16 @@ from app.domains.ldap.services.source_service import SourceService
 router = APIRouter(prefix="/ldap", tags=["ldap / FreeIPA"])
 
 
-@router.post("/users/sync")
+@router.post("/employees/sync")
 async def sync_mssql_to_ldap( background_tasks: BackgroundTasks,  dry_run: bool = True):
-    """Add all users from MSSQL to FreeIPA."""
+    """Add all employees from MSSQL to FreeIPA."""
     try:
         if dry_run:
             source_service = SourceService()
-            return await source_service.return_modified_users()
+            return await source_service.return_modified_employees()
         else:
             ldap_service = LdapService()
-            background_tasks.add_task(ldap_service.sync_all_users)
+            background_tasks.add_task(ldap_service.sync_all_employees)
             return "Sync queued"
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -31,7 +31,7 @@ async def sync_mssql_to_ldap( background_tasks: BackgroundTasks,  dry_run: bool 
 #         raise HTTPException(status_code=500, detail=str(e))
 #
 #
-# @router.delete("/users/{uid}")
+# @router.delete("/employees/{uid}")
 # async def delete_user(uid: str, session: AsyncSession = Depends(get_session)):
 #     """Delete a user from FreeIPA."""
 #     try:
@@ -42,7 +42,7 @@ async def sync_mssql_to_ldap( background_tasks: BackgroundTasks,  dry_run: bool 
 #         raise HTTPException(status_code=500, detail=str(e))
 #
 #
-# @router.get("/users/{uid}/exists")
+# @router.get("/employees/{uid}/exists")
 # async def check_user(uid: str, session: AsyncSession = Depends(get_session)):
 #     """Check if user exists in FreeIPA."""
 #     try:
@@ -53,9 +53,9 @@ async def sync_mssql_to_ldap( background_tasks: BackgroundTasks,  dry_run: bool 
 #         raise HTTPException(status_code=500, detail=str(e))
 
 # @router.get("/source")
-# async def get_users_from_source( session: Annotated[AsyncSession, Depends(get_session)]):
+# async def get_employees_from_source( session: Annotated[AsyncSession, Depends(get_session)]):
 #     try:
 #         service = SourceService(session=session)
-#         return await service.return_modified_users()
+#         return await service.return_modified_employees()
 #     except Exception as e:
 #         raise HTTPException(status_code=500, detail=str(e))

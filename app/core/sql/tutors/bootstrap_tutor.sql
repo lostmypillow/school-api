@@ -53,9 +53,9 @@ IF
 
 -- Bootstrap test teacher (ID: 222222, department='9' required for teacher role)
 IF NOT EXISTS (
-    SELECT 1 FROM dbo.users
+    SELECT 1 FROM dbo.employees
     WHERE id = '222222'
 ) BEGIN
-    INSERT INTO dbo.users (id, name, card_id, college, new_college, department)
+    INSERT INTO dbo.employees (id, name, card_id, college, new_college, department)
     VALUES ('222222', N'測試老師', '222222', N'理學院', N'新理學院', '9');
 END;
