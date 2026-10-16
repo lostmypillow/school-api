@@ -1,7 +1,7 @@
 import asyncio
 from itertools import batched
 import math
-from pathlib import Path
+from anyio import Path
 import re
 from typing import Any
 

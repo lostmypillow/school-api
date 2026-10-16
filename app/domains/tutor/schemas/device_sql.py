@@ -6,5 +6,5 @@ class DeviceSqlRow(TypedDict):
 
     SQL: SELECT id, teacher_id FROM devices;
     """
-    id: int
+    device_id: int
     teacher_id: str | None

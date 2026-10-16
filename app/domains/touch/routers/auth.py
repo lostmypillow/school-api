@@ -44,7 +44,7 @@ async def authorize_student(auth_request: AuthRequest):
         )
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="抱歉, 查無此人!")
 
-    auth_response = AuthResponse(**student_details)
+    auth_response: AuthResponse = AuthResponse.model_validate(student_details)
 
     if auth_request.type == "awards":
 

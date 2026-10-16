@@ -1,4 +1,4 @@
-from pathlib import Path
+from anyio import Path
 from typing import Any
 
 import httpx
@@ -10,7 +10,7 @@ from app.domains.courses.schemas import CourseModel, DepartmentYearModel
 from app.domains.tasks.scrape.scrape_courses import parse_course_row, scrape_courses
 from app.domains.tasks.parquet_utils import read_parquet_records
 
-PARQUET_SNAPSHOT_DIR = Path(__file__).resolve().parents[3] / "data" / "parquet"
+PARQUET_SNAPSHOT_DIR = Path(__file__).parents[3] / "data" / "parquet"
 
 
 @pytest_asyncio.fixture
@@ -102,8 +102,8 @@ async def test_scrape_courses_real_url(
 
     # Retrieve an example department_year from department_years.parquet snapshot
     sample_dy: dict[str, Any] = {}
-    if parquet_path.exists():
-        dy_records = read_parquet_records(parquet_path)
+    if await parquet_path.exists():
+        dy_records = await read_parquet_records(parquet_path)
         sample_dy = next(
             (
                 dy for dy in dy_records
@@ -140,8 +140,8 @@ async def test_scrape_courses_real_url(
 
     # Validate output written to parquet
     parquet_file = temp_parquet_dir / "courses.parquet"
-    assert parquet_file.exists(), "courses.parquet should have been created"
-    saved_records = read_parquet_records(parquet_file)
+    assert await parquet_file.exists(), "courses.parquet should have been created"
+    saved_records = await read_parquet_records(parquet_file)
     assert len(saved_records) == len(course_list)
 
     # Validate each course with Pydantic CourseModel

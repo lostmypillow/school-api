@@ -18,9 +18,11 @@ async def fetch_html(
     ttl_seconds: int = 86400,
     max_retries: int = 3,
 ) -> str:
+    cache_key: str = ''
+    html_text: str = ''
     """Fetches raw HTML from Redis cache if available, or falls back to HTTP request with retries."""
     if redis is not None:
-        url_hash = hashlib.sha256(combined_url.encode("utf-8")).hexdigest()
+        url_hash: str = hashlib.sha256(combined_url.encode("utf-8")).hexdigest()
         cache_key = f"cache:html:{url_hash}"
 
         cached_val = redis.get(cache_key)
@@ -39,7 +41,7 @@ async def fetch_html(
             html_text = response.text
             break
         except (httpx.ConnectError, httpx.ConnectTimeout, httpx.ReadTimeout) as exc:
-            last_exc = exc
+            last_exc: httpx.ConnectError | httpx.ConnectTimeout | httpx.ReadTimeout = exc
             if attempt < max_retries - 1:
                 await asyncio.sleep(0.5 * (2**attempt))
             else:

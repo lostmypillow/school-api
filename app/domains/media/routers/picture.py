@@ -47,7 +47,8 @@ async def get_image(
     """
     t1_start = perf_counter() 
     try:
-        image_data = await exec_mssql_async(f"picture_{role}", personnel_id)
+        image_data_list = await exec_mssql_async(f"picture_{role}", personnel_id)
+        image_data = image_data_list[0]
         t1_stop = perf_counter()
 
         logger.info(f"Elapsed time: {t1_stop, t1_start}") 

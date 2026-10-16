@@ -41,7 +41,10 @@ async def get_config(
 
 @router.get("/file/{id}")
 async def generate_vv(vm_id: str ):
-    vm_details = await exec_mssql_async("vm/select_by_id", vm_id)
+    vm_details_list = await exec_mssql_async("vm/select_by_id", vm_id)
+    if len(vm_details_list) != 1 :
+        raise ValueError("More than one VM details matched")
+    vm_details = vm_details_list[0]
     if vm_details["pve"]:
         service = ProxmoxService(vm_details=vm_details)
     else:

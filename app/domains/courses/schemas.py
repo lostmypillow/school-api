@@ -125,7 +125,6 @@ class CourseResponseSchema(CourseModel):
 
     model_config = ConfigDict(extra="forbid", from_attributes=True)
 
-    name: str = Field(..., description="Course name")
     created_at: datetime
     updated_at: datetime
 
