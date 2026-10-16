@@ -9,14 +9,14 @@ class SourceService:
     def __init__(self) -> None:
         pass
 
-    async def return_modified_users(self) -> FilteredList:
-        raw_dicts: list[dict] = await exec_mssql_async(command_name="ldap/ldap_get_all_users")
-        raw_users: list[RawUserData] = [RawUserData(**u) for u in raw_dicts]
-        users_to_add: List[IpaFormattedUser] = []
-        users_to_disable: List[IpaFormattedUser] = []
+    async def return_modified_employees(self) -> FilteredList:
+        raw_dicts: list[dict] = await exec_mssql_async(command_name="ldap/ldap_get_all_employees")
+        raw_employees: list[RawUserData] = [RawUserData(**u) for u in raw_dicts]
+        employees_to_add: List[IpaFormattedUser] = []
+        employees_to_disable: List[IpaFormattedUser] = []
         dep_lookup = {str(d["自動編號"]): d["group"] for d in DEPS}
 
-        for raw_user in raw_users:
+        for raw_user in raw_employees:
                 main_grp_name = dep_lookup.get(str(raw_user.main_grp), "")
                 other_grp_names = []
 
@@ -46,7 +46,7 @@ class SourceService:
                         departmentnumber=raw_user.main_grp if raw_user.main_grp else "0"
                     )
                 if raw_user.employment_status == 2:
-                    users_to_disable.append(formatted_user)
+                    employees_to_disable.append(formatted_user)
                 elif raw_user.employment_status == 1:
-                    users_to_add.append(formatted_user)
-        return FilteredList(users_to_disable=users_to_disable, users_to_add=users_to_add)
+                    employees_to_add.append(formatted_user)
+        return FilteredList(employees_to_disable=employees_to_disable, employees_to_add=employees_to_add)

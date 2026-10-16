@@ -99,8 +99,8 @@ async def reset_tutor_state():
                 cursor.execute("DELETE FROM dbo.math_announcements;")
                 cursor.execute("UPDATE dbo.devices SET teacher_id = NULL;")
                 # Ensure seed teacher and student exist
-                cursor.execute("IF NOT EXISTS (SELECT 1 FROM dbo.users WHERE id = '222222') "
-                               "INSERT INTO dbo.users (id, name, college) VALUES ('222222', '李老師', '電資學院');")
+                cursor.execute("IF NOT EXISTS (SELECT 1 FROM dbo.employees WHERE id = '222222') "
+                               "INSERT INTO dbo.employees (id, name, college) VALUES ('222222', '李老師', '電資學院');")
                 cursor.execute("IF NOT EXISTS (SELECT 1 FROM dbo.students WHERE student_id = '111111') "
                                "INSERT INTO dbo.students (student_id, name, college) VALUES ('111111', '王小明', '資訊學院');")
             conn.commit()

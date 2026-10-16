@@ -26,19 +26,19 @@ class LdapService:
         self.source_service = SourceService()
 
 
-    async def sync_all_users(self) -> List[str]:
+    async def sync_all_employees(self) -> List[str]:
         """
-        Sync all users from MSSQL → FreeIPA.
+        Sync all employees from MSSQL → FreeIPA.
 
         Creates or updates as needed, then syncs group memberships.
         """
         logger.info("Starting full user synchronization process.")
 
-        users = await self.source_service.return_modified_users()
+        employees = await self.source_service.return_modified_employees()
         logger.debug(
-            f"Fetched modified users from source: "
-            f"{len(users.users_to_add)} to add/update, "
-            f"{len(users.users_to_disable)} to disable."
+            f"Fetched modified employees from source: "
+            f"{len(employees.employees_to_add)} to add/update, "
+            f"{len(employees.employees_to_disable)} to disable."
         )
         # return
 
@@ -46,7 +46,7 @@ class LdapService:
         actual_added_or_updated = 0
         actual_disabled = 0
         actual_not_modified = 0
-        for user_to_add in users.users_to_add:
+        for user_to_add in employees.employees_to_add:
             logger.info(f"Processing addition/update for user '{user_to_add.uid}'.")
             try:
                 await self.add_or_update_user(user_to_add)
@@ -55,7 +55,7 @@ class LdapService:
             except Exception as e:
                 logger.exception(f"Failed to add or update user '{user_to_add.uid}': {e}")
 
-        for user_to_disable in users.users_to_disable:
+        for user_to_disable in employees.employees_to_disable:
             try:
                 exists, locked = await self.ldap_repo.check_user_exists(user_to_disable.uid)
                 if exists:
@@ -100,7 +100,7 @@ class LdapService:
             await self._set_password_expiration(user.uid)
 
             if user.other_grp:
-                protected_groups = ["full_time", "ipausers", "openproject"]
+                protected_groups = ["full_time", "ipaemployees", "openproject"]
                 await self._sync_groups_with_protection(
                     user.uid,
                     [str(g) for g in user.other_grp],
