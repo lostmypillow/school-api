@@ -3,6 +3,7 @@
 Provides endpoints to query academic course catalogs, including semesters,
 departments, department years, and individual course details from MSSQL.
 """
+import logging
 import uuid
 
 from fastapi import APIRouter, HTTPException, Query, status
@@ -15,10 +16,11 @@ from .schemas import (
     DepartmentResponseSchema,
     DepartmentYearResponseSchema,
     SemesterResponseSchema,
+    CourseSyllabusModel,
 )
 
 router = APIRouter(prefix="/courses", tags=["Courses"])
-
+logger = logging.getLogger(__name__)
 ERROR_500_RESPONSE = {
     status.HTTP_500_INTERNAL_SERVER_ERROR: {
         "description": "Internal server error occurred while querying MSSQL.",
@@ -95,7 +97,7 @@ async def get_departments(
         return await exec_mssql_async("courses/select_department", semester_id)
     except Exception as e:
         error_id = str(uuid.uuid4())
-        print(f"[ERROR ID: {error_id}] => {e}")
+        logger.exception(msg=f"[ERROR ID: {error_id}]", exc_info=e)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Something went wrong! Error ID: {error_id}",
@@ -134,7 +136,7 @@ async def get_years(
         return await exec_mssql_async("courses/select_department_year", department_id)
     except Exception as e:
         error_id = str(uuid.uuid4())
-        print(f"[ERROR ID: {error_id}] => {e}")
+        logger.exception(msg=f"[ERROR ID: {error_id}]", exc_info=e)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Something went wrong! Error ID: {error_id}",
@@ -173,7 +175,50 @@ async def get_course(
         return await exec_mssql_async("courses/select_courses", department_year_id)
     except Exception as e:
         error_id = str(uuid.uuid4())
-        print(f"[ERROR ID: {error_id}] => {e}")
+        logger.exception(msg=f"[ERROR ID: {error_id}]", exc_info=e)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Something went wrong! Error ID: {error_id}",
+        )
+
+@router.get(
+    path="/syllabus",
+    dependencies=[Depends(cache(ttl=60))],
+    response_model=CourseSyllabusModel,
+    status_code=status.HTTP_200_OK,
+    summary="Get syllabus",
+    description="Retrieve syllabus for a specific course.",
+    response_description="Syllabus object matching the specified department year ID.",
+    responses=ERROR_500_RESPONSE,
+)
+async def get_syllabus(
+    course_id: str = Query(
+        ...,
+        description="Unique identifier of the course (e.g., '100_1_0078_153447').",
+        examples=["100_1_0078_153447"],
+    ),
+) -> CourseSyllabusModel:
+    """Fetch all courses offered for a given department year.
+
+    Args:
+        course_id: Unique identifier of the department year (e.g., '112_1_300_101').
+
+    Returns:
+        CourseSyllabusModel: Syllabus for course.
+
+    Raises:
+        HTTPException: 500 Internal Server Error if database query fails.
+    """
+    try:
+        row = await exec_mssql_async("courses/select_syllabus", course_id)
+        logger.info(row)
+        if len(row) != 1:
+            raise ValueError("More than one syllabus for a course ID")
+        return row[0]
+
+    except Exception as e:
+        error_id = str(uuid.uuid4())
+        logger.exception(msg=f"[ERROR ID: {error_id}]", exc_info=e)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Something went wrong! Error ID: {error_id}",
