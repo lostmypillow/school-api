@@ -48,6 +48,8 @@ async def test_upsert_semester_insert_and_update():
         with conn.cursor() as cur:
             cur.execute("SELECT id, year, sem, link, created_at, updated_at FROM dbo.semesters WHERE id = '112_1';")
             row = cur.fetchone()
+            if not row:
+                assert False
             assert row[3] == "https://example.com/sem1_v2"
             assert row[4] == created_at_first  # created_at unchanged
 
@@ -66,7 +68,10 @@ async def test_upsert_semester_batch_params():
     with mssql_python.connect(TEST_DB_URL) as conn:
         with conn.cursor() as cur:
             cur.execute("SELECT COUNT(*) FROM dbo.semesters WHERE id IN ('111_1', '111_2');")
-            assert cur.fetchone()[0] == 2
+            row = cur.fetchone()
+            if not row:
+                assert False
+            assert row[0] == 2
 
 
 @pytest.mark.asyncio
@@ -120,6 +125,8 @@ async def test_upsert_department_insert_and_update():
         with conn.cursor() as cur:
             cur.execute("SELECT name, link FROM dbo.departments WHERE id = '112_1_300';")
             row = cur.fetchone()
+            if not row:
+                assert False
             assert row[0] == "CS & AI Department"
             assert row[1] == "https://example.com/cs_ai"
 
@@ -174,6 +181,8 @@ async def test_upsert_department_year_insert_and_update():
         with conn.cursor() as cur:
             cur.execute("SELECT name, link FROM dbo.department_years WHERE id = '112_1_300_101';")
             row = cur.fetchone()
+            if not row:
+                assert  False
             assert row[0] == "CS Freshman Year"
             assert row[1] == "https://example.com/cs_y1_v2"
 
@@ -249,6 +258,8 @@ async def test_upsert_course_insert_and_update():
                 "SELECT instructor, classroom, students_enrolled FROM dbo.courses WHERE id = '112_1_101_300001';"
             )
             row = cur.fetchone()
+            if not row:
+                assert False
             assert row[0] == "Prof Knuth"
             assert row[1] == "Room 202"
             assert row[2] == 50

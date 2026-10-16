@@ -228,10 +228,13 @@ async def test_register_appointment_lifecycle_and_baseline_shape():
                 appt_id,
             )
             appt_row = cur.fetchone()
-            assert appt_row[0] == student_id
-            assert appt_row[1] == teacher_id
-            assert isinstance(appt_row[2], datetime)
-            assert appt_row[3] is None
+            if appt_row:
+                assert appt_row[0] == student_id
+                assert appt_row[1] == teacher_id
+                assert isinstance(appt_row[2], datetime)
+                assert appt_row[3] is None
+            else:
+                assert False
 
     # 4. register_update_student: ends active appointment
     await exec_mssql_async("register_update_student", appt_id, fetch=False)
@@ -244,5 +247,9 @@ async def test_register_appointment_lifecycle_and_baseline_shape():
     with mssql_python.connect(TEST_DB_URL) as conn:
         with conn.cursor() as cur:
             cur.execute("SELECT end_time FROM dbo.tutor_appointments WHERE id = ?;", appt_id)
-            end_time = cur.fetchone()[0]
-            assert isinstance(end_time, datetime)
+            fetchone = cur.fetchone()
+            if fetchone:
+                end_time = fetchone[0]
+                assert isinstance(end_time, datetime)
+            else:
+                assert False

@@ -3,8 +3,8 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from app.domains.tasks.bootstrap_mssql import bootstrap_mssql
-from app.domains.tasks.scrape_to_parquet import _append_to_parquet
+from app.domains.tasks.bootstrap_mssql import main
+from app.domains.tasks.scrape import append_to_parquet
 
 
 @pytest.mark.asyncio
@@ -12,9 +12,9 @@ async def test_bootstrap_mssql_empty_parquet(temp_parquet_dir: Path):
     """Test bootstrap_mssql returns 0 counts when no parquet files exist."""
     ctx = {"parquet_dir": temp_parquet_dir}
     with patch(
-        "app.domains.tasks.bootstrap_mssql.exec_mssql_async", new_callable=AsyncMock
+            "app.domains.tasks.bootstrap_mssql.main.py.py.exec_mssql_async", new_callable=AsyncMock
     ) as mock_exec:
-        summary = await bootstrap_mssql(ctx)
+        summary = await main(ctx)
 
         assert summary["semesters"] == 0
         assert summary["departments"] == 0
@@ -85,17 +85,17 @@ async def test_bootstrap_mssql_full_pipeline(temp_parquet_dir: Path):
         }
     ]
 
-    _append_to_parquet("semesters", sem_records, temp_parquet_dir)
-    _append_to_parquet("departments", dept_records, temp_parquet_dir)
-    _append_to_parquet("department_years", dy_records, temp_parquet_dir)
-    _append_to_parquet("courses", course_records, temp_parquet_dir)
+    await append_to_parquet(table_name="semesters", new_records=sem_records, parquet_dir=temp_parquet_dir)
+    await append_to_parquet(table_name="departments", new_records=dept_records, parquet_dir=temp_parquet_dir)
+    await append_to_parquet(table_name="department_years", new_records=dy_records, parquet_dir=temp_parquet_dir)
+    await append_to_parquet(table_name="courses", new_records=course_records, parquet_dir=temp_parquet_dir)
 
     ctx = {"parquet_dir": temp_parquet_dir}
 
     with patch(
-        "app.domains.tasks.bootstrap_mssql.exec_mssql_async", new_callable=AsyncMock
+            target="app.domains.tasks.bootstrap_mssql.main.py.py.exec_mssql_async", new_callable=AsyncMock
     ) as mock_exec:
-        summary = await bootstrap_mssql(ctx)
+        summary = await main(ctx)
 
         assert summary["semesters"] == 1
         assert summary["departments"] == 1
@@ -125,13 +125,13 @@ async def test_bootstrap_mssql_large_dataset_batching(temp_parquet_dir: Path):
         }
         for i in range(5010)
     ]
-    _append_to_parquet("semesters", sem_records, temp_parquet_dir)
+    await append_to_parquet("semesters", sem_records, temp_parquet_dir)
 
     ctx = {"parquet_dir": temp_parquet_dir}
 
     with patch(
-        "app.domains.tasks.bootstrap_mssql.exec_mssql_async", new_callable=AsyncMock
+            "app.domains.tasks.bootstrap_mssql.main.py.py.exec_mssql_async", new_callable=AsyncMock
     ) as mock_exec:
-        summary = await bootstrap_mssql(ctx)
+        summary = await main(ctx)
         assert summary["semesters"] == 5010
         mock_exec.assert_awaited()

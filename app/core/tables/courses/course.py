@@ -12,7 +12,7 @@ class Course(Base):
     id = Column[str](Unicode(64), primary_key=True)  # Slug: e.g., "112_1_301_CS101"
     department_year_id = Column[str](
         Unicode(64),
-        ForeignKey("department_years.id", ondelete="CASCADE"),
+        ForeignKey(column="department_years.id", ondelete="CASCADE"),
         nullable=False,
     )
     year = Column[str](Unicode(10), nullable=False)
@@ -20,7 +20,7 @@ class Course(Base):
     code = Column[str](Unicode(50), nullable=True)
     name = Column[str](Unicode(255), nullable=False)
     link = Column[str](Unicode(2048), nullable=True)
-    credits = Column[int](Integer, nullable=True)  # Set to nullable=True for flexibility
+    credits = Column[int](Integer, nullable=True)
     course_type = Column[str](Unicode(20), nullable=True)
     instructor = Column[str](Unicode(255), nullable=True)
 

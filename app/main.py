@@ -8,9 +8,10 @@ from mssql_python.pooling import PoolingManager
 from redis import Redis
 from redis_fastapi import FastAPIRedis
 from rq import Queue
-from app.domains.tasks.bootstrap_mssql import bootstrap_mssql
+from app.domains.tasks.bootstrap_mssql import main
 from app.domains.courses import router as course_router
 from app.domains.tasks import router as tasks_router
+from app.domains.tasks.definitions import bootstrap_mssql_task
 from app.domains.tutor import router as tutor_router
 
 load_dotenv()
@@ -31,7 +32,7 @@ async def lifespan(fastapi_app: FastAPI):
     fastapi_app.state.redis = redis_conn
     fastapi_app.state.rq_redis = redis_conn
     fastapi_app.state.rq_queue = Queue(connection=fastapi_app.state.redis)
-    fastapi_app.state.rq_queue.enqueue(bootstrap_mssql)
+    fastapi_app.state.rq_queue.enqueue(bootstrap_mssql_task, job_timeout=1000)
 
     yield
     if PoolingManager.is_enabled():

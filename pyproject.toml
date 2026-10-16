@@ -33,6 +33,7 @@ dependencies = [
     "pymupdf>=1.28.2",
     "aiofiles>=25.1.0",
     "sqlfluff>=4.4.0",
+    "anyio>=4.14.2",
 ]
 
 

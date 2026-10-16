@@ -31,7 +31,7 @@ class ProxmoxService:
             logging.info(f"Existing nodes: {existing_node}")
             # TODO: node not online
 
-            vm_resource = self.proxmox_obj.nodes(self.node_name).qemu(str(self.vm_details["pve_vm_id"]))
+            vm_resource = self.proxmox_obj.nodes(self.node_name).qemu(str(self.vm_details.pve_vm_id))
             # TODO: vm not found
 
             status = vm_resource.status.current.get()["status"]
@@ -42,5 +42,5 @@ class ProxmoxService:
                 sleep(2)
             config_contents = "[virt-viewer]\n" + "\n".join(
                 f"{k}={v}" for k, v in vm_resource.spiceproxy.post().items() if k != "proxy"
-            ) + f"\nproxy={self.vm_details['spice_proxy']}\n"
+            ) + f"\nproxy={self.vm_details.spice_proxy}\n"
             return config_contents

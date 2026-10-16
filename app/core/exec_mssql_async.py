@@ -82,6 +82,8 @@ def exec_mssql(
             ddl_statements.append(wrapped_sql)
 
         sql_command = "\n\n".join(ddl_statements)
+    elif command_name == "bulkcopy_arrow":
+        sql_command = ""
     else:
         base_sql_dir = Path(__file__).resolve().parent / "sql"
         file_path = base_sql_dir / f"{command_name}.sql"
@@ -109,7 +111,10 @@ def exec_mssql(
             if command_name == 'create_database':
                 conn.autocommit = True
             with conn.cursor() as cursor:
-                if batch_params is not None:
+                if command_name == "bulkcopy_arrow":
+                    cursor.bulkcopy_arrow(params[0], params[1])
+                    result = []
+                elif batch_params is not None:
                     cursor.executemany(sql_command, batch_params)
                     result: list[Any] = []
                 else:

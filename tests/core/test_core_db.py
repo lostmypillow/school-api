@@ -68,7 +68,7 @@ def test_exec_mssql_create_tables(monkeypatch):
     mock_conn.__enter__.return_value = mock_conn
     mock_conn.cursor.return_value.__enter__.return_value = mock_cursor
 
-    with patch("app.core.exec_mssql_async.py.connect_with_retry", return_value=mock_conn):
+    with patch("app.core.exec_mssql_async.connect_with_retry", return_value=mock_conn):
         res = exec_mssql("create_tables", fetch=False)
         assert res == []
         mock_cursor.execute.assert_called_once()
@@ -84,7 +84,7 @@ def test_exec_mssql_named_command_with_batch(monkeypatch):
     mock_conn.__enter__.return_value = mock_conn
     mock_conn.cursor.return_value.__enter__.return_value = mock_cursor
 
-    with patch("app.core.exec_mssql_async.py.connect_with_retry", return_value=mock_conn):
+    with patch("app.core.exec_mssql_async.connect_with_retry", return_value=mock_conn):
         batch = [("112_1", "112", "1", "link")]
         res = exec_mssql("upsert_semester", batch_params=batch)
         assert res == []
@@ -98,7 +98,7 @@ async def test_exec_mssql_async_success(monkeypatch):
     """Test exec_mssql_async runs exec_mssql in async worker thread."""
     monkeypatch.setenv("DB_URL", "Server=localhost;Database=student_db;")
 
-    with patch("app.core.exec_mssql_async.py.exec_mssql", return_value=[("112_1", "112")]) as mock_exec:
+    with patch("app.core.exec_mssql_async.exec_mssql", return_value=[("112_1", "112")]) as mock_exec:
         result = await exec_mssql_async("upsert_semester", "param1", fetch=True)
         assert result == [("112_1", "112")]
         mock_exec.assert_called_once_with(
