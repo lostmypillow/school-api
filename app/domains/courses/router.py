@@ -5,6 +5,7 @@ departments, department years, and individual course details from MSSQL.
 """
 import logging
 import uuid
+from typing import Any
 
 from fastapi import APIRouter, HTTPException, Query, status
 from fastapi.params import Depends
@@ -21,7 +22,7 @@ from .schemas import (
 
 router = APIRouter(prefix="/courses", tags=["Courses"])
 logger = logging.getLogger(__name__)
-ERROR_500_RESPONSE = {
+ERROR_500_RESPONSE: dict[int | str, dict[str, Any]] = {
     status.HTTP_500_INTERNAL_SERVER_ERROR: {
         "description": "Internal server error occurred while querying MSSQL.",
         "content": {

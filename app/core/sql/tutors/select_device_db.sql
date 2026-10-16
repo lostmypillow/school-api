@@ -1,5 +1,5 @@
 SELECT
-    id,
-    teacher_id
+    [id] AS [device_id],
+    [teacher_id]
 FROM
-    devices;
+    [devices];

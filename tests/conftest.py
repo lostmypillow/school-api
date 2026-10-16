@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 import pytest_asyncio
+from anyio import Path
 from fastapi import FastAPI
 from httpx import ASGITransport, AsyncClient
 from sqlalchemy import event
@@ -173,6 +174,6 @@ async def app_client(test_db: DB) -> AsyncGenerator[AsyncClient, None]:
 def temp_parquet_dir(tmp_path):
     parquet_dir = tmp_path / "parquet_data"
     parquet_dir.mkdir(parents=True, exist_ok=True)
-    return parquet_dir
+    return Path(parquet_dir)
 
 

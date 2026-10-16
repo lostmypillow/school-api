@@ -2,7 +2,7 @@ import asyncio
 import gc
 from itertools import batched
 import math
-from pathlib import Path
+from anyio import Path
 from typing import Any
 
 from bs4 import BeautifulSoup, Tag
@@ -180,7 +180,7 @@ async def scrape_courses_syllabi(
 
             # 3. Stream chunk directly to parquet part file without reading existing records
             if course_syllabi_list:
-                write_parquet_chunk(
+                await write_parquet_chunk(
                     table_name="courses_syllabi",
                     new_records=course_syllabi_list,
                     parquet_dir=parquet_dir,

@@ -1,4 +1,4 @@
-from pathlib import Path
+from anyio import Path
 
 import httpx
 import pytest
@@ -9,7 +9,7 @@ from app.domains.courses.schemas import SemesterModel
 from app.domains.tasks.scrape.sync_semesters import scrape_semesters
 from app.domains.tasks.parquet_utils import read_parquet_records
 
-PARQUET_SNAPSHOT_DIR = Path(__file__).resolve().parents[3] / "data" / "parquet"
+PARQUET_SNAPSHOT_DIR = Path(__file__).parents[3] / "data" / "parquet"
 
 
 @pytest_asyncio.fixture
@@ -59,8 +59,8 @@ async def test_scrape_semesters_real_url(live_client: CustomAsyncClient):
     assert len(validated_models) > 0
     assert all(m.year and m.sem and m.link for m in validated_models)
 
-    if parquet_path.exists():
-        snapshot_records = read_parquet_records(parquet_path)
+    if await parquet_path.exists():
+        snapshot_records = await read_parquet_records(parquet_path)
         snapshot_ids = {r["id"] for r in snapshot_records if "id" in r}
         scraped_ids = {m.id for m in validated_models}
         common_ids = snapshot_ids.intersection(scraped_ids)

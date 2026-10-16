@@ -19,7 +19,7 @@ from app.domains.courses.schemas import (
     SemesterModel,
 )
 
-logger = logging.getLogger(__name__)
+logger: logging.Logger = logging.getLogger(__name__)
 
 T = TypeVar("T", bound=BaseModel)
 
@@ -59,7 +59,7 @@ async def read_parquet_models(file_path: Path, model_cls: type[T]) -> list[T]:
 
 async def append_to_parquet(
     table_name: str,
-    new_records: list[dict[str, Any]] | list[BaseModel],
+    new_records: list[SemesterModel] | list[DepartmentModel] | list[DepartmentYearModel] | list[CourseModel] | list[CourseSyllabusModel],
     parquet_dir: Path,
     compression: str = "snappy",
 ) -> Path:
@@ -100,9 +100,9 @@ async def append_to_parquet(
     return file_path
 
 
-def write_parquet_chunk(
+async def write_parquet_chunk(
     table_name: str,
-    new_records: list[dict[str, Any]] | list[BaseModel],
+    new_records: list[SemesterModel] | list[DepartmentModel] | list[DepartmentYearModel] | list[CourseModel] | list[CourseSyllabusModel],
     parquet_dir: Path,
     chunk_id: int | str | None = None,
     compression: str = "snappy",
@@ -112,7 +112,7 @@ def write_parquet_chunk(
         return parquet_dir / f"{table_name}.parquet"
 
     parts_dir = parquet_dir / f".{table_name}_parts"
-    parts_dir.mkdir(parents=True, exist_ok=True)
+    await parts_dir.mkdir(parents=True, exist_ok=True)
 
     part_name = f"part_{chunk_id if chunk_id is not None else uuid.uuid4().hex[:8]}.parquet"
     chunk_path = parts_dir / part_name
@@ -204,6 +204,7 @@ def _coerce_timestamp_column(
                 ts = pc.cast(col, pa.timestamp(unit="us", tz=tz))
             except Exception:
                 ts_naive = pc.cast(col, pa.timestamp("us"))
+                # pyrefly: ignore[missing-attribute]
                 ts = pc.assume_timezone(ts_naive, tz)
         else:
             try:
@@ -213,6 +214,7 @@ def _coerce_timestamp_column(
                 ts = pc.cast(ts_tz, pa.timestamp("us"))
     elif pa.types.is_timestamp(col.type):
         if tz is not None:
+            # pyrefly: ignore[missing-attribute]
             ts = pc.assume_timezone(col, tz) if col.type.tz is None else pc.cast(col, pa.timestamp("us", tz=tz))
         else:
             ts = pc.cast(col, pa.timestamp("us"))

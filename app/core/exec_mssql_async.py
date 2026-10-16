@@ -1,7 +1,7 @@
 import asyncio
 import logging
 from os import getenv
-from pathlib import Path
+from anyio import Path
 import time
 from typing import Any
 
@@ -85,7 +85,7 @@ def exec_mssql(
     elif command_name == "bulkcopy_arrow":
         sql_command = ""
     else:
-        base_sql_dir = Path(__file__).resolve().parent / "sql"
+        base_sql_dir = Path(__file__).parent / "sql"
         file_path = base_sql_dir / f"{command_name}.sql"
         if not file_path.exists():
             matched = list(base_sql_dir.rglob(f"{command_name}.sql"))

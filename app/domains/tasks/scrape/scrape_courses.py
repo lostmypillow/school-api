@@ -2,7 +2,7 @@ import asyncio
 import gc
 from itertools import batched
 import math
-from pathlib import Path
+from anyio import Path
 from typing import Any
 
 from bs4 import BeautifulSoup
@@ -155,7 +155,7 @@ async def scrape_courses(
                         course_list.append(parsed)
 
             if course_list:
-                write_parquet_chunk(table_name="courses", new_records=course_list, parquet_dir=parquet_dir, chunk_id=chunk_idx)
+                await write_parquet_chunk(table_name="courses", new_records=course_list, parquet_dir=parquet_dir, chunk_id=chunk_idx)
                 all_courses.extend(course_list)
 
             del raw_course_result

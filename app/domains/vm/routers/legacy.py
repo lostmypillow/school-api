@@ -61,7 +61,7 @@ async def create_vm_details(
     try:
         logger.info("vm_details:")
         logger.info(vm_details.model_dump_json(indent=2))
-        await exec_mssql_async("commit", "insert", **vm_details.model_dump().values())
+        await exec_mssql_async("commit", "insert", *vm_details.model_dump().values())
         return {"message": "ok"}
     except IntegrityError:
         logger.exception("IntegrityError raised")

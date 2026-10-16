@@ -8,7 +8,6 @@ from mssql_python.pooling import PoolingManager
 from redis import Redis
 from redis_fastapi import FastAPIRedis
 from rq import Queue
-from app.domains.tasks.bootstrap_mssql import main
 from app.domains.courses import router as course_router
 from app.domains.tasks import router as tasks_router
 from app.domains.tasks.definitions import bootstrap_mssql_task

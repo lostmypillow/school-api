@@ -2,7 +2,7 @@
 from app.core.exec_mssql_async import exec_mssql_async
 from app.domains.ldap.schemas.filtered_response import FilteredList
 from app.domains.ldap.schemas.raw_user_data import RawUserData
-from app.domains.ldap.settings import DEPS
+from app.domains.touch.lib import deps as DEPS
 from typing import List
 from app.domains.ldap.schemas.ipa_formatted_user import IpaFormattedUser
 class SourceService:
@@ -32,11 +32,12 @@ class SourceService:
                         uid="e" + str(raw_user.uid.strip()) if raw_user.uid is not None else "",
                         employeenumber=str(raw_user.uid.strip()) if raw_user.uid is not None else "",
                         cn=str(raw_user.cn.strip()) if raw_user.cn is not None else "",
-                        givenname=self._split_chinese_name(raw_user.cn.strip())[1]
-                        if raw_user.cn is not None
-                        else "",
-                        sn=self._split_chinese_name(raw_user.cn.strip())[0] if raw_user.cn else "",
-                        pwd=self.decrypt_pwd(raw_user.pwd.strip()) if raw_user.pwd is not None else str(raw_user.uid).strip(),
+                        givenname="",# Placeholder before we implement actual logic
+                        # self._split_chinese_name(raw_user.cn.strip())[1] if raw_user.cn is not None else "",
+                        sn="", # Placeholder before we implement actual logic
+                        # self._split_chinese_name(raw_user.cn.strip())[0] if raw_user.cn else "",
+                        pwd="", # Placeholder before we implement actual logic
+                        # pwd=self.decrypt_pwd(raw_user.pwd.strip()) if raw_user.pwd is not None else str(raw_user.uid).strip(),
                         main_grp=main_grp_name,
                         main_grp_id=raw_user.main_grp if raw_user.main_grp else "0",
                         other_grp=other_grp_names,
