@@ -1,7 +1,7 @@
 import asyncio
 import logging
 from os import getenv
-from anyio import Path
+from pathlib import Path
 import time
 from typing import Any
 
@@ -9,7 +9,7 @@ import mssql_python
 from sqlalchemy.dialects import mssql
 from sqlalchemy.schema import CreateTable
 
-from app.core.tables.base_model import Base
+from app.core.tables.base import Base
 logger = logging.getLogger(__name__)
 
 CONNECT_RETRY_ERRORS = frozenset(

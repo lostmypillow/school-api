@@ -7,8 +7,7 @@ import pyarrow.parquet as pq
 import pytest
 from unittest.mock import AsyncMock, patch
 
-from app.domains.tasks.bootstrap_mssql.main import bootstrap_mssql
-from app.domains.tasks.bootstrap_mssql.schemas import BootstrapSummaryModel
+from app.domains.tasks.bootstrap_mssql.main import bootstrap_mssql, BootstrapSummaryModel
 
 
 # ==============================================================================

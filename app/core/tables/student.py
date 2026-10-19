@@ -1,7 +1,7 @@
 from sqlalchemy import Column, String, Unicode
 from sqlalchemy.orm import Mapped, mapped_column
 
-from app.core.tables.base_model import Base
+from app.core.tables.base import Base
 
 
 class Student(Base):

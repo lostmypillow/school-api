@@ -3,7 +3,7 @@ from typing import Optional
 from sqlalchemy import DateTime, Unicode, UnicodeText, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column
 
-from app.core.tables.base_model import Base
+from app.core.tables.base import Base
 
 
 class CourseSyllabus(Base):

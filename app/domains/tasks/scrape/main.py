@@ -21,6 +21,7 @@ from app.domains.tasks.scrape.scrape_department_years import (
     scrape_department_years,
 )
 from app.domains.tasks.scrape.scrape_departments import scrape_departments
+from app.domains.tasks.scrape.sync_employees import sync_employees
 from app.domains.tasks.scrape.sync_semesters import (
     sync_semesters,
 )
@@ -123,9 +124,7 @@ async def scrape_to_parquet(ctx: dict[str, Any] | None = None) -> None:
             chunk_size=chunk_size,
         )
 
-        # ---------------------------------------------------------
         # 3. Department Years -> Skip departments already in Parquet
-        # ---------------------------------------------------------
         all_departments: list[DepartmentModel] = await read_parquet_models(
             parquet_dir / "departments.parquet", DepartmentModel
         )
@@ -144,9 +143,7 @@ async def scrape_to_parquet(ctx: dict[str, Any] | None = None) -> None:
             chunk_size=chunk_size,
         )
 
-        # ---------------------------------------------------------
         # 4. Courses -> Skip department years already in Parquet
-        # ---------------------------------------------------------
         all_dep_years: list[DepartmentYearModel] = await read_parquet_models(
             parquet_dir / "department_years.parquet", DepartmentYearModel
         )
@@ -179,6 +176,8 @@ async def scrape_to_parquet(ctx: dict[str, Any] | None = None) -> None:
             course_to_scrape=courses_to_scrape,
             chunk_size=chunk_size,
         )
+
+        await sync_employees()
 
         end_time = time.time()
         print(

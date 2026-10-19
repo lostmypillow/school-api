@@ -17,7 +17,7 @@ from sqlalchemy.ext.asyncio import (
     create_async_engine,
 )
 
-from app.core.tables.base_model import Base
+from app.core.tables.base import Base
 from app.domains.courses.router import router as courses_router
 
 
