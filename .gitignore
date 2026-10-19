@@ -13,3 +13,5 @@ __pycache__
 cdk.out
 .idea
 /.coverage
+data/parquet
+*.db

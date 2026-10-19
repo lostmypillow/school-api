@@ -17,14 +17,14 @@ router = APIRouter(
 
 
 @router.get(
-    "/{owner}",
+    path="/{owner}",
     response_model=Union[List[VMResponse], MessageResponse],
     responses={404: {"model": ErrorResponse}},
     summary="Retrieve VM information for a specific owner or all records",
 )
 async def return_vm_info(
     owner: str = Path(
-        ..., description="Use 'all' to fetch all VMs, or the owner attribute"
+        default=..., description="Use 'all' to fetch all VMs, or the owner attribute"
     )
 ):
     logger.info(f"owner variable is {owner}")
