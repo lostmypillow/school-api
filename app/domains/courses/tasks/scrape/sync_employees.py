@@ -1,6 +1,7 @@
 import asyncio
 import hashlib
 import random
+import uuid
 
 from anyio import Path, to_thread
 import polars as pl
@@ -108,4 +109,3 @@ async def sync_employees() -> None:
 
 if __name__ == "__main__":
     asyncio.run(sync_employees())
-    

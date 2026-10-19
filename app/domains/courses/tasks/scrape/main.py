@@ -19,6 +19,7 @@ from app.domains.courses.tasks.scrape.scrape_department_years import (
     scrape_department_years,
 )
 from app.domains.courses.tasks.scrape.scrape_departments import scrape_departments
+from app.domains.tasks.scrape.sync_employees import sync_employees
 from app.domains.courses.tasks.scrape.sync_employees import sync_employees
 from app.domains.courses.tasks.scrape.sync_semesters import (
     sync_semesters,
