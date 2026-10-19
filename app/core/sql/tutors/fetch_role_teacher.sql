@@ -8,4 +8,3 @@ FROM
 WHERE
     card_id = ?
     OR id = ?
-    AND department = '9';

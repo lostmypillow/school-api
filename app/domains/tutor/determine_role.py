@@ -9,7 +9,7 @@ from app.domains.tutor.schemas.student_sql_row import StudentSqlRow
 logger: logging.Logger = logging.getLogger(__name__)
 async def determine_role(card_id: str) -> Cardholder | str:
     """Determine role (student vs teacher) based on card_id and return Cardholder or error string."""
-    # 1. Check if cardholder is student (matches card_id or student_id)
+    logger.info("Check if cardholder is student (matches card_id or student_id)")
     student_rows: list[StudentSqlRow] | None = cast(
         list[StudentSqlRow] | None,
         await exec_mssql_async("fetch_role_student", card_id, card_id),
@@ -24,8 +24,7 @@ async def determine_role(card_id: str) -> Cardholder | str:
         logger.info("Cardholder is student: %s", cardholder.model_dump_json(indent=2))
         return cardholder
 
-    # 2. Check if cardholder is teacher (matches card_id or id)
-    logger.info("Cardholder is not a student, trying teacher")
+    logger.info(msg="Check if cardholder is teacher (matches card_id or id)")
     teacher_rows: list[TeacherSqlRow] | None = cast(
         list[TeacherSqlRow] | None,
         await exec_mssql_async("fetch_role_teacher", card_id, card_id),
