@@ -2,5 +2,5 @@ SELECT subject
 FROM
     student_survey_results
 WHERE
-    course_time > ?
-    AND student_id = ?
+    course_time > $1
+    AND student_id = $2

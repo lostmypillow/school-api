@@ -1,6 +1,6 @@
 UPDATE
-    dbo.tutor_appointments
+    tutor_appointments
 SET
-    end_time = GETDATE()
+    end_time = NOW()
 WHERE
-    id = ?;
+    id = $1;

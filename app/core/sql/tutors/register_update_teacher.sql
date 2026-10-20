@@ -1,6 +1,6 @@
 UPDATE
-    dbo.devices
+    devices
 SET
     teacher_id = ?
 WHERE
-    id = ?;
+    id = $1;
