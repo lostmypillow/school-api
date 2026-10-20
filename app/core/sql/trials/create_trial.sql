@@ -5,11 +5,11 @@ INSERT INTO trial_records
     telephone, mobile, notes, parent_name, manager, status, current_grade,
     created_at, updated_at
 )
-OUTPUT INSERTED.id, INSERTED.created_at, INSERTED.updated_at
 VALUES
 (
-    ?, ?, ?, ?, ?,
-    ?, ?, ?, ?,
-    ?, ?, ?, ?, ?, ?, ?,
-    GETDATE(), GETDATE()
+    $1, $2, $3, $4, $5,
+    $6, $7, $8, $9,
+    $10, $11, $12, $13, $14, $15, $16,
+    NOW(), NOW()
 )
+RETURNING id, created_at, updated_at

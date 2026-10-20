@@ -1,7 +1,8 @@
-SELECT TOP 1
-    student_id,
+SELECT
     name,
-    gender
+    gender,
+    TOP 1
+        AS student_id
 FROM
     students
 WHERE

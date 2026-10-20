@@ -1,20 +1,20 @@
 UPDATE trial_records
 SET
-    source = ?,
-    student_id = ?,
-    student_name = ?,
-    middle_school_name = ?,
-    middle_school_class = ?,
-    high_school_name = ?,
-    high_school_class = ?,
-    registered_class = ?,
-    trial_date = ?,
-    telephone = ?,
-    mobile = ?,
-    notes = ?,
-    parent_name = ?,
-    manager = ?,
-    status = ?,
-    current_grade = ?, updated_at = GETDATE()
-OUTPUT INSERTED.id, INSERTED.created_at, INSERTED.updated_at
-WHERE id = ?
+    source = $1,
+    student_id = $2,
+    student_name = $3,
+    middle_school_name = $4,
+    middle_school_class = $5,
+    high_school_name = $6,
+    high_school_class = $7,
+    registered_class = $8,
+    trial_date = $9,
+    telephone = $10,
+    mobile = $11,
+    notes = $12,
+    parent_name = $13,
+    manager = $14,
+    status = $15,
+    current_grade = $16, updated_at = NOW()
+WHERE id = $17
+RETURNING id, created_at, updated_at;

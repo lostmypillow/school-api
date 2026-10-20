@@ -1,21 +1,21 @@
 SELECT
-    [id],
-    [vm_name],
-    [human_owner],
-    [pc_owner],
-    [pve],
-    [pve_host],
-    [pve_token_username],
-    [pve_token_name],
-    [pve_token_value],
-    [pve_vm_id],
-    [proxy_from],
-    [pve_proxy],
-    [spice_proxy],
-    [vm_password],
-    [usb]
+    id,
+    vm_name,
+    human_owner,
+    pc_owner,
+    pve,
+    pve_host,
+    pve_token_username,
+    pve_token_name,
+    pve_token_value,
+    pve_vm_id,
+    proxy_from,
+    pve_proxy,
+    spice_proxy,
+    vm_password,
+    usb
 FROM
-    [vm_details]
+    vm_details
 WHERE
-    [human_owner] = ?
-    OR [pc_owner] = ?
+    human_owner = $1
+    OR pc_owner = $2

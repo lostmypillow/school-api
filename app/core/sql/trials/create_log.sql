@@ -1,16 +1,14 @@
 INSERT INTO trial_records
 (
-    [employee_name],
-    [category],
-    [log_content],
-    [record_date],
-    [course_time],
-    [computer_name],
-    [student_id]
+    employee_name,
+    category,
+    log_content,
+    record_date,
+    course_time,
+    computer_name,
+    student_id
 )
-OUTPUT
-    INSERTED.id AS id,
-    INSERTED.[record_date] AS date,
-    INSERTED.[course_time] AS time
+
 VALUES
-(?, ?, ?, GETDATE(), GETDATE(), ?, ?)
+($1, $2, $3, NOW(), NOW(), $4, $5)
+RETURNING id, record_date, course_time

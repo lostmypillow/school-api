@@ -1,8 +1,8 @@
 SELECT
-    [sn],
-    [seat_no]
+    sn,
+    seat_no
 FROM
-    [seats_records]
+    seats_records
 WHERE
     file_no = 4
     AND student_id IS NULL

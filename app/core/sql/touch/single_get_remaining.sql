@@ -1,39 +1,26 @@
-SET ARITHABORT ON;
-WITH FIRSTQUERY AS (
-    SELECT TOP (1)
-        [file_no],
-        [course_name],
-        [legacy_course_num]
+WITH firstquery AS (
+    SELECT
+        course_name,
+        legacy_course_num,
+        top(1)
+            AS file_no
     FROM
-        [todays_seats]
+        todays_seats
 )
 
 SELECT
-    FQ.[file_no],
-    FQ.[course_name],
-    FQ.[legacy_course_num],
-    SQ.SEAT_NO,
-    SQ.SEAT
-FROM FIRSTQUERY AS FQ
-OUTER APPLY ( -- noqa: ST05
+    fq.file_no,
+    fq.course_name,
+    fq.legacy_course_num,
+    sq.seat_no,
+    sq.seat
+FROM firstquery AS fq
+LEFT JOIN LATERAL (
     SELECT
-        STUFF((
-            SELECT ',' + CAST([seats_records].[sn] AS NVARCHAR(MAX))
-            FROM [seats_records]
-            WHERE
-                [seats_records].[student_id] IS NULL
-                AND [seats_records].[file_no] = FQ.[file_no]
-            FOR XML PATH (''), TYPE
-        ).value('.', 'NVARCHAR(MAX)'
-        ), 1, 1, '') AS SEAT_NO,
-        STUFF((
-            SELECT ',' + CAST([seats_records].[seat_no] AS NVARCHAR(MAX))
-            FROM [seats_records]
-            WHERE
-                [seats_records].[student_id] IS NULL
-                AND [seats_records].[file_no] = FQ.[file_no]
-            FOR XML PATH (''), TYPE
-        ).value('.', 'NVARCHAR(MAX)'
-        ), 1, 1, '') AS SEAT
-) AS SQ
-WHERE EXISTS (SELECT 1 FROM FIRSTQUERY);
+        string_agg(seats_records.sn::text, ',') AS seat_no,
+        string_agg(seat_no::text, ',') AS seat
+    FROM seats_records
+    WHERE
+        seats_records.student_id IS NULL AND seats_records.file_no = fq.file_no
+) AS sq ON TRUE
+WHERE EXISTS (SELECT 1 FROM firstquery);

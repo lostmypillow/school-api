@@ -1,7 +1,7 @@
 UPDATE
     math_announcements
 SET
-    content = ?,
-    updated_at = SYSDATETIME()
+    content = $1,
+    updated_at = CURRENT_TIMESTAMP
 WHERE
-    id = ?;
+    id = $2;

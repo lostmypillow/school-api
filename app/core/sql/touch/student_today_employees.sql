@@ -11,7 +11,7 @@ WHERE
             employee_clock_records AS ecr
         WHERE
             ecr.student_id = u.student_id
-            AND ecr.clock_in_date = ?
+            AND ecr.clock_in_date = $1
             AND ecr.main_department IN (2, 4, 8, 9, 11)
             AND ecr.job_type <> 1
     );

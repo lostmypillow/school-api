@@ -1,5 +1,5 @@
 SELECT id
 FROM
-    dbo.devices
+    devices
 WHERE
-    teacher_id = ?;
+    teacher_id = $1;
