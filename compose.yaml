@@ -1,29 +1,21 @@
 services:
   db:
     container_name: school-db-local
-    image: mcr.microsoft.com/azure-sql-edge:latest
-    user: root
+    image: postgres:latest
     environment:
-      - ACCEPT_EULA=Y
-      - MSSQL_SA_PASSWORD=YourPassword123!
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=YourPassword123!
+      - POSTGRES_DB=student_db 
       - TZ=Asia/Taipei
     ports:
-      - "1433:1433"
+      - "5432:5432"
     volumes:
-      - sqledge_data:/var/opt/mssql
-    deploy:
-      resources:
-        limits:
-          memory: 2048M
-          cpus: '2.0'
-        reservations:
-          memory: 2048M
-          cpus: '1.0'
+      - postgres_data:/var/lib/postgresql
     networks:
       - nginx-schoolapi-local-net
       - schoolapp-internal-local-net
     healthcheck:
-      test: [ "CMD", "/bin/bash", "-c", "</dev/tcp/127.0.0.1/1433" ]
+      test: [ "CMD", "pg_isready", "-U", "postgres" ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -100,7 +92,7 @@ services:
 
 
 volumes:
-  sqledge_data:
+  postgres_data:
 
 networks:
   nginx-schoolapi-local-net:

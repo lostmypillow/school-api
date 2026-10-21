@@ -1,6 +1,6 @@
 from typing import cast
 import logging
-from app.core.exec_mssql_async import exec_mssql_async
+from app.core.exec_psql import exec_mssql_async
 from app.domains.tutor.schemas.cardholder import Cardholder
 from app.domains.tutor.schemas.teacher_sql_row import TeacherSqlRow
 from app.domains.tutor.schemas.associated_device_sql import AssociatedDeviceSqlRow

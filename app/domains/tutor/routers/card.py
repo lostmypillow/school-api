@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException, Path, status
 
-from app.core.exec_mssql_async import exec_mssql_async
+from app.core.exec_psql import exec_mssql_async
 from app.domains.tutor.process_card import process_card
 from app.domains.tutor.schemas.cardholder import Cardholder
 from app.domains.tutor.lib.sync_frontend import sync_frontend
@@ -59,7 +59,7 @@ async def update_teacher_info(cardholder: Cardholder) -> UpdateTeacherResponse:
         cardholder.new_school,
         cardholder.card_id,
         cardholder.card_id,
-        fetch=False,
+        
     )
     await sync_frontend()
 

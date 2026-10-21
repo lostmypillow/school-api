@@ -34,6 +34,7 @@ def scrape_to_parquet_task() -> None:
 def bootstrap_mssql_task() -> dict[str, int]:
     """Standard synchronous RQ task entrypoint for bootstrapping MSSQL from Parquet."""
     try:
+
         return asyncio.run(bootstrap_mssql())
     finally:
         _cleanup_child_resources()

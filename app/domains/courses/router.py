@@ -11,7 +11,7 @@ from fastapi import APIRouter, HTTPException, Query, status
 from fastapi.params import Depends
 from redis_fastapi import cache
 
-from app.core.exec_mssql_async import exec_mssql_async
+from app.core.exec_psql import exec_mssql_async
 from .schemas import (
     CourseResponseSchema,
     DepartmentResponseSchema,

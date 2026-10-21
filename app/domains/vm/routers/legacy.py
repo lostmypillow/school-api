@@ -1,7 +1,7 @@
 from fastapi import APIRouter, status, Path
 from typing import Union, List
 
-from app.core.exec_mssql_async import exec_mssql_async
+from app.core.exec_psql import exec_mssql_async
 from ..schemas import VMResponse, ErrorResponse, MessageResponse, VMDetails
 from pprint import pformat
 
@@ -83,7 +83,7 @@ async def update_vm_details(
     Update existing VM entry by its ID.
     """
     try:
-        await exec_mssql_async("vm/update",  vm_details.model_dump().values(), vm_id, fetch=False)
+        await exec_mssql_async("vm/update",  vm_details.model_dump().values(), vm_id)
         logger.info("SQL UPDATE Success!")
         return {"message": "ok"}
     except IntegrityError:
@@ -103,7 +103,7 @@ async def update_vm_details(
 async def delete_vm_details(vm_id: int):
     try:
         logger.info(f"Deleting VM {str(vm_id)}")
-        await exec_mssql_async( "vm/delete", vm_id, fetch=False)
+        await exec_mssql_async( "vm/delete", vm_id)
         logger.info("SQL DELETE Success!")
         return {"message": "ok"}
     except Exception:

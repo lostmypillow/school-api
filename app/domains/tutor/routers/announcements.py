@@ -5,7 +5,7 @@ import nh3
 from fastapi import APIRouter
 from fastapi.exceptions import HTTPException
 
-from app.core.exec_mssql_async import exec_mssql_async
+from app.core.exec_psql import exec_mssql_async
 from app.domains.tutor.schemas.announcement import AddAnnouncement, Announcement, UpdateAnnouncement
 from app.domains.tutor.schemas.api_response import APIResponse
 
@@ -35,7 +35,7 @@ async def add_announcement(announcement: AddAnnouncement) -> APIResponse:
 async def update_announcement(announcement: UpdateAnnouncement) -> APIResponse:
     try:
         await exec_mssql_async(
-            "update_announce", announcement.id,sanitize_html(announcement.content), fetch=False
+            "update_announce", announcement.id,sanitize_html(announcement.content)
         )
         return APIResponse(detail="Updating announcement successful!!")
     except Exception as e:
@@ -46,7 +46,7 @@ async def update_announcement(announcement: UpdateAnnouncement) -> APIResponse:
 @router.delete("/{announcement_id}")
 async def delete_announcement(announcement_id: int) -> APIResponse:
     try:
-        await exec_mssql_async("delete_announce", announcement_id, fetch=False)
+        await exec_mssql_async("delete_announce", announcement_id)
         return APIResponse(detail="Deleting announcement successful!!")
 
     except Exception as e:

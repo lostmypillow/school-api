@@ -1,7 +1,7 @@
 from anyio import Path
 from pyarrow import parquet as pq
 
-from app.core.exec_mssql_async import exec_mssql_async
+from app.core.exec_psql import exec_mssql_async
 import logging
 from app.domains.tasks.parquet_utils import _prepare_arrow_table
 logger = logging.getLogger(__name__)
@@ -16,8 +16,8 @@ async def copy_semesters(parquet_dir: Path) -> int:
         sem_count = sem_table.num_rows
         if sem_count > 0:
             sem_table = _prepare_arrow_table(sem_table, add_timestamps=True)
-            await exec_mssql_async(command_name="courses/upsert_semester", fetch=False)
+            await exec_mssql_async(command_name="courses/upsert_semester")
             await exec_mssql_async("create_tables")
-            await exec_mssql_async("bulkcopy_arrow", "semesters", sem_table, fetch=False)
+            await exec_mssql_async("bulkcopy_arrow", "semesters", sem_table)
             logger.info("Bulk copied %d semesters to MSSQL", sem_count)
     return sem_count

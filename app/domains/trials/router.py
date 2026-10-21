@@ -6,7 +6,7 @@ from fastapi import APIRouter, HTTPException, status
 
 
 
-from app.core.exec_mssql_async import exec_mssql_async
+from app.core.exec_psql import exec_mssql_async
 from app.domains.trials.schemas.log_record_create import LogRecordCreate
 from app.domains.trials.schemas.log_record_response import LogRecordResponse
 from app.domains.trials.schemas.trial_record_base import TrialRecordBase
@@ -98,7 +98,7 @@ async def update_trial(
         raise HTTPException(status_code=404, detail=error_message)
 
     try:
-        result = await exec_mssql_async("trials/update_trial", trial.model_dump().values(), fetch=False)
+        result = await exec_mssql_async("trials/update_trial", trial.model_dump().values())
         return result
 
     except Exception as e:
@@ -111,7 +111,7 @@ async def update_trial(
 async def delete_trial(trial_id: int) -> dict[str, str]:
 
 
-    result = await exec_mssql_async("trials/delete_trial",  trial_id, fetch=False)
+    result = await exec_mssql_async("trials/delete_trial",  trial_id)
 
     if not result:
         error_message = "找不到問課紀錄 (TrialRecord)"
