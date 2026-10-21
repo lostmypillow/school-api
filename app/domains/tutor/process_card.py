@@ -37,7 +37,7 @@ async def process_card(device_id: int, card_id: str) -> str | None | Any:
                     "register_update_teacher",
                     None,
                     device_id,
-                    
+
                 )
                 logger.info("Clearing device and return early")
                 await sync_frontend()
@@ -51,14 +51,14 @@ async def process_card(device_id: int, card_id: str) -> str | None | Any:
                     "register_update_teacher",
                     None,
                     cardholder.device_id,
-                    
+
                 )
             logger.info("Assigning this device to the teacher and returning early.")
             await exec_sql(
                 "register_update_teacher",
                 cardholder.card_id,
                 device_id,
-                
+
             )
             await sync_frontend()
             return f"{cardholder.name}老師 刷卡成功"
@@ -95,7 +95,7 @@ async def process_card(device_id: int, card_id: str) -> str | None | Any:
                     "register_insert",
                     cardholder.card_id,
                     device.teacher_id,
-                    
+
                 )
             else:
                 logger.info(
@@ -105,7 +105,7 @@ async def process_card(device_id: int, card_id: str) -> str | None | Any:
                 await exec_sql(
                     "register_update_student",
                     appt_id,
-                    
+
                 )
             await sync_frontend()
             return f"{cardholder.name}學生 刷卡成功"

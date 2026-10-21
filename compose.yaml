@@ -106,4 +106,3 @@ networks:
     driver: bridge
     name: school-worker-net
     internal: true
-

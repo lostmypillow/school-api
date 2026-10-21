@@ -1,7 +1,7 @@
 from anyio import Path
 from pyarrow import parquet as pq
 
-from app.core.exec_mssql_async import exec_mssql_async
+from app.core.exec_psql import exec_mssql_async
 import logging
 from app.domains.tasks.parquet_utils import _prepare_arrow_table
 logger = logging.getLogger(__name__)
@@ -18,9 +18,9 @@ async def copy_employees(parquet_dir: Path) -> int:
         employee_count = employee_table.num_rows
         if employee_count > 0:
             employee_table = _prepare_arrow_table(employee_table, add_timestamps=False)
-            await exec_mssql_async(command_name="courses/upsert_employees", fetch=False)
+            await exec_mssql_async(command_name="courses/upsert_employees")
             await exec_mssql_async("create_tables")
-            await exec_mssql_async("bulkcopy_arrow", "employees", employee_table, fetch=False)
+            await exec_mssql_async("bulkcopy_arrow", "employees", employee_table)
             logger.info("Bulk copied %d employees to MSSQL", employee_count)
     return employee_count
 
@@ -36,8 +36,8 @@ async def copy_course_syllabi(parquet_dir: Path) -> int:
         syllabi_count = syllabi_table.num_rows
         if syllabi_count > 0:
             syllabi_table = _prepare_arrow_table(syllabi_table, add_timestamps=False)
-            await exec_mssql_async(command_name="courses/upsert_course_syllabi", fetch=False)
+            await exec_mssql_async(command_name="courses/upsert_course_syllabi")
             await exec_mssql_async("create_tables")
-            await exec_mssql_async("bulkcopy_arrow", "course_syllabi", syllabi_table, fetch=False)
+            await exec_mssql_async("bulkcopy_arrow", "course_syllabi", syllabi_table)
             logger.info("Bulk copied %d course syllabi to MSSQL", syllabi_count)
     return syllabi_count

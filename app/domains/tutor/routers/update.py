@@ -29,7 +29,7 @@ async def update_teacher_info(cardholder: Cardholder) -> UpdateTeacherResponse:
         cardholder.new_school,
         cardholder.card_id,
         cardholder.card_id,
-        
+
     )
     await sync_frontend()
 
