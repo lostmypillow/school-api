@@ -5,7 +5,7 @@ import nh3
 from fastapi import APIRouter
 from fastapi.exceptions import HTTPException
 
-from app.core.exec_psql import exec_mssql_async
+from app.core.exec_sql import exec_sql
 from app.domains.tutor.schemas.announcement import AddAnnouncement, Announcement, UpdateAnnouncement
 from app.domains.tutor.schemas.api_response import APIResponse
 
@@ -20,7 +20,7 @@ def sanitize_html(raw_html: str) -> str:
 async def add_announcement(announcement: AddAnnouncement) -> APIResponse:
     try:
         logger.info(announcement.model_dump_json(indent=2))
-        await exec_mssql_async(
+        await exec_sql(
             "insert_announce",
             sanitize_html(announcement.content),
             fetch=False
@@ -34,7 +34,7 @@ async def add_announcement(announcement: AddAnnouncement) -> APIResponse:
 @router.put("/")
 async def update_announcement(announcement: UpdateAnnouncement) -> APIResponse:
     try:
-        await exec_mssql_async(
+        await exec_sql(
             "update_announce", announcement.id,sanitize_html(announcement.content)
         )
         return APIResponse(detail="Updating announcement successful!!")
@@ -46,7 +46,7 @@ async def update_announcement(announcement: UpdateAnnouncement) -> APIResponse:
 @router.delete("/{announcement_id}")
 async def delete_announcement(announcement_id: int) -> APIResponse:
     try:
-        await exec_mssql_async("delete_announce", announcement_id)
+        await exec_sql("delete_announce", announcement_id)
         return APIResponse(detail="Deleting announcement successful!!")
 
     except Exception as e:
@@ -57,7 +57,7 @@ async def delete_announcement(announcement_id: int) -> APIResponse:
 @router.get("/")
 async def get_announcements() -> list[Announcement] | None:
     try:
-        return await exec_mssql_async(command_name="get_announce")
+        return await exec_sql(command_name="get_announce")
     except Exception as e:
         logger.exception("Internal Server Error", exc_info=e)
         raise HTTPException(status_code=500, detail=f"Error {uuid4()!s}") from e

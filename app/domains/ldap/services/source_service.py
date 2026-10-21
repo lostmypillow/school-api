@@ -1,5 +1,5 @@
 
-from app.core.exec_psql import exec_mssql_async
+from app.core.exec_sql import exec_sql
 from app.domains.ldap.schemas.filtered_response import FilteredList
 from app.domains.ldap.schemas.raw_user_data import RawUserData
 from app.domains.touch.lib import deps as DEPS
@@ -10,7 +10,7 @@ class SourceService:
         pass
 
     async def return_modified_employees(self) -> FilteredList:
-        raw_dicts: list[dict] = await exec_mssql_async(command_name="ldap/ldap_get_all_employees")
+        raw_dicts: list[dict] = await exec_sql(command_name="ldap/ldap_get_all_employees")
         raw_employees: list[RawUserData] = [RawUserData(**u) for u in raw_dicts]
         employees_to_add: List[IpaFormattedUser] = []
         employees_to_disable: List[IpaFormattedUser] = []

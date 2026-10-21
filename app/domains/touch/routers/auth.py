@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 
 from fastapi import APIRouter, HTTPException, status
 
-from app.core.exec_psql import exec_mssql_async
+from app.core.exec_sql import exec_sql
 from app.domains.touch.lib import deps, get_class_with_seats
 from app.domains.touch.schemas import AuthRequest, AuthResponse, ErrorResponse, RateableEmployee
 
@@ -30,7 +30,7 @@ router = APIRouter(
 )
 async def authorize_student(auth_request: AuthRequest):
     try:
-        student_details_result = await exec_mssql_async("student_details", auth_request.student_id)
+        student_details_result = await exec_sql("student_details", auth_request.student_id)
         student_details: dict[str, str] = student_details_result[0]
     except Exception as e:
         logger.exception(
@@ -64,8 +64,8 @@ async def authorize_student(auth_request: AuthRequest):
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="抱歉, 目前沒有補位資料!")
 
         try:
-            courses_of_student: list[dict[str, str]] = await exec_mssql_async( "student_match_course", auth_request.student_id,
-            )
+            courses_of_student: list[dict[str, str]] = await exec_sql("student_match_course", auth_request.student_id,
+                                                                      )
 
         except Exception:
             logger.exception(
@@ -108,7 +108,7 @@ async def authorize_student(auth_request: AuthRequest):
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="抱歉, 目前沒有您可選的補位資料, 請洽導師!")
 
         try:
-            check_already_selected: list = await exec_mssql_async(
+            check_already_selected: list = await exec_sql(
                 "student_already_selected", class_with_seat["file_no"], auth_request.student_id,
             )
         except Exception as e:
@@ -143,7 +143,7 @@ async def authorize_student(auth_request: AuthRequest):
     elif auth_request.type == "survey":
 
         try:
-            emp_working_today = await exec_mssql_async(
+            emp_working_today = await exec_sql(
                 "student_today_employees",
                 datetime.now().strftime("%Y-%m-%d"),
             )
@@ -167,7 +167,7 @@ async def authorize_student(auth_request: AuthRequest):
                 )
 
         try:
-            voted_emp_week = await exec_mssql_async(
+            voted_emp_week = await exec_sql(
                 "student_voted_employees",
                 (
                     datetime.now() - timedelta(days=datetime.now().weekday())

@@ -6,7 +6,7 @@ import logging
 
 from fastapi import APIRouter, HTTPException
 
-from app.core.exec_psql import exec_mssql_async
+from app.core.exec_sql import exec_sql
 from app.domains.touch.schemas.error_response import ErrorResponse
 from app.domains.touch.schemas.seat_info import SeatInfo
 from app.domains.touch.schemas.success_message import SuccessMessage
@@ -33,7 +33,7 @@ router = APIRouter(
                   })
 async def register_seat(seat_info: SeatInfo):
     try:
-        await exec_mssql_async(
+        await exec_sql(
             "register_seat",
             seat_info.student_id,
             seat_info.seat_number,
