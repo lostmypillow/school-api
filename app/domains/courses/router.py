@@ -22,7 +22,7 @@ from .schemas import (
 from rq.exceptions import NoSuchJobError
 from rq.job import Job
 
-from app.domains.courses.tasks.definitions import bootstrap_mssql_task, scrape_to_parquet_task
+from app.domains.courses.tasks.definitions import bootstrap_db_task, scrape_to_parquet_task
 from app.domains.courses.schemas.task_queue import TaskQueueResponse
 from app.domains.courses.schemas.job_status import JobStatusResponse
 
@@ -32,7 +32,7 @@ logger = logging.getLogger(__name__)
 
 ERROR_500_RESPONSE: dict[int | str, dict[str, Any]] = {
     status.HTTP_500_INTERNAL_SERVER_ERROR: {
-        "description": "Internal server error occurred while querying MSSQL.",
+        "description": "Internal server error occurred while querying DB.",
         "content": {
             "application/json": {
                 "example": {
@@ -64,7 +64,9 @@ async def get_semesters() -> list[Any] | list[dict[Any, Any]] | str | None:
         HTTPException: 500 Internal Server Error if database query fails.
     """
     try:
-        return await exec_sql(command_name="courses/select_all_semester")
+        row = await exec_sql(command_name="courses/select_all_semester")
+        print(row)
+        return row
     except Exception as e:
         error_id = str(uuid.uuid4())
         print(f"[ERROR ID: {error_id}] => {e}")
@@ -206,7 +208,7 @@ async def get_syllabus(
         description="Unique identifier of the course (e.g., '100_1_0078_153447').",
         examples=["100_1_0078_153447"],
     ),
-) -> CourseSyllabusModel:
+) -> str | Any:
     """Fetch all courses offered for a given department year.
 
     Args:
@@ -220,9 +222,8 @@ async def get_syllabus(
     """
     try:
         row = await exec_sql("courses/select_syllabus", course_id)
-        logger.info(row)
-        if len(row) != 1:
-            raise ValueError("More than one syllabus for a course ID")
+        if not isinstance(row, list) or len(row) != 1:
+            raise ValueError("Expected exactly one syllabus for the given course ID")
         return row[0]
 
     except Exception as e:
@@ -265,13 +266,13 @@ async def trigger_scrape_to_parquet(
     path="/sync",
     response_model=TaskQueueResponse,
     status_code=status.HTTP_200_OK,
-    summary="Enqueue MSSQL database bootstrap task",
-    description="Submits a background task to bootstrap MSSQL tables and upsert records from Parquet snapshots.",
+    summary="Enqueue DB database bootstrap task",
+    description="Submits a background task to bootstrap DB tables and upsert records from Parquet snapshots.",
 )
-async def trigger_bootstrap_mssql(request: Request) -> TaskQueueResponse:
+async def trigger_bootstrap_db(request: Request) -> TaskQueueResponse:
     queue = request.app.state.queue
     try:
-        job: Job | None = queue.enqueue(bootstrap_mssql_task)
+        job: Job | None = queue.enqueue(bootstrap_db_task)
     except Exception:
         job = None
     if job is None:

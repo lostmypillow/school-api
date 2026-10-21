@@ -50,8 +50,7 @@ async def rate_employee(survey_info: SurveyInfo):
             survey_info.student_id,
             deps[survey_info.employee_dep],
             survey_info.employee_id,
-            survey_info.rating,
-            fetch=False
+            survey_info.rating
         )
         return SuccessMessage(message="success")
     except KeyError as e:

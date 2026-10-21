@@ -20,7 +20,7 @@ class CustomAsyncClient:
         self._client: httpx.AsyncClient | None = None
         self.semaphore: Semaphore = Semaphore(20)
         self.redis: Redis = Redis.from_url(
-            getenv("REDIS_URL", "redis://localhost:6379/0")
+            f"redis://{getenv("REDIS_HOST", "localhost")}:6379/0"
         )
 
     def _ensure_active_client(self) -> AsyncClient | None:
@@ -42,6 +42,8 @@ class CustomAsyncClient:
         cache_key: str = ""
         html_text: str = ""
         """Fetches raw HTML from Redis cache if available, or falls back to HTTP request with retries."""
+        self._ensure_active_client()
+        assert self._client is not None
         if redis is not None:
             cached_val = redis.get(
                 f"cache:html:{hashlib.sha256(combined_url.encode('utf-8')).hexdigest()}"
@@ -56,7 +58,7 @@ class CustomAsyncClient:
 
         for attempt in range(3):
             try:
-                response: Response = await self._ensure_active_client().get(combined_url)
+                response: Response = await self._client.get(combined_url)
                 response.raise_for_status()
                 html_text: str = response.text
                 break

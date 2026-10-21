@@ -1,7 +1,7 @@
 import asyncio
 import logging
 
-from app.domains.courses.tasks.bootstrap_mssql import bootstrap_mssql
+from app.domains.courses.tasks.bootstrap_db import bootstrap_db
 from app.domains.courses.tasks.scrape import scrape_to_parquet
 
 logging.getLogger("httpx").setLevel(logging.ERROR)
@@ -31,10 +31,10 @@ def scrape_to_parquet_task() -> None:
         _cleanup_child_resources()
 
 
-def bootstrap_mssql_task() -> dict[str, int]:
-    """Standard synchronous RQ task entrypoint for bootstrapping MSSQL from Parquet."""
+def bootstrap_db_task() -> dict[str, int] | None:
+    """Standard synchronous RQ task entrypoint for bootstrapping DB from Parquet."""
     try:
 
-        return asyncio.run(bootstrap_mssql())
+        return asyncio.run(bootstrap_db())
     finally:
         _cleanup_child_resources()

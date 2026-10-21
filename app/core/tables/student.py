@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, Unicode
+from sqlalchemy import String, Unicode
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.core.tables.base import Base

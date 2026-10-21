@@ -4,10 +4,10 @@ from typing import TypeVar
 from pydantic import BaseModel, ConfigDict, Field
 
 from app.core.exec_sql import exec_sql, init_db, close_db
-from app.domains.courses.tasks.bootstrap_mssql.copy_courses import copy_courses, copy_department_years
-from app.domains.courses.tasks.bootstrap_mssql.copy_departments import copy_departments
-from app.domains.courses.tasks.bootstrap_mssql.copy_employees import copy_employees, copy_course_syllabi
-from app.domains.courses.tasks.bootstrap_mssql.copy_semesters import copy_semesters
+from app.domains.courses.tasks.bootstrap_db.copy_courses import copy_courses, copy_department_years
+from app.domains.courses.tasks.bootstrap_db.copy_departments import copy_departments
+from app.domains.courses.tasks.bootstrap_db.copy_employees import copy_employees, copy_course_syllabi
+from app.domains.courses.tasks.bootstrap_db.copy_semesters import copy_semesters
 from app.domains.courses.lib.parquet_utils import resolve_parquet_dir
 
 logger = logging.getLogger(__name__)
@@ -15,8 +15,8 @@ logger = logging.getLogger(__name__)
 T = TypeVar("T", bound=BaseModel)
 
 
-async def bootstrap_mssql() -> dict[str, int] | None:
-    """Bootstraps MSSQL by reading Parquet snapshot files directly into Arrow tables and performing bulk copies."""
+async def bootstrap_db() -> dict[str, int] | None:
+    """Bootstraps DB by reading Parquet snapshot files directly into Arrow tables and performing bulk copies."""
     try:
         await init_db()
         parquet_dir = await resolve_parquet_dir()
@@ -39,7 +39,7 @@ async def bootstrap_mssql() -> dict[str, int] | None:
             employees=employee_count
         ).model_dump()
 
-        logger.info(msg=f"MSSQL sync complete: {summary}")
+        logger.info(msg=f"DB sync complete: {summary}")
         await close_db()
         return summary
     except Exception as e:
@@ -48,7 +48,7 @@ async def bootstrap_mssql() -> dict[str, int] | None:
         await close_db()
 
 class BootstrapSummaryModel(BaseModel):
-    """Structured summary schema for MSSQL database bootstrapping counts."""
+    """Structured summary schema for DB database bootstrapping counts."""
 
     model_config = ConfigDict(extra="forbid")
 

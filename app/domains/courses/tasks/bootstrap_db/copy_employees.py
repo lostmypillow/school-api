@@ -21,7 +21,7 @@ async def copy_employees(parquet_dir: Path) -> int:
             await exec_sql(command_name="courses/upsert_employees")
             await exec_sql("create_tables")
             await exec_sql("bulkcopy_arrow", "employees", employee_table)
-            logger.info("Bulk copied %d employees to MSSQL", employee_count)
+            logger.info("Bulk copied %d employees to DB", employee_count)
     return employee_count
 
 
@@ -39,5 +39,5 @@ async def copy_course_syllabi(parquet_dir: Path) -> int:
             await exec_sql(command_name="courses/upsert_course_syllabi")
             await exec_sql("create_tables")
             await exec_sql("bulkcopy_arrow", "course_syllabi", syllabi_table)
-            logger.info("Bulk copied %d course syllabi to MSSQL", syllabi_count)
+            logger.info("Bulk copied %d course syllabi to DB", syllabi_count)
     return syllabi_count

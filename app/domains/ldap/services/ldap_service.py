@@ -28,7 +28,7 @@ class LdapService:
 
     async def sync_all_employees(self) -> List[str]:
         """
-        Sync all employees from MSSQL → FreeIPA.
+        Sync all employees from DB → FreeIPA.
 
         Creates or updates as needed, then syncs group memberships.
         """
