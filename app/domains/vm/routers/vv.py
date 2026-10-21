@@ -9,6 +9,7 @@ from fastapi.exceptions import HTTPException
 
 from app.core.exec_sql import exec_sql
 from app.domains.vm.schemas.vm_details import VMDetails
+from app.core.exec_sql import exec_sql
 from app.domains.vm.services.proxmox import ProxmoxService
 from app.domains.vm.services.custom import CustomService
 router = APIRouter(
