@@ -3,7 +3,7 @@ from typing import Any, cast
 
 from fastapi import HTTPException, status
 
-from app.core.exec_psql import exec_mssql_async
+from app.core.exec_sql import exec_sql
 from app.domains.tutor.determine_role import determine_role
 from app.domains.tutor.lib.sync_frontend import sync_frontend
 from app.domains.tutor.schemas.cardholder import Cardholder
@@ -33,7 +33,7 @@ async def process_card(device_id: int, card_id: str) -> str | None | Any:
                 logger.info(
                     "Cardholder device_id matches incoming device_id",
                 )
-                await exec_mssql_async(
+                await exec_sql(
                     "register_update_teacher",
                     None,
                     device_id,
@@ -47,14 +47,14 @@ async def process_card(device_id: int, card_id: str) -> str | None | Any:
                 logger.info(
                     "Cardholder has a device assigned and it's not this device, will clear DB",
                 )
-                await exec_mssql_async(
+                await exec_sql(
                     "register_update_teacher",
                     None,
                     cardholder.device_id,
                     
                 )
             logger.info("Assigning this device to the teacher and returning early.")
-            await exec_mssql_async(
+            await exec_sql(
                 "register_update_teacher",
                 cardholder.card_id,
                 device_id,
@@ -66,7 +66,7 @@ async def process_card(device_id: int, card_id: str) -> str | None | Any:
         if cardholder.role == "student":
             rows: list[CheckDeviceTeacherSqlRow] | None = cast(
                 list[CheckDeviceTeacherSqlRow] | None,
-                await exec_mssql_async("check_for_teacher", device_id),
+                await exec_sql("check_for_teacher", device_id),
             )
             teacher_id: str | None = rows[0]["teacher_id"] if rows else None
 
@@ -81,7 +81,7 @@ async def process_card(device_id: int, card_id: str) -> str | None | Any:
 
             reservation_rows: list[AppointmentSqlRow] | None = cast(
                 list[AppointmentSqlRow] | None,
-                await exec_mssql_async(
+                await exec_sql(
                     "register_select",
                     cardholder.card_id,
                     device.teacher_id,
@@ -91,7 +91,7 @@ async def process_card(device_id: int, card_id: str) -> str | None | Any:
                 logger.info(
                     "Student has no reservation ID associated, proceeding to create one"
                 )
-                await exec_mssql_async(
+                await exec_sql(
                     "register_insert",
                     cardholder.card_id,
                     device.teacher_id,
@@ -102,7 +102,7 @@ async def process_card(device_id: int, card_id: str) -> str | None | Any:
                     "Student has reservation ID, proceeding to update time for end of class"
                 )
                 appt_id: int = reservation_rows[0]["id"]
-                await exec_mssql_async(
+                await exec_sql(
                     "register_update_student",
                     appt_id,
                     

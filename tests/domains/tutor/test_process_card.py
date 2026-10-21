@@ -49,7 +49,7 @@ async def test_process_card_teacher_unassign_same_device():
 
     with (
         patch("app.domains.tutor.process_card.determine_role", AsyncMock(return_value=teacher)),
-        patch("app.domains.tutor.process_card.exec_mssql_async", new_callable=AsyncMock) as mock_exec,
+        patch("app.domains.tutor.process_card.exec_sql", new_callable=AsyncMock) as mock_exec,
         patch("app.domains.tutor.process_card.sync_frontend", new_callable=AsyncMock) as mock_sync,
     ):
         result = await process_card(device_id=2, card_id="T01")
@@ -66,7 +66,7 @@ async def test_process_card_teacher_switch_devices():
 
     with (
         patch("app.domains.tutor.process_card.determine_role", AsyncMock(return_value=teacher)),
-        patch("app.domains.tutor.process_card.exec_mssql_async", new_callable=AsyncMock) as mock_exec,
+        patch("app.domains.tutor.process_card.exec_sql", new_callable=AsyncMock) as mock_exec,
         patch("app.domains.tutor.process_card.sync_frontend", new_callable=AsyncMock) as mock_sync,
     ):
         result = await process_card(device_id=2, card_id="T01")
@@ -86,7 +86,7 @@ async def test_process_card_teacher_first_device_assignment():
 
     with (
         patch("app.domains.tutor.process_card.determine_role", AsyncMock(return_value=teacher)),
-        patch("app.domains.tutor.process_card.exec_mssql_async", new_callable=AsyncMock) as mock_exec,
+        patch("app.domains.tutor.process_card.exec_sql", new_callable=AsyncMock) as mock_exec,
         patch("app.domains.tutor.process_card.sync_frontend", new_callable=AsyncMock) as mock_sync,
     ):
         result = await process_card(device_id=3, card_id="T01")
@@ -103,7 +103,7 @@ async def test_process_card_student_no_teacher_returns_error():
 
     with (
         patch("app.domains.tutor.process_card.determine_role", AsyncMock(return_value=student)),
-        patch("app.domains.tutor.process_card.exec_mssql_async", new_callable=AsyncMock, return_value=[]),
+        patch("app.domains.tutor.process_card.exec_sql", new_callable=AsyncMock, return_value=[]),
     ):
         result = await process_card(device_id=1, card_id="S01")
 
@@ -124,7 +124,7 @@ async def test_process_card_student_new_appointment():
 
     with (
         patch("app.domains.tutor.process_card.determine_role", AsyncMock(return_value=student)),
-        patch("app.domains.tutor.process_card.exec_mssql_async", side_effect=side_effect) as mock_exec,
+        patch("app.domains.tutor.process_card.exec_sql", side_effect=side_effect) as mock_exec,
         patch("app.domains.tutor.process_card.sync_frontend", new_callable=AsyncMock) as mock_sync,
     ):
         result = await process_card(device_id=1, card_id="S01")
@@ -150,7 +150,7 @@ async def test_process_card_student_update_existing_appointment():
 
     with (
         patch("app.domains.tutor.process_card.determine_role", AsyncMock(return_value=student)),
-        patch("app.domains.tutor.process_card.exec_mssql_async", side_effect=side_effect) as mock_exec,
+        patch("app.domains.tutor.process_card.exec_sql", side_effect=side_effect) as mock_exec,
         patch("app.domains.tutor.process_card.sync_frontend", new_callable=AsyncMock) as mock_sync,
     ):
         result = await process_card(device_id=1, card_id="S01")

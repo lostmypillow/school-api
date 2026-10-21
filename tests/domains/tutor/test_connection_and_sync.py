@@ -58,7 +58,7 @@ async def test_sync_frontend_payload_shape():
         return []
 
     with (
-        patch("app.domains.tutor.lib.sync_frontend.exec_mssql_async", side_effect=mock_exec),
+        patch("app.domains.tutor.lib.sync_frontend.exec_sql", side_effect=mock_exec),
         patch("app.domains.tutor.lib.sync_frontend.manager.broadcast", new_callable=AsyncMock) as mock_broadcast,
     ):
         await sync_frontend()

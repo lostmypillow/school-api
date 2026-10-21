@@ -26,7 +26,7 @@ async def test_health_check_live_app():
     test_app = FastAPI()
     test_app.state.db = mock_db
     test_app.state.redis = mock_redis
-    test_app.state.rq_redis = mock_redis
+    test_app.state.redis = mock_redis
     test_app.add_api_route("/health", health_check, methods=["GET"])
 
     async with AsyncClient(
@@ -51,7 +51,7 @@ async def test_app_lifespan():
 
         async with lifespan(test_app):
             assert test_app.state.redis is mock_redis
-            assert test_app.state.rq_redis is mock_redis
+            assert test_app.state.redis is mock_redis
             mock_pool.enable.assert_called_once_with(max_size=50, idle_timeout=600)
 
         mock_pool.disable.assert_called_once()

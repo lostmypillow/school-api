@@ -18,7 +18,7 @@ async def test_determine_role_student():
     ]
 
     with patch(
-        "app.domains.tutor.determine_role.exec_mssql_async",
+            "app.domains.tutor.determine_role.exec_sql",
         new_callable=AsyncMock,
         return_value=student_db_row,
     ) as mock_exec:
@@ -56,7 +56,7 @@ async def test_determine_role_teacher_with_assigned_device():
         return []
 
     with patch(
-        "app.domains.tutor.determine_role.exec_mssql_async",
+            "app.domains.tutor.determine_role.exec_sql",
         side_effect=side_effect,
     ):
         result = await determine_role("222222")
@@ -84,7 +84,7 @@ async def test_determine_role_teacher_without_device():
         return []
 
     with patch(
-        "app.domains.tutor.determine_role.exec_mssql_async",
+            "app.domains.tutor.determine_role.exec_sql",
         side_effect=side_effect,
     ):
         result = await determine_role("222222")
@@ -98,7 +98,7 @@ async def test_determine_role_teacher_without_device():
 async def test_determine_role_not_found():
     """Test determine_role returns exact error string '刷卡失敗: 查無此人' when not in DB."""
     with patch(
-        "app.domains.tutor.determine_role.exec_mssql_async",
+            "app.domains.tutor.determine_role.exec_sql",
         new_callable=AsyncMock,
         return_value=[],
     ):

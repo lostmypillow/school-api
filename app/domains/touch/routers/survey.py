@@ -7,7 +7,7 @@ import logging
 
 from fastapi import APIRouter, HTTPException
 
-from app.core.exec_psql import exec_mssql_async
+from app.core.exec_sql import exec_sql
 
 from app.domains.touch.schemas.error_response import ErrorResponse
 from app.domains.touch.schemas.success_message import SuccessMessage
@@ -45,7 +45,7 @@ deps: dict = {
 async def rate_employee(survey_info: SurveyInfo):
     global deps
     try:
-        await exec_mssql_async(
+        await exec_sql(
             "rate_employee",
             survey_info.student_id,
             deps[survey_info.employee_dep],

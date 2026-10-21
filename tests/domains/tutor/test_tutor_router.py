@@ -42,7 +42,7 @@ async def test_add_announcement_sanitizes_html_and_returns_shape(tutor_client: A
     }
 
     with patch(
-        "app.domains.tutor.routers.announcements.exec_mssql_async",
+            "app.domains.tutor.routers.announcements.exec_sql",
         new_callable=AsyncMock,
     ) as mock_exec:
         response = await tutor_client.post("/tutor/announcements/", json=raw_payload)
@@ -64,7 +64,7 @@ async def test_add_announcement_sanitizes_html_and_returns_shape(tutor_client: A
 async def test_add_announcement_error_raises_500(tutor_client: AsyncClient):
     """Test POST /tutor/announcements/ returns 500 when database fails."""
     with patch(
-        "app.domains.tutor.routers.announcements.exec_mssql_async",
+            "app.domains.tutor.routers.announcements.exec_sql",
         side_effect=Exception("DB write failure"),
     ):
         response = await tutor_client.post(
@@ -81,7 +81,7 @@ async def test_update_announcement_success(tutor_client: AsyncClient):
     payload = {"id": 10, "content": "Updated content"}
 
     with patch(
-        "app.domains.tutor.routers.announcements.exec_mssql_async",
+            "app.domains.tutor.routers.announcements.exec_sql",
         new_callable=AsyncMock,
     ) as mock_exec:
         response = await tutor_client.put("/tutor/announcements/", json=payload)
@@ -99,7 +99,7 @@ async def test_update_announcement_success(tutor_client: AsyncClient):
 async def test_delete_announcement_success(tutor_client: AsyncClient):
     """Test DELETE /tutor/announcements/{id} returns APIResponse."""
     with patch(
-        "app.domains.tutor.routers.announcements.exec_mssql_async",
+            "app.domains.tutor.routers.announcements.exec_sql",
         new_callable=AsyncMock,
     ) as mock_exec:
         response = await tutor_client.delete("/tutor/announcements/42")
@@ -124,7 +124,7 @@ async def test_get_announcements_returns_list_shape(tutor_client: AsyncClient):
     ]
 
     with patch(
-        "app.domains.tutor.routers.announcements.exec_mssql_async",
+            "app.domains.tutor.routers.announcements.exec_sql",
         new_callable=AsyncMock,
         return_value=mock_db_rows,
     ):
@@ -203,7 +203,7 @@ async def test_card_update_teacher_info(tutor_client: AsyncClient):
     }
 
     with (
-        patch("app.domains.tutor.routers.card.exec_mssql_async", new_callable=AsyncMock) as mock_exec,
+        patch("app.domains.tutor.routers.card.exec_sql", new_callable=AsyncMock) as mock_exec,
         patch("app.domains.tutor.routers.card.sync_frontend", new_callable=AsyncMock) as mock_sync,
     ):
         response = await tutor_client.post("/tutor/card/update", json=payload)
@@ -229,7 +229,7 @@ async def test_update_teacher_info_endpoint(tutor_client: AsyncClient):
     }
 
     with (
-        patch("app.domains.tutor.routers.update.exec_mssql_async", new_callable=AsyncMock) as mock_exec,
+        patch("app.domains.tutor.routers.update.exec_sql", new_callable=AsyncMock) as mock_exec,
         patch("app.domains.tutor.routers.update.sync_frontend", new_callable=AsyncMock) as mock_sync,
     ):
         response = await tutor_client.post("/tutor/update/", json=payload)
