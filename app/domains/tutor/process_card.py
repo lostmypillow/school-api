@@ -3,7 +3,7 @@ from typing import Any, cast
 
 from fastapi import HTTPException, status
 
-from app.core.exec_mssql_async import exec_mssql_async
+from app.core.exec_psql import exec_mssql_async
 from app.domains.tutor.determine_role import determine_role
 from app.domains.tutor.lib.sync_frontend import sync_frontend
 from app.domains.tutor.schemas.cardholder import Cardholder
@@ -37,7 +37,7 @@ async def process_card(device_id: int, card_id: str) -> str | None | Any:
                     "register_update_teacher",
                     None,
                     device_id,
-                    fetch=False,
+                    
                 )
                 logger.info("Clearing device and return early")
                 await sync_frontend()
@@ -51,14 +51,14 @@ async def process_card(device_id: int, card_id: str) -> str | None | Any:
                     "register_update_teacher",
                     None,
                     cardholder.device_id,
-                    fetch=False,
+                    
                 )
             logger.info("Assigning this device to the teacher and returning early.")
             await exec_mssql_async(
                 "register_update_teacher",
                 cardholder.card_id,
                 device_id,
-                fetch=False,
+                
             )
             await sync_frontend()
             return f"{cardholder.name}老師 刷卡成功"
@@ -95,7 +95,7 @@ async def process_card(device_id: int, card_id: str) -> str | None | Any:
                     "register_insert",
                     cardholder.card_id,
                     device.teacher_id,
-                    fetch=False,
+                    
                 )
             else:
                 logger.info(
@@ -105,7 +105,7 @@ async def process_card(device_id: int, card_id: str) -> str | None | Any:
                 await exec_mssql_async(
                     "register_update_student",
                     appt_id,
-                    fetch=False,
+                    
                 )
             await sync_frontend()
             return f"{cardholder.name}學生 刷卡成功"

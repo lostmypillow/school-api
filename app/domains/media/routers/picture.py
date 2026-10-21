@@ -4,7 +4,7 @@ from typing import Literal
 
 from fastapi import APIRouter, Response, HTTPException, Path, status
 
-from app.core.exec_mssql_async import exec_mssql_async
+from app.core.exec_psql import exec_mssql_async
 
 logger = logging.getLogger("__name__")
 

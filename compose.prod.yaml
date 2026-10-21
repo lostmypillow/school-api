@@ -10,14 +10,7 @@ services:
       - "1433:1433"
     volumes:
       - mssql_data:/var/opt/mssql
-    deploy:
-      resources:
-        limits:
-          memory: 2048M
-          cpus: '2.0'
-        reservations:
-          memory: 2048M
-          cpus: '1.0'
+  
     networks:
       - schoolapp-internal-prod-net
     healthcheck:
@@ -66,7 +59,7 @@ services:
 
 
   worker:
-    container_name: school-worker-local
+    container_name: school-worker-prod
     build: .
     command: ["python", "-m", "app.worker"]
     restart: always

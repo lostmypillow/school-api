@@ -1,13 +1,16 @@
 import logging
 import os
 from contextlib import asynccontextmanager
+
+from asyncpg import create_pool
 from dotenv import load_dotenv
 from fastapi import FastAPI, Request, status
 from fastapi.middleware.cors import CORSMiddleware
-from mssql_python.pooling import PoolingManager
 from redis import Redis
 from redis_fastapi import FastAPIRedis
 from rq import Queue
+
+from app.core.exec_psql import init_db, close_db
 from app.domains.courses import router as course_router
 from app.domains.tasks import router as tasks_router
 from app.domains.tasks.definitions import bootstrap_mssql_task
@@ -23,23 +26,18 @@ logging.getLogger("httpcore").setLevel(logging.ERROR)
 
 @asynccontextmanager
 async def lifespan(fastapi_app: FastAPI):
-    if not PoolingManager.is_enabled():
-        PoolingManager.enable(max_size=50, idle_timeout=600)
 
-    redis_url = os.getenv("REDIS_URL", "redis://localhost:6379/0")
-    redis_conn = Redis.from_url(redis_url)
-    fastapi_app.state.redis = redis_conn
-    fastapi_app.state.rq_redis = redis_conn
-    fastapi_app.state.rq_queue = Queue(connection=fastapi_app.state.redis)
+    await init_db()
+    fastapi_app.state.rq_queue = Queue(connection=Redis.from_url(os.getenv("REDIS_URL", "redis://localhost:6379/0")))
     fastapi_app.state.rq_queue.enqueue(bootstrap_mssql_task, job_timeout=1000)
 
     yield
-    if PoolingManager.is_enabled():
-        PoolingManager.disable()
     fastapi_app.state.redis.close()
+    await close_db()
+    
 
 
-app = FastAPI(title="School API", version="4.0.1", lifespan=lifespan)
+app = FastAPI(title="School API", version="5.1.0", lifespan=lifespan)
 
 
 origins = ["http://localhost:5173", "http://localhost:8081", "http://localhost:8000", "https://school.lostmypillow.com", "https://school-dev.lostmypillow.com"]

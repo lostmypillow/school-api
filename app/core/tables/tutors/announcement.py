@@ -11,5 +11,5 @@ class Announcement(Base):
 
     id: Mapped[int] =  mapped_column(Integer, primary_key=True, autoincrement=True)
     content: Mapped[str] =  mapped_column(UnicodeText, nullable=False)
-    created_at: Mapped[datetime] =  mapped_column(DateTime, server_default=text("SYSDATETIME()"), nullable=False)
+    created_at: Mapped[datetime] =  mapped_column(DateTime, server_default=text("CURRENT_TIMESTAMP"), nullable=False)
     updated_at: Mapped[datetime]=  mapped_column(DateTime, nullable=True)

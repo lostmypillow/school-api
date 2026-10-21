@@ -1,6 +1,6 @@
 import logging
 import orjson
-from app.core.exec_mssql_async import exec_mssql_async
+from app.core.exec_psql import exec_mssql_async
 from app.domains.tutor.schemas.cardholder import Cardholder
 from app.domains.tutor.lib.connection_manager import manager
 

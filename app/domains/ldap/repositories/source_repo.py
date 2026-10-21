@@ -2,7 +2,7 @@ from typing import List
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.exec_mssql_async import exec_mssql_async
+from app.core.exec_psql import exec_mssql_async
 
 
 async def load_employees() -> List[dict]:

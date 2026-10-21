@@ -7,12 +7,12 @@ COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 RUN --mount=type=cache,target=/root/.cache/uv \
     --mount=type=bind,source=uv.lock,target=uv.lock \
     --mount=type=bind,source=pyproject.toml,target=pyproject.toml \
-    uv sync --frozen --no-install-workspace
+    uv sync --frozen --no-install-workspace --no-dev
 
 COPY . /app
 
 RUN --mount=type=cache,target=/root/.cache/uv \
-        uv sync --locked
+    uv sync --locked --no-dev
 
 ENV PYTHONUNBUFFERED=1
 ENV PYTHONDONTWRITEBYTECODE=1

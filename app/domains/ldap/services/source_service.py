@@ -1,5 +1,5 @@
 
-from app.core.exec_mssql_async import exec_mssql_async
+from app.core.exec_psql import exec_mssql_async
 from app.domains.ldap.schemas.filtered_response import FilteredList
 from app.domains.ldap.schemas.raw_user_data import RawUserData
 from app.domains.touch.lib import deps as DEPS

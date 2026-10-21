@@ -7,7 +7,7 @@ from fastapi import status, Response
 
 from fastapi.exceptions import HTTPException
 
-from app.core.exec_mssql_async import exec_mssql_async
+from app.core.exec_psql import exec_mssql_async
 from app.domains.vm.services.proxmox import ProxmoxService
 from app.domains.vm.services.custom import CustomService
 router = APIRouter(

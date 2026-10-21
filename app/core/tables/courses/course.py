@@ -45,12 +45,12 @@ class Course(Base):
 
     created_at = Column[datetime](
         DateTime(timezone=True),
-        server_default=text("SYSDATETIMEOFFSET()"),
+        server_default=text("NOW()"),
         nullable=False,
     )
     updated_at = Column[datetime](
         DateTime(timezone=True),
-        server_default=text("SYSDATETIMEOFFSET()"),
+        server_default=text("NOW()"),
         nullable=False,
     )
 
