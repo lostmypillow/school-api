@@ -19,5 +19,5 @@ async def copy_departments(parquet_dir: Path) -> int:
             await exec_sql(command_name="courses/upsert_department")
             await exec_sql("create_tables")
             await exec_sql("bulkcopy_arrow", "departments", dept_table)
-            logger.info("Bulk copied %d departments to MSSQL", dept_count)
+            logger.info("Bulk copied %d departments to DB", dept_count)
     return dept_count

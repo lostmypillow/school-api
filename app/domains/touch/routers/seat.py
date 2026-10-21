@@ -36,8 +36,7 @@ async def register_seat(seat_info: SeatInfo):
         await exec_sql(
             "register_seat",
             seat_info.student_id,
-            seat_info.seat_number,
-            fetch=False
+            seat_info.seat_number
         )
         return SuccessMessage(message="success")
     except Exception as e:

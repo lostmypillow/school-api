@@ -25,12 +25,11 @@ CONNECT_RETRY_ERRORS = frozenset(
     }
 )
 _pool: Optional[Pool] = None
-
-
-async def init_db(url: str = getenv("DB_URL", "")):
+DSN = f"postgresql://postgres:{getenv('DB_PWD','')}@{getenv('DB_HOST','')}:5432/student_db"
+async def init_db():
     global _pool
     if _pool is None:
-        _pool = await create_pool(url, min_size=5, max_size=10) # type: ignore[misc]
+        _pool = await create_pool(dsn=DSN, min_size=5, max_size=10) # type: ignore[misc]
 
 
 async def close_db():
@@ -58,7 +57,7 @@ async def start_transaction():
 
 async def bulkcopy_arrow(table_name: str, arrow_table):
     def _adbc_ingest():
-        with adbc_dbapi.connect(getenv("DB_URL", "")) as conn:
+        with adbc_dbapi.connect(DSN) as conn:
             with conn.cursor() as cur:
                 cur.adbc_ingest(table_name, arrow_table, mode="append")
             conn.commit()
@@ -68,7 +67,7 @@ async def bulkcopy_arrow(table_name: str, arrow_table):
 async def exec_sql(
     command_name: str, *params: Any
 ) -> list[Any] | list[dict[Any, Any]] | str | None:
-    """Executes a named SQL script file from app/core/sql/ using mssql-python."""
+    """Executes a named SQL script file from app/core/sql/"""
     global _pool
 
     if command_name == "create_tables":
@@ -101,7 +100,11 @@ async def exec_sql(
             raise
     try:
         async with start_transaction() as conn:
-            return await conn.execute(sql_command, *params)
+            if command_name == "create_tables" or command_name == "tutors/bootstrap_tutor":
+                await conn.execute(sql_command)
+                return None
+            records = await conn.fetch(sql_command, *params)
+            return [dict(record) for record in records]
     except asyncpg.exceptions.PostgresError as exc:
-        logger.exception("mssql_execution_error: Error running %s: %s", command_name, exc)
+        logger.exception("DB_execution_error: Error running %s: %s", command_name, exc)
         raise

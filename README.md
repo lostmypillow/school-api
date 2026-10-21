@@ -36,11 +36,10 @@ pip install -r requirements.txt
 - Swagger
 - BeautifulSoup web scraping
 
-# JSearch0 Backend
 
-> This is a prototype website, denoted by the 0 in the name "JSearch0". Expect bugs.
+> This is a prototype website, denoted by the 0 in the name . Expect bugs.
 
-> This is the repository for the FastAPI backend, if you're looking for JSearch0 API's GitHub repository, it's
+> This is the repository for the FastAPI backend, if you're looking for API's GitHub repository, it's
 > here: https://github.com/lostmypillow/jsearch
 
 ## What is it?

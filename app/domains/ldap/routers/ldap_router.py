@@ -6,8 +6,8 @@ router = APIRouter(prefix="/ldap", tags=["ldap / FreeIPA"])
 
 
 @router.post("/employees/sync")
-async def sync_mssql_to_ldap( background_tasks: BackgroundTasks,  dry_run: bool = True):
-    """Add all employees from MSSQL to FreeIPA."""
+async def sync_db_to_ldap(background_tasks: BackgroundTasks, dry_run: bool = True):
+    """Add all employees from DB to FreeIPA."""
     try:
         if dry_run:
             source_service = SourceService()
@@ -22,7 +22,7 @@ async def sync_mssql_to_ldap( background_tasks: BackgroundTasks,  dry_run: bool 
 # #
 # @router.post("/groups/sync")
 # async def sync_groups(session: AsyncSession = Depends(get_session)):
-#     """Add all groups from MSSQL to FreeIPA."""
+#     """Add all groups from DB to FreeIPA."""
 #     try:
 #         service = LdapService(session)
 #         added = service.add_all_groups()

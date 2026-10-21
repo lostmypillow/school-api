@@ -3,15 +3,13 @@ import logging
 import time
 from typing import Any
 
-import httpx
 
-from app.domains.courses.lib.CustomAsyncClient import CustomAsyncClient, client
+from app.domains.courses.lib.CustomAsyncClient import client
 from app.domains.courses.schemas import (
     CourseModel,
     DepartmentModel,
     DepartmentYearModel,
     SemesterModel,
-    CourseSyllabusModel,
 )
 from app.domains.courses.tasks.scrape.scrape_courses import (
     scrape_courses,

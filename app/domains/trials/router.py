@@ -1,5 +1,4 @@
 import logging
-from collections.abc import Sequence
 from typing import Any, Literal
 
 from fastapi import APIRouter, HTTPException, status
@@ -42,7 +41,7 @@ async def get_schools(
 
 
 @router.get(path="/managers")
-async def get_managers() -> Sequence[Any]:
+async def get_managers() -> list[Any] | list[dict[Any, Any]] | str | None:
     result = await exec_sql(command_name="trials/get_managers")
     return result
 
@@ -65,10 +64,11 @@ async def create_trial(
 async def read_trials(skip: int = 0, limit: int = 50):
 
     result = await exec_sql("read_trials", skip, limit)
-    total = result[0]["total_count"] if result else 0
-
+    total = 0
+    if isinstance(result, list) and len(result) > 0 and isinstance(result[0], dict):
+        total = result[0].get("total_count", 0)
     return {
-        "data": result,
+        "data": result if isinstance(result, list) else [],
         "total": total,
     }
 

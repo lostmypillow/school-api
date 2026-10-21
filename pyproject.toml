@@ -24,7 +24,6 @@ dependencies = [
     "cachetools>=5.2.0",
     "asyncache>=0.3.1",
     "pyarrow==26.0.0",
-    "mssql-python==1.16.0",
     "apscheduler>=3.11.3",
     "smbprotocol>=1.17.0",
     "proxmoxer>=2.3.0",
@@ -66,7 +65,7 @@ search-path = ["app"]
 pythonpath = ["."]
 testpaths = ["tests"]
 markers = [
-    "integration: integration tests requiring a live MSSQL instance",
+    "integration: integration tests requiring a live DB instance",
 ]
 
 [tool.ruff.lint]

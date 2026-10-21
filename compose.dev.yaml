@@ -1,28 +1,18 @@
 services:
   db:
     container_name: school-db-dev
-    image: mcr.microsoft.com/azure-sql-edge:latest
-    user: root
+    image: postgres:18.6-trixie
     environment:
-      - ACCEPT_EULA=Y
-      - MSSQL_SA_PASSWORD=YourPassword123!
-    ports:
-      - "1433:1433"
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=YourPassword123!
+      - POSTGRES_DB=student_db
+      - TZ=Asia/Taipei
     volumes:
-      - sqledge_data:/var/opt/mssql
-    deploy:
-      resources:
-        limits:
-          memory: 2048M
-          cpus: '2.0'
-        reservations:
-          memory: 2048M
-          cpus: '1.0'
+      - postgres_data:/var/lib/postgresql
     networks:
-      - nginx-schoolapi-dev-net
-      - schoolapp-internal-dev-net
+      - school-db-dev-net
     healthcheck:
-      test: [ "CMD", "/bin/bash", "-c", "</dev/tcp/127.0.0.1/1433" ]
+      test: [ "CMD", "pg_isready", "-U", "postgres" ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -30,12 +20,12 @@ services:
 
   redis:
     container_name: school-redis-dev
-    image: redis:7-alpine
+    image: redis:8.4.7-trixie
     restart: always
     environment:
       - TZ=Asia/Taipei
     networks:
-      - schoolapp-internal-dev-net
+      - school-db-dev-net
     healthcheck:
       test: [ "CMD", "redis-cli", "ping" ]
       interval: 5s
@@ -52,12 +42,14 @@ services:
       context: .
       dockerfile: Dockerfile
     networks:
-      - schoolapp-internal-dev-net
-    env_file:
-      - .env
+      - proxy-school-dev-net
+      - school-db-dev-net
+      - school-worker-dev-net
     environment:
       - PYTHONWARNINGS=ignore:resource_tracker:UserWarning
       - TZ=Asia/Taipei
+    env_file:
+      - .env.dev
     depends_on:
       worker:
         condition: service_started
@@ -72,16 +64,16 @@ services:
     build: .
     command: ["python", "-m", "app.worker"]
     restart: always
+    volumes:
+      - ./data:/app/data
     environment:
       - PYTHONWARNINGS=ignore:resource_tracker:UserWarning
       - TZ=Asia/Taipei
-    volumes:
-      - /var/lib/school-api/data:/app/data
     env_file:
-      - .env
+      - .env.dev
     networks:
-      - schoolapp-internal-dev-net
-      - schoolapp-worker-dev-net
+      - school-worker-dev-net
+      - school-db-dev-net
     depends_on:
       db:
         condition: service_healthy
@@ -93,13 +85,19 @@ services:
 
 
 volumes:
-  mssql_data:
+  postgres_data:
 
 networks:
-  schoolapp-worker-dev-net:
+  proxy-school-dev-net:
     driver: bridge
-    name: schoolapp-worker-dev-net
-  schoolapp-internal-dev-net:
+    name: proxy-school-dev-net
+
+  school-db-dev-net:
     driver: bridge
-    name: schoolapp-internal-dev-net
+    name: school-db-dev-net
     internal: true
+  school-worker-dev-net:
+    driver: bridge
+    name: school-worker-dev-net
+    internal: true
+

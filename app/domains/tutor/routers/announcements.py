@@ -1,4 +1,5 @@
 import logging
+from typing import Any
 from uuid import uuid4
 
 import nh3
@@ -6,7 +7,7 @@ from fastapi import APIRouter
 from fastapi.exceptions import HTTPException
 
 from app.core.exec_sql import exec_sql
-from app.domains.tutor.schemas.announcement import AddAnnouncement, Announcement, UpdateAnnouncement
+from app.domains.tutor.schemas.announcement import AddAnnouncement, UpdateAnnouncement
 from app.domains.tutor.schemas.api_response import APIResponse
 
 logger = logging.getLogger(__name__)
@@ -22,8 +23,7 @@ async def add_announcement(announcement: AddAnnouncement) -> APIResponse:
         logger.info(announcement.model_dump_json(indent=2))
         await exec_sql(
             "insert_announce",
-            sanitize_html(announcement.content),
-            fetch=False
+            sanitize_html(announcement.content)
             )
         return APIResponse(detail="Adding announcement successful!!")
     except Exception as e:
@@ -55,7 +55,7 @@ async def delete_announcement(announcement_id: int) -> APIResponse:
 
 
 @router.get("/")
-async def get_announcements() -> list[Announcement] | None:
+async def get_announcements() -> list[Any] | list[dict[Any, Any]] | str | None:
     try:
         return await exec_sql(command_name="get_announce")
     except Exception as e:
