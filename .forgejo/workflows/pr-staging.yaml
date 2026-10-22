@@ -13,9 +13,9 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Setup uv
-        uses: https://github.com/astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9
+        uses: https://github.com/astral-sh/setup-uv@18d369b23da25a81e9458561248e1aafff6a70fa
         with:
-          version: "0.12.7"
+          version: "latest"
           enable-cache: true
 
       - name: Install Dependencies
@@ -27,13 +27,11 @@ jobs:
       - name: Run Type checker (pyrefly)
         run: uv run pyrefly check app/domains/courses app/domains/tutor
 
-#      - name: Run Tests (pytest)
-#        run: uv run pytest tests/domains/tasks tests/domains/courses tests/domains/tutor
+
 
 
       - name: Fix SQL files and lint (sqlfluff)
         run: uv run sqlfluff lint app/core/sql --dialect=postgres
-
 
   deploy-dev:
     name: Deploy dev Stack
@@ -51,3 +49,24 @@ jobs:
           echo "Deploying updated Docker containers to dev environment..."
           docker compose -f compose.dev.yaml down
           docker compose -f compose.dev.yaml up -d --build
+
+  integration_test:
+    name: Integration test
+    needs: deploy-dev
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup uv
+        uses: https://github.com/astral-sh/setup-uv@18d369b23da25a81e9458561248e1aafff6a70fa
+        with:
+          version: "latest"
+          enable-cache: true
+
+
+      - name: Install Dependencies
+        run: uv sync --no-default-groups --group dev
+
+      - name: Run Tests (pytest)
+        run: uv run pytest tests/domains/tasks tests/domains/courses tests/domains/tutor
