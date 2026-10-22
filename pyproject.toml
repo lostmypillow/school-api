@@ -44,10 +44,6 @@ dependencies = [
 
 [dependency-groups]
 dev = [
-    "ansible>=14.5.0",
-    "ansible-dev-tools>=26.1.0",
-    "molecule>=26.10.0",
-    "molecule-plugins[podman]>=26.10.12",
     "pyrefly>=1.2.0",
     "pytest-asyncio>=1.4.0",
     "pytest-cov>=7.1.0",
@@ -66,6 +62,7 @@ pythonpath = ["."]
 testpaths = ["tests"]
 markers = [
     "integration: integration tests requiring a live DB instance",
+    "workflow: end-to-end Forgejo Actions / act runner integration tests",
 ]
 
 [tool.ruff.lint]
