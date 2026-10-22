@@ -19,8 +19,8 @@ WITH res AS (
         current_grade,
         created_at,
         updated_at,
-        row_number() over (ORDER BY created_at DESC) AS row_num,
-        count(*) over () AS total_count
+        ROW_NUMBER() OVER (ORDER BY created_at DESC) AS row_num,
+        COUNT(*) OVER () AS total_count
     FROM trial_records
 )
 
