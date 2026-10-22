@@ -27,7 +27,13 @@ async def lifespan(fastapi_app: FastAPI):
     await init_db()
     fastapi_app.state.redis = Redis.from_url(f"redis://{getenv("REDIS_HOST", "localhost")}:6379/0")
     fastapi_app.state.queue = Queue(connection=fastapi_app.state.redis)
-    fastapi_app.state.queue.enqueue(bootstrap_db_task, job_timeout=1000)
+    is_acquired = fastapi_app.state.redis.set(
+        name="lock:bootstrap_db_task", value="enqueued", nx=True, ex=43200
+    )
+
+    if is_acquired:
+        fastapi_app.state.queue.enqueue(bootstrap_db_task, job_timeout=1000)
+        logger.info("Bootstrap job enqueued successfully.")
     yield
     fastapi_app.state.redis.close()
     await close_db()

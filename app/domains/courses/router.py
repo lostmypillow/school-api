@@ -65,7 +65,6 @@ async def get_semesters() -> list[Any] | list[dict[Any, Any]] | str | None:
     """
     try:
         row = await exec_sql(command_name="courses/select_all_semester")
-        print(row)
         return row
     except Exception as e:
         error_id = str(uuid.uuid4())

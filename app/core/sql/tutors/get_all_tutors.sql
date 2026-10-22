@@ -9,4 +9,5 @@ SELECT
 FROM
     employees
 ORDER BY
-    id ASC;
+    id ASC
+LIMIT $1 OFFSET $2;

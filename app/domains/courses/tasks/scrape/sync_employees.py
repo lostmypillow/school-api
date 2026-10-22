@@ -62,14 +62,13 @@ def _sync_employees_worker(base_path: Path) -> None:
         )
         .rename({"instructor_name": "name", "department_code": "department"})
         .drop_nulls()
-        .unique(subset=["name"])
         .sort(["name", "email", "department"])
+        .unique(subset=["name"], keep="first")
+        .unique(subset=["email"], keep="first")
         .with_row_index(name="row_num", offset=100000)
         .with_columns(
-            pl.col("row_num")
-            .cast(pl.String)
-            .alias("id"),  # <-- Ensures id is "100000", NOT "丁原智"
-            pl.concat_str([pl.col("name"), pl.col("email")], separator=":")
+            pl.col("row_num").cast(pl.String).alias("id"),
+            pl.concat_str(exprs=[pl.col("name"), pl.col("email")], separator=":")
             .map_elements(
                 lambda val: hashlib.sha256(val.encode("utf-8")).hexdigest()[:20],
                 return_dtype=pl.String,

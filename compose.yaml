@@ -101,9 +101,9 @@ networks:
   school-db-net:
     driver: bridge
     name: school-db-net
-    internal: true
+
   school-worker-net:
     driver: bridge
     name: school-worker-net
-    internal: true
+
 
