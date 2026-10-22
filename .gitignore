@@ -15,3 +15,4 @@ cdk.out
 /.coverage
 data/parquet
 *.db
+*.yaml.log

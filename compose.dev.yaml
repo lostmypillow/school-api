@@ -9,6 +9,8 @@ services:
       - TZ=Asia/Taipei
     volumes:
       - postgres_data:/var/lib/postgresql
+    ports:
+      - "5432:5432"
     networks:
       - school-db-dev-net
     healthcheck:
@@ -24,6 +26,8 @@ services:
     restart: always
     environment:
       - TZ=Asia/Taipei
+    ports:
+      - "6379:6379"
     networks:
       - school-db-dev-net
     healthcheck:
@@ -64,8 +68,6 @@ services:
     build: .
     command: ["python", "-m", "app.worker"]
     restart: always
-    volumes:
-      - ./data:/app/data
     environment:
       - PYTHONWARNINGS=ignore:resource_tracker:UserWarning
       - TZ=Asia/Taipei
@@ -95,9 +97,8 @@ networks:
   school-db-dev-net:
     driver: bridge
     name: school-db-dev-net
-    internal: true
+
   school-worker-dev-net:
     driver: bridge
     name: school-worker-dev-net
-    internal: true
 
