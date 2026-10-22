@@ -11,11 +11,9 @@ from app.domains.tutor.schemas.announcement import AddAnnouncement, UpdateAnnoun
 from app.domains.tutor.schemas.api_response import APIResponse
 
 logger = logging.getLogger(__name__)
-router = APIRouter(prefix="/announcements", tags=["Announcements"])
+router = APIRouter(prefix="/announcements")
 
-def sanitize_html(raw_html: str) -> str:
-    return nh3.clean(raw_html,tags={"p", "strong", "em", "h1", "h2", "h3"})
-
+TAGS={"p", "strong", "em", "h1", "h2", "h3"}
 
 @router.post("/")
 async def add_announcement(announcement: AddAnnouncement) -> APIResponse:
@@ -23,8 +21,8 @@ async def add_announcement(announcement: AddAnnouncement) -> APIResponse:
         logger.info(announcement.model_dump_json(indent=2))
         await exec_sql(
             "insert_announce",
-            sanitize_html(announcement.content)
-            )
+            nh3.clean(announcement.content,tags=TAGS)
+        )
         return APIResponse(detail="Adding announcement successful!!")
     except Exception as e:
         logger.exception("Internal Server Error", exc_info=e)
@@ -35,7 +33,7 @@ async def add_announcement(announcement: AddAnnouncement) -> APIResponse:
 async def update_announcement(announcement: UpdateAnnouncement) -> APIResponse:
     try:
         await exec_sql(
-            "update_announce", announcement.id,sanitize_html(announcement.content)
+            "update_announce", announcement.id,nh3.clean(announcement.content,tags=TAGS)
         )
         return APIResponse(detail="Updating announcement successful!!")
     except Exception as e:

@@ -4,7 +4,7 @@ from typing import Any, cast
 from fastapi import HTTPException, status
 
 from app.core.exec_sql import exec_sql
-from app.domains.tutor.determine_role import determine_role
+from app.domains.tutor.lib.determine_role import determine_role
 from app.domains.tutor.lib.sync_frontend import sync_frontend
 from app.domains.tutor.schemas.cardholder import Cardholder
 from app.domains.tutor.schemas.device import Device

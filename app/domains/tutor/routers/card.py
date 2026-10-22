@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, Path, status
 
 from app.core.exec_sql import exec_sql
-from app.domains.tutor.process_card import process_card
+from app.domains.tutor.lib.process_card import process_card
 from app.domains.tutor.schemas.cardholder import Cardholder
 from app.domains.tutor.lib.sync_frontend import sync_frontend
 from app.domains.tutor.schemas.update_teacher_response import UpdateTeacherResponse
@@ -10,7 +10,7 @@ router: APIRouter = APIRouter(prefix="/card", tags=["Card Swipe"])
 
 
 @router.get(
-    "/{device_id}/{card_id}",
+    path="/{device_id}/{card_id}",
     response_model=Cardholder | str,
     status_code=status.HTTP_200_OK,
     responses={

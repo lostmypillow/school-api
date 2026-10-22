@@ -18,7 +18,7 @@ def run_worker():
     queues = [Queue(name="default", connection=conn)]
     worker = Worker(queues, connection=conn)
     logger.info("Starting standard RQ worker listening on 'default' queue...")
-    worker.work()
+    worker.work(with_scheduler=True)
 
 
 if __name__ == "__main__":

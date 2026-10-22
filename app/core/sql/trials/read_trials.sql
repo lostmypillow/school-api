@@ -1,50 +1,50 @@
-WITH RES AS (
+WITH res AS (
     SELECT
-        ID,
-        SOURCE,
-        STUDENT_ID,
-        STUDENT_NAME,
-        MIDDLE_SCHOOL_NAME,
-        MIDDLE_SCHOOL_CLASS,
-        HIGH_SCHOOL_NAME,
-        HIGH_SCHOOL_CLASS,
-        REGISTERED_CLASS,
-        TRIAL_DATE,
-        TELEPHONE,
-        MOBILE,
-        NOTES,
-        PARENT_NAME,
-        MANAGER,
-        STATUS,
-        CURRENT_GRADE,
-        CREATED_AT,
-        UPDATED_AT,
-        row_number() OVER (ORDER BY CREATED_AT DESC) AS ROW_NUM,
-        count(*) OVER () AS TOTAL_COUNT
-    FROM TRIAL_RECORDS
+        id,
+        source,
+        student_id,
+        student_name,
+        middle_school_name,
+        middle_school_class,
+        high_school_name,
+        high_school_class,
+        registered_class,
+        trial_date,
+        telephone,
+        mobile,
+        notes,
+        parent_name,
+        manager,
+        status,
+        current_grade,
+        created_at,
+        updated_at,
+        row_number() over (ORDER BY created_at DESC) AS row_num,
+        count(*) over () AS total_count
+    FROM trial_records
 )
 
 SELECT
-    ID,
-    SOURCE,
-    STUDENT_ID,
-    STUDENT_NAME,
-    MIDDLE_SCHOOL_NAME,
-    MIDDLE_SCHOOL_CLASS,
-    HIGH_SCHOOL_NAME,
-    HIGH_SCHOOL_CLASS,
-    REGISTERED_CLASS,
-    TRIAL_DATE,
-    TELEPHONE,
-    MOBILE,
-    NOTES,
-    PARENT_NAME,
-    MANAGER,
-    STATUS,
-    CURRENT_GRADE,
-    CREATED_AT,
-    UPDATED_AT,
-    TOTAL_COUNT
-FROM RES
-WHERE ROW_NUM > $1 AND ROW_NUM <= ($2 + $2)
-ORDER BY CREATED_AT DESC;
+    id,
+    source,
+    student_id,
+    student_name,
+    middle_school_name,
+    middle_school_class,
+    high_school_name,
+    high_school_class,
+    registered_class,
+    trial_date,
+    telephone,
+    mobile,
+    notes,
+    parent_name,
+    manager,
+    status,
+    current_grade,
+    created_at,
+    updated_at,
+    total_count
+FROM res
+WHERE row_num > $1 AND row_num <= ($2 + $2)
+ORDER BY created_at DESC;

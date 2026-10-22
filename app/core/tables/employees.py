@@ -1,6 +1,6 @@
 from typing import Optional
 
-from sqlalchemy import String, Unicode
+from sqlalchemy import String, Unicode, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.core.tables.base import Base
