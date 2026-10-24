@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 async def scheduled_ldap_sync() -> None:
     """Job that runs every day at 7pm."""
     ldap_service = LdapService()
-    await ldap_service.sync_all_users()
+    await ldap_service.sync_all_employees()
 
 
 # async def lifespan(app: FastAPI):  # noqa: ANN201

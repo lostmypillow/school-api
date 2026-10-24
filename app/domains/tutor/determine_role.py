@@ -1,6 +1,6 @@
 from typing import cast
 import logging
-from app.core.exec_mssql_async import exec_mssql_async
+from app.core.exec_sql import exec_sql
 from app.domains.tutor.schemas.cardholder import Cardholder
 from app.domains.tutor.schemas.teacher_sql_row import TeacherSqlRow
 from app.domains.tutor.schemas.associated_device_sql import AssociatedDeviceSqlRow
@@ -9,10 +9,10 @@ from app.domains.tutor.schemas.student_sql_row import StudentSqlRow
 logger: logging.Logger = logging.getLogger(__name__)
 async def determine_role(card_id: str) -> Cardholder | str:
     """Determine role (student vs teacher) based on card_id and return Cardholder or error string."""
-    # 1. Check if cardholder is student (matches card_id or student_id)
+    logger.info("Check if cardholder is student (matches card_id or student_id)")
     student_rows: list[StudentSqlRow] | None = cast(
         list[StudentSqlRow] | None,
-        await exec_mssql_async("fetch_role_student", card_id, card_id),
+        await exec_sql("fetch_role_student", card_id, card_id),
     )
     if student_rows:
         row: StudentSqlRow = student_rows[0]
@@ -24,11 +24,10 @@ async def determine_role(card_id: str) -> Cardholder | str:
         logger.info("Cardholder is student: %s", cardholder.model_dump_json(indent=2))
         return cardholder
 
-    # 2. Check if cardholder is teacher (matches card_id or id)
-    logger.info("Cardholder is not a student, trying teacher")
+    logger.info(msg="Check if cardholder is teacher (matches card_id or id)")
     teacher_rows: list[TeacherSqlRow] | None = cast(
         list[TeacherSqlRow] | None,
-        await exec_mssql_async("fetch_role_teacher", card_id, card_id),
+        await exec_sql("fetch_role_teacher", card_id, card_id),
     )
     if not teacher_rows:
         logger.error("Error: Can't find info for %s", card_id)
@@ -40,7 +39,7 @@ async def determine_role(card_id: str) -> Cardholder | str:
 
     device_rows: list[AssociatedDeviceSqlRow] | None = cast(
         list[AssociatedDeviceSqlRow] | None,
-        await exec_mssql_async("fetch_associated_device", cardholder.card_id),
+        await exec_sql("fetch_associated_device", cardholder.card_id),
     )
     if device_rows:
         cardholder.device_id = device_rows[0].get("id")

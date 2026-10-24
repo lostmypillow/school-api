@@ -1,2 +1,2 @@
 DELETE FROM trial_records
-WHERE id = ?
+WHERE id = $1

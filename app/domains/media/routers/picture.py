@@ -4,7 +4,7 @@ from typing import Literal
 
 from fastapi import APIRouter, Response, HTTPException, Path, status
 
-from app.core.exec_mssql_async import exec_mssql_async
+from app.core.exec_sql import exec_sql
 
 logger = logging.getLogger("__name__")
 
@@ -47,7 +47,7 @@ async def get_image(
     """
     t1_start = perf_counter() 
     try:
-        image_data_list = await exec_mssql_async(f"picture_{role}", personnel_id)
+        image_data_list = await exec_sql(f"picture_{role}", personnel_id)
         image_data = image_data_list[0]
         t1_stop = perf_counter()
 

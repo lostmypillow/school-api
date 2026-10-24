@@ -4,11 +4,11 @@ student_survey_results (
 )
 VALUES
 (
-    ?,
-    ?,
-    CONVERT(char, getdate(), 112),
-    CONVERT(char, getdate(), 120),
-    ?,
-    ?,
+    $1,
+    $2,
+    to_char(now(), 'YYYYMMDD'),
+    to_char(now(), 'YYYY-MM-DD HH24:MI:SS'),
+    $3,
+    $4,
     ''
 );

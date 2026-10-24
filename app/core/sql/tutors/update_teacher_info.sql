@@ -1,7 +1,7 @@
 UPDATE
-    dbo.users
+    employees
 SET
-    new_college = ?
+    new_college = $1
 WHERE
-    card_id = ?
-    OR id = ?;
+    card_id = $2
+    OR id = $3;

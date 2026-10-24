@@ -1,12 +1,11 @@
 SELECT
-    [student_id] AS uid,
-    [name] AS cn,
-    新密碼 AS pwd,
-    [main_department] AS main_grp,
-    部門 AS other_grp,
-    狀態 AS employment_status
+    student_id,
+    name,
+    pwd,
+    main_department,
+    employment_status
 FROM
-    [users]
+    employees
 WHERE
-    LEN(student_id) >= 6
+    LENGTH(student_id) >= 6
     OR student_id = 'admin'

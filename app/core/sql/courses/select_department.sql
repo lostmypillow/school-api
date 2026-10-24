@@ -1,14 +1,14 @@
 SELECT
-    [id],
-    [semester_id],
-    [year],
-    [sem],
-    [code],
-    [name],
-    [link],
-    [created_at],
-    [updated_at]
+    id,
+    semester_id,
+    year,
+    sem,
+    code,
+    name,
+    link,
+    created_at,
+    updated_at
 FROM
-    [departments]
+    departments
 WHERE
-    [semester_id] = ?
+    semester_id = $1

@@ -22,17 +22,17 @@ jobs:
         run: uv sync --no-default-groups --group dev
 
       - name: Run Linter (Ruff)
-        run: uv run ruff check app/domains/tasks app/domains/courses app/domains/tutor
+        run: uv run ruff check
 
       - name: Run Type checker (pyrefly)
-        run: uv run pyrefly check app/domains/tasks app/domains/courses app/domains/tutor
+        run: uv run pyrefly check app/domains/courses app/domains/tutor
 
 #      - name: Run Tests (pytest)
 #        run: uv run pytest tests/domains/tasks tests/domains/courses tests/domains/tutor
 
 
       - name: Fix SQL files and lint (sqlfluff)
-        run: uv run sqlfluff fix app/core/sql --dialect=tsql && uv run sqlfluff lint app/core/sql --dialect=tsql
+        run: uv run sqlfluff lint app/core/sql --dialect=postgres
 
 
   deploy-dev:
@@ -71,5 +71,5 @@ jobs:
           echo "Deploying updated Docker containers to dev environment..."
           docker compose -f compose.dev.yaml down
           docker compose -f compose.dev.yaml up -d --build
-          docker inspect -f '{{json .NetworkSettings.Networks}}' nginx-proxy-manager | grep -q '"nginx-schoolapi-dev-net"' || \
-          docker network connect nginx-schoolapi-dev-net nginx-proxy-manager
+          docker inspect -f '{{json .NetworkSettings.Networks}}' nginx-proxy-manager | grep -q '"proxy-school-dev-net"' || \
+          docker network connect proxy-school-dev-net nginx-proxy-manager

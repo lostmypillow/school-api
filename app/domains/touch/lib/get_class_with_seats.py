@@ -1,10 +1,10 @@
 from datetime import datetime
 
-from app.core.exec_mssql_async import exec_mssql_async
+from app.core.exec_sql import exec_sql
 
 
 async def get_class_with_seats() -> dict:
-    class_with_seats_result = await exec_mssql_async("single_get_remaining")
+    class_with_seats_result = await exec_sql("single_get_remaining")
     class_with_seats = class_with_seats_result[0]
     if class_with_seats:
 
@@ -40,7 +40,7 @@ async def get_class_with_seats() -> dict:
     # current_date = '2023/08/15'  # DEBUG USE
     # current_period = 1  # DEBUG USE
 
-    classes_today: list = await exec_mssql_async(
+    classes_today: list = await exec_sql(
         "classes_today",
         current_date,
         current_period,

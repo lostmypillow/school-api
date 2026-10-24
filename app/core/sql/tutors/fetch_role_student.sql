@@ -2,7 +2,7 @@ SELECT
     name,
     student_id
 FROM
-    dbo.students
+    students
 WHERE
-    card_id = ?
-    OR student_id = ?;
+    card_id = $1
+    OR student_id = $2;

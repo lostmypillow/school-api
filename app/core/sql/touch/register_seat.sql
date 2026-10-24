@@ -2,6 +2,6 @@ UPDATE
     seats_records
 SET
     student_id = ?,
-    created_at = GETDATE()
+    created_at = NOW()
 WHERE
-    sn = ?
+    sn = $1

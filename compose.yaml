@@ -1,29 +1,20 @@
 services:
   db:
     container_name: school-db-local
-    image: mcr.microsoft.com/azure-sql-edge:latest
-    user: root
+    image: postgres:18.6-trixie
     environment:
-      - ACCEPT_EULA=Y
-      - MSSQL_SA_PASSWORD=YourPassword123!
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=YourPassword123!
+      - POSTGRES_DB=student_db 
       - TZ=Asia/Taipei
     ports:
-      - "1433:1433"
+      - "5432:5432"
     volumes:
-      - sqledge_data:/var/opt/mssql
-    deploy:
-      resources:
-        limits:
-          memory: 2048M
-          cpus: '2.0'
-        reservations:
-          memory: 2048M
-          cpus: '1.0'
+      - postgres_data:/var/lib/postgresql
     networks:
-      - nginx-schoolapi-local-net
-      - schoolapp-internal-local-net
+      - school-db-net
     healthcheck:
-      test: [ "CMD", "/bin/bash", "-c", "</dev/tcp/127.0.0.1/1433" ]
+      test: [ "CMD", "pg_isready", "-U", "postgres" ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -31,13 +22,12 @@ services:
 
   redis:
     container_name: school-redis-local
-    image: redis:7-alpine
+    image: redis:8.4.7-trixie
     restart: always
     environment:
       - TZ=Asia/Taipei
     networks:
-      - schoolapp-internal-local-net
-      - nginx-schoolapi-local-net
+      - school-db-net
     ports:
       - "6379:6379"
     healthcheck:
@@ -56,15 +46,16 @@ services:
       context: .
       dockerfile: Dockerfile
     networks:
-      - schoolapp-internal-local-net
-      - nginx-schoolapi-local-net
+      - proxy-school-net
+      - school-db-net
+      - school-worker-net
     ports:
       - "8080:8000"
     environment:
       - PYTHONWARNINGS=ignore:resource_tracker:UserWarning
       - TZ=Asia/Taipei
     env_file:
-      - .env
+      - .env.local
     depends_on:
       worker:
         condition: service_started
@@ -85,10 +76,10 @@ services:
       - PYTHONWARNINGS=ignore:resource_tracker:UserWarning
       - TZ=Asia/Taipei
     env_file:
-      - .env
+      - .env.local
     networks:
-      - schoolapp-internal-local-net
-      - nginx-schoolapi-local-net
+      - school-worker-net
+      - school-db-net
     depends_on:
       db:
         condition: service_healthy
@@ -100,14 +91,19 @@ services:
 
 
 volumes:
-  sqledge_data:
+  postgres_data:
 
 networks:
-  nginx-schoolapi-local-net:
+  proxy-school-net:
     driver: bridge
-    name: nginx-schoolapi-local-net
+    name: proxy-school-net
 
-  schoolapp-internal-local-net:
+  school-db-net:
     driver: bridge
-    name: schoolapp-internal-local-net
+    name: school-db-net
     internal: true
+  school-worker-net:
+    driver: bridge
+    name: school-worker-net
+    internal: true
+

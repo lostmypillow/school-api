@@ -1,12 +1,11 @@
 import logging
-from collections.abc import Sequence
 from typing import Any, Literal
 
 from fastapi import APIRouter, HTTPException, status
 
 
 
-from app.core.exec_mssql_async import exec_mssql_async
+from app.core.exec_sql import exec_sql
 from app.domains.trials.schemas.log_record_create import LogRecordCreate
 from app.domains.trials.schemas.log_record_response import LogRecordResponse
 from app.domains.trials.schemas.trial_record_base import TrialRecordBase
@@ -24,7 +23,7 @@ async def create_log(
         log_entry: LogRecordCreate,
 ):
     try:
-        result = await exec_mssql_async("trials/create_log", log_entry.model_dump().values())
+        result = await exec_sql("trials/create_log", log_entry.model_dump().values())
         logger.info(result)
     except Exception as e:
         logger.exception(msg="Exception occurred", exc_info=e)
@@ -37,13 +36,13 @@ async def get_schools(
 ):
     level_id = 2 if level == "middle" else 3
 
-    result = await exec_mssql_async("trials/get_schools", {"level_id": level_id})
+    result = await exec_sql("trials/get_schools", {"level_id": level_id})
     return result
 
 
 @router.get(path="/managers")
-async def get_managers() -> Sequence[Any]:
-    result = await exec_mssql_async(command_name="trials/get_managers")
+async def get_managers() -> list[Any] | list[dict[Any, Any]] | str | None:
+    result = await exec_sql(command_name="trials/get_managers")
     return result
 
 
@@ -52,7 +51,7 @@ async def create_trial(
     trial: TrialRecordCreate,
 ):
     try:
-        return await exec_mssql_async("trials/create_trial", trial.model_dump().values())
+        return await exec_sql("trials/create_trial", trial.model_dump().values())
 
 
     except Exception as e:
@@ -64,11 +63,12 @@ async def create_trial(
 @router.get(path="/")
 async def read_trials(skip: int = 0, limit: int = 50):
 
-    result = await exec_mssql_async("read_trials", skip, limit)
-    total = result[0]["total_count"] if result else 0
-
+    result = await exec_sql("read_trials", skip, limit)
+    total = 0
+    if isinstance(result, list) and len(result) > 0 and isinstance(result[0], dict):
+        total = result[0].get("total_count", 0)
     return {
-        "data": result,
+        "data": result if isinstance(result, list) else [],
         "total": total,
     }
 
@@ -78,7 +78,7 @@ async def read_trial(
     trial_id: int,
 ):
 
-    row = await exec_mssql_async("trials/read_trial", trial_id)
+    row = await exec_sql("trials/read_trial", trial_id)
 
     if not row:
         error_message = "找不到問課紀錄 (TrialRecord)"
@@ -91,14 +91,14 @@ async def read_trial(
 async def update_trial(
     trial_id: int, trial: TrialRecordBase
 ):
-    check_result = await exec_mssql_async("trials/check_trial", trial_id)
+    check_result = await exec_sql("trials/check_trial", trial_id)
     if not check_result:
         error_message = "找不到問課紀錄 (TrialRecord)"
         logger.exception(error_message, check_result)
         raise HTTPException(status_code=404, detail=error_message)
 
     try:
-        result = await exec_mssql_async("trials/update_trial", trial.model_dump().values(), fetch=False)
+        result = await exec_sql("trials/update_trial", trial.model_dump().values())
         return result
 
     except Exception as e:
@@ -111,7 +111,7 @@ async def update_trial(
 async def delete_trial(trial_id: int) -> dict[str, str]:
 
 
-    result = await exec_mssql_async("trials/delete_trial",  trial_id, fetch=False)
+    result = await exec_sql("trials/delete_trial", trial_id)
 
     if not result:
         error_message = "找不到問課紀錄 (TrialRecord)"

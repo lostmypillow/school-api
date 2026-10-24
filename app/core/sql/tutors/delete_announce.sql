@@ -1,2 +1,2 @@
 DELETE FROM math_announcements
-WHERE id = ?;
+WHERE id = $1;

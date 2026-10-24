@@ -7,7 +7,8 @@ from fastapi import status, Response
 
 from fastapi.exceptions import HTTPException
 
-from app.core.exec_mssql_async import exec_mssql_async
+from app.core.exec_sql import exec_sql
+from app.domains.vm.schemas.vm_details import VMDetails
 from app.domains.vm.services.proxmox import ProxmoxService
 from app.domains.vm.services.custom import CustomService
 router = APIRouter(
@@ -22,11 +23,11 @@ async def get_config(
 ):
     try:
         if owner == "all":
-            all_vm_details = await exec_mssql_async("vm/read_all")
+            all_vm_details = await exec_sql("vm/read_all")
             logger.info("all_vm_details:")
             logger.info(pformat(all_vm_details))
             return all_vm_details
-        vm_details = await exec_mssql_async(
+        vm_details = await exec_sql(
             "read_for_owner",
             owner
         )
@@ -41,11 +42,18 @@ async def get_config(
 
 @router.get("/file/{id}")
 async def generate_vv(vm_id: str ):
-    vm_details_list = await exec_mssql_async("vm/select_by_id", vm_id)
+    raw_data = await exec_sql("vm/select_by_id", vm_id)
+
+    if not raw_data:
+        raise HTTPException(status_code=404, detail="VM not found")
+
+    vm_details_list: list[VMDetails] = [
+        VMDetails.model_validate(item) for item in raw_data
+    ]
     if len(vm_details_list) != 1 :
         raise ValueError("More than one VM details matched")
-    vm_details = vm_details_list[0]
-    if vm_details["pve"]:
+    vm_details: VMDetails = vm_details_list[0]
+    if vm_details.pve:
         service = ProxmoxService(vm_details=vm_details)
     else:
         service = CustomService(vm_details=vm_details)

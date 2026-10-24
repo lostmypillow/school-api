@@ -1,22 +1,22 @@
 DROP TABLE IF EXISTS vm_details;
 
 CREATE TABLE vm_details (
-    id INT IDENTITY (1, 1) PRIMARY KEY,
-    vm_name NVARCHAR(100) NOT NULL,
-    human_owner NVARCHAR(100) NULL,
-    pc_owner NVARCHAR(100) NULL,
-    pve BIT NOT NULL,
-    pve_host NVARCHAR(150) NULL,
-    pve_token_username NVARCHAR(100) NULL,
-    pve_token_name NVARCHAR(100) NULL,
-    pve_token_value NVARCHAR(36) NULL,
+    id SERIAL PRIMARY KEY,
+    vm_name VARCHAR(100) NOT NULL,
+    human_owner VARCHAR(100) NULL,
+    pc_owner VARCHAR(100) NULL,
+    pve BOOLEAN NOT NULL,
+    pve_host VARCHAR(150) NULL,
+    pve_token_username VARCHAR(100) NULL,
+    pve_token_name VARCHAR(100) NULL,
+    pve_token_value VARCHAR(36) NULL,
     pve_vm_id INT NULL,
-    pve_proxy NVARCHAR(150) NULL,
-    spice_proxy NVARCHAR(150) NOT NULL,
-    vm_password NVARCHAR(128) NULL,
-    usb BIT NOT NULL,
-    created_at DATETIME2 DEFAULT SYSDATETIME() NOT NULL,
-    updated_at DATETIME2 DEFAULT SYSDATETIME() NOT NULL,
+    pve_proxy VARCHAR(150) NULL,
+    spice_proxy VARCHAR(150) NOT NULL,
+    vm_password VARCHAR(128) NULL,
+    usb BOOLEAN NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT chk_proxmox CHECK (pve IN (0, 1)),
     CONSTRAINT chk_optional_fields CHECK (
         pve = 0
@@ -63,7 +63,7 @@ VALUES
     '192.168.2.13:3128',
     NULL,
     0,
-    SYSDATETIME()
+    CURRENT_TIMESTAMP
 );
 
 INSERT INTO
@@ -98,5 +98,5 @@ VALUES
     '192.168.2.21:8283',
     '8283',
     0,
-    SYSDATETIME()
+    CURRENT_TIMESTAMP
 );

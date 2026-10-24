@@ -1,11 +1,11 @@
 SELECT
-    [classroom],
-    [contents],
-    LEFT(CONVERT(VARCHAR, [course_time], 108), 5) AS [course_time]
+    classroom,
+    contents,
+    to_char(course_time, 'HH24:MI') AS course_time
 FROM
-    [legacy_course_list]
+    legacy_course_list
 WHERE
-    [record_date] = ?
-    AND [time_slot] = ?
+    record_date = $1
+    AND time_slot = $2
 ORDER BY
-    [classroom]
+    classroom
