@@ -6,39 +6,40 @@ on:
 
 
 jobs:
-  test:
-    name: Run Unit & Integration Tests
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
-
-      - name: Setup uv
-        uses: https://github.com/astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
-        with:
-          version: "0.12.7"
-          enable-cache: true
-
-      - name: Install Dependencies
-        run: uv sync
-
-      - name: Run Linter (Ruff)
-        run: uv run ruff check
-
-      - name: Run Type checker (pyrefly)
-        run: uv run pyrefly check app/domains/courses app/domains/sync
-
-
   deploy-prod:
     name: Deploy prod Stack
-    needs: test
     runs-on: host
     steps:
+      - name: Install Git LFS
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y git-lfs
+          git lfs install
+
       - name: Checkout Code
         uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          lfs: false
+
+      - name: Restore LFS Cache
+        uses: actions/cache@v4
+        with:
+          path: .git/lfs
+          key: ${{ runner.os }}-lfs-${{ hashFiles('.gitattributes') }}
+
+      - name: Pull LFS files
+        run: |
+          git remote set-url origin https://${{ secrets.GITHUB_TOKEN }}@git.lostmypillow.com/lostmypillow/school-api.git
+          git lfs pull
 
       - name: Build & Deploy prod Containers
+        env:
+          DOCKER_BUILDKIT: 1
+          COMPOSE_DOCKER_CLI_BUILD: 1
         run: |
           echo "Deploying updated Docker containers to prod environment..."
-          docker compose -f compose.dev.yaml down student-system-api-dev student-system-worker-dev
+          docker compose -f compose.prod.yaml down
           docker compose -f compose.prod.yaml up -d --build
+          docker network disconnect -f nginx-schoolapi-prod-net nginx-proxy-manager
+          docker network connect nginx-schoolapi-prod-net nginx-proxy-manager

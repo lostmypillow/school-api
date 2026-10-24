@@ -1,0 +1,52 @@
+
+from app.core.exec_mssql_async import exec_mssql_async
+from app.domains.ldap.schemas.filtered_response import FilteredList
+from app.domains.ldap.schemas.raw_user_data import RawUserData
+from app.domains.touch.lib import deps as DEPS
+from typing import List
+from app.domains.ldap.schemas.ipa_formatted_user import IpaFormattedUser
+class SourceService:
+    def __init__(self) -> None:
+        pass
+
+    async def return_modified_users(self) -> FilteredList:
+        raw_dicts: list[dict] = await exec_mssql_async(command_name="ldap/ldap_get_all_users")
+        raw_users: list[RawUserData] = [RawUserData(**u) for u in raw_dicts]
+        users_to_add: List[IpaFormattedUser] = []
+        users_to_disable: List[IpaFormattedUser] = []
+        dep_lookup = {str(d["自動編號"]): d["group"] for d in DEPS}
+
+        for raw_user in raw_users:
+                main_grp_name = dep_lookup.get(str(raw_user.main_grp), "")
+                other_grp_names = []
+
+                if raw_user.other_grp and raw_user.other_grp != raw_user.main_grp:
+                    # print(raw_user.uid)
+                    dep_ids = str(raw_user.other_grp).split(",")
+                    for dep_id in dep_ids:
+                        dep_id = dep_id.strip()
+                        if dep_id and dep_id in dep_lookup and dep_lookup[dep_id] is not None:
+
+                            other_grp_names.append(dep_lookup[dep_id])
+                formatted_user = IpaFormattedUser(
+                        uid="e" + str(raw_user.uid.strip()) if raw_user.uid is not None else "",
+                        employeenumber=str(raw_user.uid.strip()) if raw_user.uid is not None else "",
+                        cn=str(raw_user.cn.strip()) if raw_user.cn is not None else "",
+                        givenname="",# Placeholder before we implement actual logic
+                        # self._split_chinese_name(raw_user.cn.strip())[1] if raw_user.cn is not None else "",
+                        sn="", # Placeholder before we implement actual logic
+                        # self._split_chinese_name(raw_user.cn.strip())[0] if raw_user.cn else "",
+                        pwd="", # Placeholder before we implement actual logic
+                        # pwd=self.decrypt_pwd(raw_user.pwd.strip()) if raw_user.pwd is not None else str(raw_user.uid).strip(),
+                        main_grp=main_grp_name,
+                        main_grp_id=raw_user.main_grp if raw_user.main_grp else "0",
+                        other_grp=other_grp_names,
+                        other_grp_ids=str(raw_user.other_grp).split(",") if raw_user.other_grp is not None else [],
+                        mail=str(raw_user.uid).strip() + "@km.",
+                        departmentnumber=raw_user.main_grp if raw_user.main_grp else "0"
+                    )
+                if raw_user.employment_status == 2:
+                    users_to_disable.append(formatted_user)
+                elif raw_user.employment_status == 1:
+                    users_to_add.append(formatted_user)
+        return FilteredList(users_to_disable=users_to_disable, users_to_add=users_to_add)

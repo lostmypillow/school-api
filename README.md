@@ -117,9 +117,13 @@ uv sync --only-group core-dev
 AWS (Base dependencies + AWS optional extra, no dev tools)
 Bash
 
+```
 uv sync --no-dev --extra aws
-
+```
 AWS-Dev (Base dependencies + dev tools + AWS extra)
 Bash
 
+```
 uv sync --only-group aws-dev
+uv run --env-file .env.local python -m app.worker
+```

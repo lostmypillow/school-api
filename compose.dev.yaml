@@ -1,75 +1,112 @@
 services:
-  student-system-mssql:
-    container_name: student-system-mssql
-    image: mcr.microsoft.com/mssql/server:2025-latest
-    platform: linux/amd64
+  db:
+    container_name: school-db-dev
+    image: mcr.microsoft.com/azure-sql-edge:latest
+    user: root
     environment:
       - ACCEPT_EULA=Y
       - MSSQL_SA_PASSWORD=YourPassword123!
-      - MSSQL_PID=Developer
     ports:
       - "1433:1433"
     volumes:
-      - mssql_data:/var/opt/mssql
+      - sqledge_data:/var/opt/mssql
+    deploy:
+      resources:
+        limits:
+          memory: 2048M
+          cpus: '2.0'
+        reservations:
+          memory: 2048M
+          cpus: '1.0'
+    networks:
+      - schoolapp-internal-dev-net
     healthcheck:
-      test: /opt/mssql-tools18/bin/sqlcmd -S 127.0.0.1 -U sa -P 'YourPassword123!' -Q 'SELECT 1' -C
+      test: [ "CMD", "/bin/bash", "-c", "</dev/tcp/127.0.0.1/1433" ]
       interval: 10s
       timeout: 5s
       retries: 5
       start_period: 20s
-    networks:
-      - proxy-net
 
-
-  student-system-redis:
-    container_name: student-system-redis
+  redis:
+    container_name: school-redis-dev
     image: redis:7-alpine
     restart: always
-    ports:
-      - "6379:6379"
+    environment:
+      - TZ=Asia/Taipei
+    networks:
+      - schoolapp-internal-dev-net
     healthcheck:
       test: [ "CMD", "redis-cli", "ping" ]
       interval: 5s
       timeout: 3s
       retries: 5
     depends_on:
-      - student-system-mssql
-    networks:
-      - proxy-net
+      db:
+        condition: service_healthy
 
-  student-system-api-dev:
-    container_name: student-system-api-dev
+
+  api:
+    container_name: school-fastapi-dev
     build:
       context: .
       dockerfile: Dockerfile
-    ports:
-      - "8081:8080"
-    env_file:
-      - .env.dev
     networks:
-      - proxy-net
+      - nginx-schoolapi-dev-net
+      - schoolapp-internal-dev-net
+    environment:
+      - PYTHONWARNINGS=ignore:resource_tracker:UserWarning
+      - TZ=Asia/Taipei
+    env_file:
+      - .env.prod
     depends_on:
-      - student-system-mssql
-      - student-system-redis
+      worker:
+        condition: service_started
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
 
 
-  student-system-worker-dev:
-    container_name: student-system-worker-dev
+  worker:
+    container_name: school-worker-dev
     build: .
-    command: ["python", "-m", "arq", "app.worker.WorkerSettings" ]
+    command: ["python", "-m", "app.worker"]
     restart: always
     env_file:
-      - .env.dev
+      - .env.prod
+    environment:
+      - PYTHONWARNINGS=ignore:resource_tracker:UserWarning
+      - TZ=Asia/Taipei
     networks:
-      - proxy-net
+      - schoolapp-internal-dev-net
+      - schoolapp-worker-dev-net
     depends_on:
-      - student-system-redis
-      - student-system-mssql
-      - student-system-api-dev
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    dns:
+      - 8.8.8.8
+      - 1.1.1.1
 
-networks:
-  proxy-net:
-    external: true
 
 volumes:
-  mssql_data:
+  sqledge_data:
+
+networks:
+  schoolapp-worker-dev-net:
+    driver: bridge
+    name: schoolapp-worker-dev-net
+    driver_opts:
+      com.docker.network.bridge.name: school-w-dev
+  schoolapp-internal-dev-net:
+    driver: bridge
+    name: schoolapp-internal-dev-net
+    internal: true
+    driver_opts:
+      com.docker.network.bridge.name: school-i-dev
+  nginx-schoolapi-dev-net:
+    driver: bridge
+    name: nginx-schoolapi-dev-net
+    driver_opts:
+      com.docker.network.bridge.name: n-school-dev
