@@ -11,11 +11,15 @@ from app.domains.touch.schemas.error_response import ErrorResponse
 from app.domains.touch.schemas.seat_info import SeatInfo
 from app.domains.touch.schemas.success_message import SuccessMessage
 
-logger = logging.getLogger("__name__")
+logger = logging.getLogger(__name__)
 router = APIRouter(
     prefix="/seat",
     tags=["Seat"],
 )
+
+@router.get(path="/")
+async def get_seats():
+    return "ok"
 
 @router.post("/",
                   summary="Register a seat for student",
