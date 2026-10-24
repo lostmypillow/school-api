@@ -77,8 +77,6 @@ services:
     environment:
       - PYTHONWARNINGS=ignore:resource_tracker:UserWarning
       - TZ=Asia/Taipei
-    volumes:
-      - /var/lib/school-api/data:/app/data
     networks:
       - schoolapp-internal-dev-net
       - schoolapp-worker-dev-net
