@@ -19,7 +19,6 @@ services:
           memory: 2048M
           cpus: '1.0'
     networks:
-      - nginx-schoolapi-dev-net
       - schoolapp-internal-dev-net
     healthcheck:
       test: [ "CMD", "/bin/bash", "-c", "</dev/tcp/127.0.0.1/1433" ]
@@ -52,6 +51,7 @@ services:
       context: .
       dockerfile: Dockerfile
     networks:
+      - nginx-schoolapi-dev-net
       - schoolapp-internal-dev-net
     environment:
       - PYTHONWARNINGS=ignore:resource_tracker:UserWarning
