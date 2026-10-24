@@ -71,5 +71,5 @@ jobs:
           echo "Deploying updated Docker containers to dev environment..."
           docker compose -f compose.dev.yaml down
           docker compose -f compose.dev.yaml up -d --build
-          docker inspect -f '{{json .NetworkSettings.Networks}}' nginx-proxy-manager | grep -q '"nginx-schoolapi-dev-net"' || \
-          docker network connect nginx-schoolapi-dev-net nginx-proxy-manager
+          docker inspect -f '{{json .NetworkSettings.Networks}}' nginx-proxy-manager | grep -q '"proxy-school-dev-net"' || \
+          docker network connect proxy-school-dev-net nginx-proxy-manager
