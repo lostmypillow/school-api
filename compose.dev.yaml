@@ -64,8 +64,6 @@ services:
     build: .
     command: ["python", "-m", "app.worker"]
     restart: always
-    volumes:
-      - ./data:/app/data
     environment:
       - PYTHONWARNINGS=ignore:resource_tracker:UserWarning
       - TZ=Asia/Taipei
