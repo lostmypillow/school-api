@@ -10,20 +10,28 @@ jobs:
     name: Deploy prod Stack
     runs-on: host
     steps:
+      - name: Install Git LFS
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y git-lfs
+          git lfs install
+
       - name: Checkout Code
         uses: actions/checkout@v4
         with:
-          lfs: true
+          persist-credentials: false
+          lfs: false
 
-      - name: Cache Git LFS
+      - name: Restore LFS Cache
         uses: actions/cache@v4
         with:
           path: .git/lfs
-          key: ${{ runner.os }}-lfs-${{ hashFiles('.lfsconfig', '.gitattributes') }}
-          restore-keys: |
-            ${{ runner.os }}-lfs-
-      - name: Pull Git LFS data
-        run: git lfs pull
+          key: ${{ runner.os }}-lfs-${{ hashFiles('.gitattributes') }}
+
+      - name: Pull LFS files
+        run: |
+          git remote set-url origin https://${{ secrets.GITHUB_TOKEN }}@git.lostmypillow.com/lostmypillow/school-api.git
+          git lfs pull
 
       - name: Build & Deploy prod Containers
         env:
@@ -33,4 +41,5 @@ jobs:
           echo "Deploying updated Docker containers to prod environment..."
           docker compose -f compose.prod.yaml down
           docker compose -f compose.prod.yaml up -d --build
+          docker network disconnect -f nginx-schoolapi-prod-net nginx-proxy-manager
           docker network connect nginx-schoolapi-prod-net nginx-proxy-manager
