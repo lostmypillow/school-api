@@ -51,6 +51,7 @@ services:
       context: .
       dockerfile: Dockerfile
     networks:
+      - nginx-schoolapi-prod-net
       - schoolapp-internal-prod-net
     env_file:
       - .env.prod
@@ -66,7 +67,7 @@ services:
 
 
   worker:
-    container_name: school-worker-local
+    container_name: school-worker-prod
     build: .
     command: ["python", "-m", "app.worker"]
     restart: always

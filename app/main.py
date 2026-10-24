@@ -39,7 +39,7 @@ async def lifespan(fastapi_app: FastAPI):
     fastapi_app.state.redis.close()
 
 
-app = FastAPI(title="School API", version="4.0.1", lifespan=lifespan)
+app = FastAPI(title="School API", version="5.0.0", lifespan=lifespan)
 
 
 origins = ["http://localhost:5173", "http://localhost:8081", "http://localhost:8000", "https://school.lostmypillow.com", "https://school-dev.lostmypillow.com"]

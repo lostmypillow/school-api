@@ -2102,7 +2102,7 @@ wheels = [
 
 [[package]]
 name = "school-api"
-version = "4.0.1"
+version = "5.0.0"
 source = { virtual = "." }
 dependencies = [
     { name = "aiofiles" },

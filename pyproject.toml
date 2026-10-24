@@ -1,6 +1,6 @@
 [project]
 name = "school-api"
-version = "4.0.1"
+version = "5.0.0"
 description = "API to search NTUT courses and movies"
 readme = "README.md"
 requires-python = ">=3.13"
@@ -74,4 +74,3 @@ templater = "placeholder"
 
 [tool.sqlfluff.templater.placeholder]
 param_style = "question_mark"
-
