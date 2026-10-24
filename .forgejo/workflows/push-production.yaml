@@ -12,6 +12,16 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - name: Cache Git LFS
+        uses: actions/cache@v4
+        with:
+          path: .git/lfs
+          key: ${{ runner.os }}-lfs-${{ hashFiles('.lfsconfig', '.gitattributes') }}
+          restore-keys: |
+            ${{ runner.os }}-lfs-
 
       - name: Build & Deploy prod Containers
         env:
