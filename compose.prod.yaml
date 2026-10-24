@@ -53,7 +53,7 @@ services:
     networks:
       - schoolapp-internal-prod-net
     env_file:
-      - .env
+      - .env.prod
     environment:
       - PYTHONWARNINGS=ignore:resource_tracker:UserWarning
     depends_on:
@@ -74,7 +74,7 @@ services:
       - PYTHONWARNINGS=ignore:resource_tracker:UserWarning
       - TZ=Asia/Taipei
     env_file:
-      - .env
+      - .env.prod
     networks:
       - schoolapp-internal-prod-net
       - schoolapp-worker-prod-net
@@ -94,8 +94,17 @@ volumes:
 networks:
   schoolapp-worker-prod-net:
     driver: bridge
-    name: schoolapp-worker-net
+    name: schoolapp-worker-prod-net
+    driver_opts:
+      com.docker.network.bridge.name: school-w-prod
   schoolapp-internal-prod-net:
     driver: bridge
     name: schoolapp-internal-prod-net
     internal: true
+    driver_opts:
+      com.docker.network.bridge.name: school-i-prod
+  nginx-schoolapi-prod-net:
+    driver: bridge
+    name: nginx-schoolapi-prod-net
+    driver_opts:
+      com.docker.network.bridge.name: n-school-prod

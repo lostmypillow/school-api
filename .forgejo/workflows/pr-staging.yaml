@@ -51,3 +51,5 @@ jobs:
           echo "Deploying updated Docker containers to dev environment..."
           docker compose -f compose.dev.yaml down
           docker compose -f compose.dev.yaml up -d --build
+          docker network disconnect -f nginx-schoolapi-dev-net nginx-proxy-manager
+          docker network connect nginx-schoolapi-dev-net nginx-proxy-manager

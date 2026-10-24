@@ -53,11 +53,11 @@ services:
       dockerfile: Dockerfile
     networks:
       - schoolapp-internal-dev-net
-    env_file:
-      - .env
     environment:
       - PYTHONWARNINGS=ignore:resource_tracker:UserWarning
       - TZ=Asia/Taipei
+    env_file:
+      - .env.prod
     depends_on:
       worker:
         condition: service_started
@@ -72,13 +72,13 @@ services:
     build: .
     command: ["python", "-m", "app.worker"]
     restart: always
+    env_file:
+      - .env.prod
     environment:
       - PYTHONWARNINGS=ignore:resource_tracker:UserWarning
       - TZ=Asia/Taipei
     volumes:
       - /var/lib/school-api/data:/app/data
-    env_file:
-      - .env
     networks:
       - schoolapp-internal-dev-net
       - schoolapp-worker-dev-net
@@ -93,13 +93,22 @@ services:
 
 
 volumes:
-  mssql_data:
+  sqledge_data:
 
 networks:
   schoolapp-worker-dev-net:
     driver: bridge
     name: schoolapp-worker-dev-net
+    driver_opts:
+      com.docker.network.bridge.name: school-w-dev
   schoolapp-internal-dev-net:
     driver: bridge
     name: schoolapp-internal-dev-net
     internal: true
+    driver_opts:
+      com.docker.network.bridge.name: school-i-dev
+  nginx-schoolapi-dev-net:
+    driver: bridge
+    name: nginx-schoolapi-dev-net
+    driver_opts:
+      com.docker.network.bridge.name: n-school-dev
