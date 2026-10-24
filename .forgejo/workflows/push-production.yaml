@@ -22,6 +22,8 @@ jobs:
           key: ${{ runner.os }}-lfs-${{ hashFiles('.lfsconfig', '.gitattributes') }}
           restore-keys: |
             ${{ runner.os }}-lfs-
+      - name: Pull Git LFS data
+        run: git lfs pull
 
       - name: Build & Deploy prod Containers
         env:

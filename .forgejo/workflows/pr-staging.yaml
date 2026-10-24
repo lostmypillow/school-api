@@ -40,17 +40,28 @@ jobs:
     needs: test
     runs-on: host
     steps:
+      - name: Install Git LFS
+        run: |
+            sudo apt-get update
+            sudo apt-get install -y git-lfs
+            git lfs install
+
       - name: Checkout Code
         uses: actions/checkout@v4
-        lfs: true
+        with:
+          persist-credentials: false
+          lfs: false
 
-      - name: Cache Git LFS
+      - name: Restore LFS Cache
         uses: actions/cache@v4
         with:
           path: .git/lfs
-          key: ${{ runner.os }}-lfs-${{ hashFiles('.lfsconfig', '.gitattributes') }}
-          restore-keys: |
-            ${{ runner.os }}-lfs-
+          key: ${{ runner.os }}-lfs-${{ hashFiles('.gitattributes') }}
+
+      - name: Pull LFS files
+        run: |
+            git remote set-url origin https://${{ secrets.GITHUB_TOKEN }}@git.lostmypillow.com/lostmypillow/school-api.git
+            git lfs pull
 
       - name: Build & Deploy dev Containers
         env:
