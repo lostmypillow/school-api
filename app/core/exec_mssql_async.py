@@ -1,7 +1,7 @@
 import asyncio
 import logging
 from os import getenv
-from anyio import Path
+from pathlib import Path
 import time
 from typing import Any
 
