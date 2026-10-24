@@ -41,5 +41,5 @@ jobs:
           echo "Deploying updated Docker containers to prod environment..."
           docker compose -f compose.prod.yaml down
           docker compose -f compose.prod.yaml up -d --build
-          docker network disconnect -f nginx-schoolapi-prod-net nginx-proxy-manager
+          docker inspect -f '{{json .NetworkSettings.Networks}}' nginx-proxy-manager | grep -q '"nginx-schoolapi-prod-net"' || \
           docker network connect nginx-schoolapi-prod-net nginx-proxy-manager
