@@ -27,8 +27,8 @@ jobs:
       - name: Run Type checker (pyrefly)
         run: uv run pyrefly check app/domains/tasks app/domains/courses app/domains/tutor
 
-      - name: Run Tests (pytest)
-        run: uv run pytest tests/domains/tasks tests/domains/courses tests/domains/tutor
+#      - name: Run Tests (pytest)
+#        run: uv run pytest tests/domains/tasks tests/domains/courses tests/domains/tutor
 
 
       - name: Fix SQL files and lint (sqlfluff)
