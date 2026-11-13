@@ -32,7 +32,7 @@ dependencies = [
     "pymupdf>=1.28.2",
     "aiofiles>=25.1.0",
     "sqlfluff>=4.4.0",
-    "anyio==4.15.1",
+    "anyio==4.16.0",
     "orjson>=3.13.0",
     "polars>=2.0.0",
     "nh3>=0.3.7",
