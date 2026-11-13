@@ -23,7 +23,7 @@ dependencies = [
     "aioodbc>=0.5.0",
     "cachetools>=5.2.0",
     "asyncache>=0.3.1",
-    "pyarrow==26.0.0",
+    "pyarrow==26.0.1",
     "apscheduler>=3.11.3",
     "smbprotocol>=1.17.0",
     "proxmoxer>=2.3.0",
