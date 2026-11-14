@@ -6,7 +6,7 @@ click==8.5.1
 colorama==0.4.6
 cryptography==44.0.3
 dnspython==2.9.2
-email_validator==2.2.0
+email_validator==2.3.0
 exceptiongroup==1.2.2
 fastapi==0.115.8
 fastapi-cli==0.0.7
