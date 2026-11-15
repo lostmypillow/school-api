@@ -41,8 +41,9 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+    ports:
+      - "127.0.0.1:8005:8000"
     networks:
-      - proxy-school-dev-net
       - school-db-dev-net
       - school-worker-dev-net
     environment:
@@ -86,10 +87,6 @@ volumes:
   postgres_data:
 
 networks:
-  proxy-school-dev-net:
-    driver: bridge
-    name: proxy-school-dev-net
-
   school-db-dev-net:
     driver: bridge
     name: school-db-dev-net
