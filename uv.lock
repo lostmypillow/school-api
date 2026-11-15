@@ -1026,7 +1026,7 @@ wheels = [
 
 [[package]]
 name = "fastapi-redis-sdk"
-version = "0.8.1"
+version = "0.9.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "anyio" },
@@ -1035,9 +1035,9 @@ dependencies = [
     { name = "pydantic-settings" },
     { name = "redis" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/1f/ff/a1891337482e0b4caf90b5bb3b5fe3cc031f05c4dc628e85441dc2618d8e/fastapi_redis_sdk-0.8.1.tar.gz", hash = "sha256:98cf2e2d476cf98e66ffd5df8ce3374b5d702b6fe4f7f2369c43fd0fe4cd7631", size = 40767, upload-time = "2026-09-25T09:14:41.152Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/2e/3f/4f25165f04806e9d32be84763eb1065e512242ff3c3f365a103028b936ac/fastapi_redis_sdk-0.9.1.tar.gz", hash = "sha256:20ffef1b2c42ac9c561188c399169aa3df782a371f1942680beffb6251c24896", size = 95738, upload-time = "2026-10-19T14:40:30.951Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/c3/0f/22eca03926218343602a26620ebd092043783b9edc00d0c5f9b6f92c830c/fastapi_redis_sdk-0.8.1-py3-none-any.whl", hash = "sha256:c0ed749839ce621de89cc8f54bb330bf8a4918af24572c639480c5d2d4627c9e", size = 46325, upload-time = "2026-09-25T09:14:39.083Z" },
+    { url = "https://files.pythonhosted.org/packages/d4/b7/06bf82060caba8590a59050fcdefa0e66e5d1bf0a4f175a6cfdc9fab8a73/fastapi_redis_sdk-0.9.1-py3-none-any.whl", hash = "sha256:e4d1162b8187b0d3dadcaec5e239c95df3f12b2ba109b15661e96e138ffae2bf", size = 102757, upload-time = "2026-10-19T14:40:29.432Z" },
 ]
 
 [[package]]
@@ -2851,7 +2851,7 @@ requires-dist = [
     { name = "cachetools", specifier = ">=5.2.0" },
     { name = "chardet", specifier = ">=7.6.0" },
     { name = "fastapi", extras = ["standard"], specifier = "==0.163.0" },
-    { name = "fastapi-redis-sdk", specifier = "==0.8.1" },
+    { name = "fastapi-redis-sdk", specifier = "==0.9.1" },
     { name = "greenlet", specifier = "==3.5.6" },
     { name = "gunicorn", marker = "sys_platform != 'win32'", specifier = ">=26.2.0" },
     { name = "httpx", specifier = ">=0.28.1" },
