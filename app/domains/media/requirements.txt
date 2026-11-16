@@ -22,7 +22,7 @@ mdurl==0.1.2
 psutil==7.0.0
 pycparser==2.22
 pydantic==2.10.6
-pydantic-settings==2.7.1
+pydantic-settings==2.16.3
 pydantic_core==2.50.4
 Pygments==2.19.1
 pyspnego==0.11.2
