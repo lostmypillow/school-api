@@ -41,7 +41,6 @@ jobs:
           echo "Deploying updated Docker containers to prod environment..."
           docker compose -f compose.prod.yaml down
           docker compose -f compose.prod.yaml up -d --build
-
   release:
       needs: deploy-prod
       runs-on: ubuntu-latest
@@ -52,7 +51,6 @@ jobs:
             fetch-depth: 0
 
         - name: Generate changelog from commits
-          id: changelog
           run: |
             CURRENT_TAG="${GITHUB_REF_NAME}"
             PREV_TAG=$(git describe --tags --abbrev=0 "${CURRENT_TAG}^" 2>/dev/null || true)
@@ -64,15 +62,17 @@ jobs:
               echo "## Initial Release" > release_notes.md
               git log "${CURRENT_TAG}" --pretty=format:"- %s (%h)" >> release_notes.md
             fi
-            mkdir -p empty_dist
 
         - name: Create Forgejo Release
-          uses: https://code.forgejo.org/actions/forgejo-release@v2
-          with:
-            direction: upload
-            url: ${{ github.server_url }}
-            repo: ${{ github.repository }}
-            token: ${{ secrets.GITHUB_TOKEN }}
-            tag: ${{ github.ref_name }}
-            release-notes-file: release_notes.md
-            release-dir: empty_dist
+          run: |
+            PAYLOAD=$(jq -n \
+              --arg tag "${GITHUB_REF_NAME}" \
+              --arg name "${GITHUB_REF_NAME}" \
+              --rawfile body release_notes.md \
+              '{tag_name: $tag, name: $name, body: $body, draft: false, prerelease: false}')
+  
+            curl -f -sS -X POST \
+              -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+              -H "Content-Type: application/json" \
+              -d "$PAYLOAD" \
+              "${GITHUB_SERVER_URL}/api/v1/repos/${GITHUB_REPOSITORY}/releases"
