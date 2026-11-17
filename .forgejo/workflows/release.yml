@@ -57,10 +57,10 @@ jobs:
   
             if [ -n "$PREV_TAG" ]; then
               echo "## Changes since ${PREV_TAG}" > release_notes.md
-              git log "${PREV_TAG}..${CURRENT_TAG}" --pretty=format:"- %s (%h)" >> release_notes.md
+              git log "${PREV_TAG}..${CURRENT_TAG}" --no-merges --pretty=format:"- %s (%h)" >> release_notes.md
             else
               echo "## Initial Release" > release_notes.md
-              git log "${CURRENT_TAG}" --pretty=format:"- %s (%h)" >> release_notes.md
+              git log "${CURRENT_TAG}" --no-merges --pretty=format:"- %s (%h)" >> release_notes.md
             fi
 
         - name: Create Forgejo Release
