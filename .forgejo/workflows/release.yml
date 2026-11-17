@@ -1,0 +1,75 @@
+name: Auto Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  deploy-prod:
+    name: Deploy prod Stack
+    runs-on: host
+    steps:
+      - name: Install Git LFS
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y git-lfs
+          git lfs install
+
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          lfs: false
+
+      - name: Restore LFS Cache
+        uses: actions/cache@v4
+        with:
+          path: .git/lfs
+          key: ${{ runner.os }}-lfs-${{ hashFiles('.gitattributes') }}
+
+      - name: Pull LFS files
+        run: |
+          git remote set-url origin https://${{ secrets.GITHUB_TOKEN }}@git.lostmypillow.com/lostmypillow/school-api.git
+          git lfs pull
+
+      - name: Build & Deploy prod Containers
+        env:
+          DOCKER_BUILDKIT: 1
+          COMPOSE_DOCKER_CLI_BUILD: 1
+        run: |
+          echo "Deploying updated Docker containers to prod environment..."
+          docker compose -f compose.prod.yaml down
+          docker compose -f compose.prod.yaml up -d --build
+
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Generate changelog from commits
+        id: changelog
+        run: |
+          CURRENT_TAG="${GITHUB_REF_NAME}"
+          PREV_TAG=$(git describe --tags --abbrev=0 "${CURRENT_TAG}^" 2>/dev/null || true)
+
+          if [ -n "$PREV_TAG" ]; then
+            echo "## Changes since ${PREV_TAG}" > release_notes.md
+            git log "${PREV_TAG}..${CURRENT_TAG}" --pretty=format:"- %s (%h)" >> release_notes.md
+          else
+            echo "## Initial Release" > release_notes.md
+            git log "${CURRENT_TAG}" --pretty=format:"- %s (%h)" >> release_notes.md
+          fi
+
+      - name: Create Forgejo Release
+        uses: https://code.forgejo.org/actions/forgejo-release@v2
+        with:
+          direction: upload
+          url: ${{ github.server_url }}
+          repo: ${{ github.repository }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          tag: ${{ github.ref_name }}
+          release-notes-file: release_notes.md
