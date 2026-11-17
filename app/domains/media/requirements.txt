@@ -24,7 +24,7 @@ pycparser==2.23
 pydantic==2.14.3
 pydantic-settings==2.16.3
 pydantic_core==2.50.4
-Pygments==2.19.1
+Pygments==2.21.0
 pyspnego==0.11.2
 python-dotenv==1.2.4
 python-multipart==0.0.20
