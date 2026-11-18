@@ -27,7 +27,7 @@ pydantic_core==2.50.4
 Pygments==2.21.0
 pyspnego==0.12.4
 python-dotenv==1.2.4
-python-multipart==0.0.20
+python-multipart==0.0.34
 PyYAML==6.0.2
 rich==13.9.4
 rich-toolkit==0.13.2
