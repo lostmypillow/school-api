@@ -29,7 +29,7 @@ pyspnego==0.12.4
 python-dotenv==1.2.4
 python-multipart==0.0.34
 PyYAML==6.0.2
-rich==13.9.4
+rich==15.0.0
 rich-toolkit==0.13.2
 shellingham==1.5.4
 smbprotocol==1.17.0
