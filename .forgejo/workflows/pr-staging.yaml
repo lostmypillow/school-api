@@ -53,7 +53,7 @@ jobs:
           lfs: false
 
       - name: Restore LFS Cache
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: .git/lfs
           key: ${{ runner.os }}-lfs-${{ hashFiles('.gitattributes') }}
