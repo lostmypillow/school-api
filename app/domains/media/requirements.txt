@@ -28,7 +28,7 @@ Pygments==2.21.0
 pyspnego==0.12.4
 python-dotenv==1.2.4
 python-multipart==0.0.34
-PyYAML==6.0.2
+PyYAML==6.0.4
 rich==15.0.0
 rich-toolkit==0.13.2
 shellingham==1.5.4
